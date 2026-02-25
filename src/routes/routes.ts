@@ -9,8 +9,8 @@ import staffAuthRoutes from "../modules/staff/staff.auth.routes.js";
 import attendanceRoutes from "../modules/attendance/attendance.routes.js";
 import payrollRoutes from "../modules/payroll/payroll.routes.js";
 import bookingRoutes from "../modules/booking/booking.routes.js";
-import leadRoutes from "../modules/lead/lead.routes.js";
 import commentRoutes from "../modules/comment/comment.routes.js";
+import eodRoutes from "../modules/eod/eod.routes.js";
 
 // Central routes aggregator - register all module routes here
 const routes: FastifyPluginAsync = async (fastify) => {
@@ -44,11 +44,11 @@ const routes: FastifyPluginAsync = async (fastify) => {
   // Booking routes (public route for consultation requests)
   await fastify.register(bookingRoutes);
 
-  // Lead routes
-  await fastify.register(leadRoutes);
-
   // Comment routes (includes public comment submission)
   await fastify.register(commentRoutes);
+
+  // EOD Report routes
+  await fastify.register(eodRoutes);
 };
 
 export default routes;

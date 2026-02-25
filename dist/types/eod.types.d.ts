@@ -1,0 +1,311 @@
+import { z } from "zod";
+export declare const eodStatusEnum: z.ZodEnum<["submitted", "reviewed", "needs_revision"]>;
+export declare const eodReportSchema: z.ZodObject<{
+    _id: z.ZodOptional<z.ZodString>;
+    staffId: z.ZodString;
+    businessId: z.ZodString;
+    date: z.ZodString;
+    hoursWorked: z.ZodNumber;
+    tasksCompleted: z.ZodString;
+    challenges: z.ZodOptional<z.ZodString>;
+    nextDayPlan: z.ZodOptional<z.ZodString>;
+    notes: z.ZodOptional<z.ZodString>;
+    status: z.ZodDefault<z.ZodEnum<["submitted", "reviewed", "needs_revision"]>>;
+    isApproved: z.ZodDefault<z.ZodBoolean>;
+    adminNotes: z.ZodOptional<z.ZodString>;
+    reviewedBy: z.ZodOptional<z.ZodString>;
+    reviewedAt: z.ZodOptional<z.ZodString>;
+    isActive: z.ZodDefault<z.ZodBoolean>;
+    createdAt: z.ZodOptional<z.ZodString>;
+    updatedAt: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    status: "reviewed" | "submitted" | "needs_revision";
+    date: string;
+    isActive: boolean;
+    businessId: string;
+    staffId: string;
+    hoursWorked: number;
+    isApproved: boolean;
+    tasksCompleted: string;
+    _id?: string | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
+    notes?: string | undefined;
+    adminNotes?: string | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+    reviewedBy?: string | undefined;
+    reviewedAt?: string | undefined;
+}, {
+    date: string;
+    businessId: string;
+    staffId: string;
+    hoursWorked: number;
+    tasksCompleted: string;
+    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    _id?: string | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
+    notes?: string | undefined;
+    adminNotes?: string | undefined;
+    isApproved?: boolean | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+    reviewedBy?: string | undefined;
+    reviewedAt?: string | undefined;
+}>;
+export declare const submitEodSchema: z.ZodObject<{
+    date: z.ZodString;
+    hoursWorked: z.ZodNumber;
+    tasksCompleted: z.ZodString;
+    challenges: z.ZodOptional<z.ZodString>;
+    nextDayPlan: z.ZodOptional<z.ZodString>;
+    notes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    date: string;
+    hoursWorked: number;
+    tasksCompleted: string;
+    notes?: string | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+}, {
+    date: string;
+    hoursWorked: number;
+    tasksCompleted: string;
+    notes?: string | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+}>;
+export declare const editOwnEodSchema: z.ZodObject<{
+    hoursWorked: z.ZodOptional<z.ZodNumber>;
+    tasksCompleted: z.ZodOptional<z.ZodString>;
+    challenges: z.ZodOptional<z.ZodString>;
+    nextDayPlan: z.ZodOptional<z.ZodString>;
+    notes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    notes?: string | undefined;
+    hoursWorked?: number | undefined;
+    tasksCompleted?: string | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+}, {
+    notes?: string | undefined;
+    hoursWorked?: number | undefined;
+    tasksCompleted?: string | undefined;
+    challenges?: string | undefined;
+    nextDayPlan?: string | undefined;
+}>;
+export declare const reviewEodSchema: z.ZodObject<{
+    status: z.ZodEnum<["reviewed", "needs_revision"]>;
+    isApproved: z.ZodOptional<z.ZodBoolean>;
+    adminNotes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    status: "reviewed" | "needs_revision";
+    adminNotes?: string | undefined;
+    isApproved?: boolean | undefined;
+}, {
+    status: "reviewed" | "needs_revision";
+    adminNotes?: string | undefined;
+    isApproved?: boolean | undefined;
+}>;
+export declare const adminEditEodSchema: z.ZodObject<{
+    hoursWorked: z.ZodOptional<z.ZodNumber>;
+    tasksCompleted: z.ZodOptional<z.ZodString>;
+    date: z.ZodOptional<z.ZodString>;
+    adminNotes: z.ZodOptional<z.ZodString>;
+    status: z.ZodOptional<z.ZodEnum<["submitted", "reviewed", "needs_revision"]>>;
+    isApproved: z.ZodOptional<z.ZodBoolean>;
+}, "strip", z.ZodTypeAny, {
+    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    date?: string | undefined;
+    hoursWorked?: number | undefined;
+    adminNotes?: string | undefined;
+    isApproved?: boolean | undefined;
+    tasksCompleted?: string | undefined;
+}, {
+    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    date?: string | undefined;
+    hoursWorked?: number | undefined;
+    adminNotes?: string | undefined;
+    isApproved?: boolean | undefined;
+    tasksCompleted?: string | undefined;
+}>;
+export type EodReport = z.infer<typeof eodReportSchema>;
+export type SubmitEod = z.infer<typeof submitEodSchema>;
+export type EditOwnEod = z.infer<typeof editOwnEodSchema>;
+export type ReviewEod = z.infer<typeof reviewEodSchema>;
+export type AdminEditEod = z.infer<typeof adminEditEodSchema>;
+export declare const eodReportJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly _id: {
+            readonly type: "string";
+        };
+        readonly staffId: {
+            readonly type: "string";
+        };
+        readonly businessId: {
+            readonly type: "string";
+        };
+        readonly date: {
+            readonly type: "string";
+            readonly pattern: "^\\d{4}-\\d{2}-\\d{2}$";
+        };
+        readonly hoursWorked: {
+            readonly type: "number";
+            readonly minimum: 0;
+            readonly maximum: 24;
+        };
+        readonly tasksCompleted: {
+            readonly type: "string";
+            readonly maxLength: 5000;
+        };
+        readonly challenges: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly nextDayPlan: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly notes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+        readonly status: {
+            readonly type: "string";
+            readonly enum: readonly ["submitted", "reviewed", "needs_revision"];
+        };
+        readonly isApproved: {
+            readonly type: "boolean";
+        };
+        readonly adminNotes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+        readonly reviewedBy: {
+            readonly type: "string";
+        };
+        readonly reviewedAt: {
+            readonly type: "string";
+            readonly format: "date-time";
+        };
+        readonly isActive: {
+            readonly type: "boolean";
+        };
+        readonly createdAt: {
+            readonly type: "string";
+            readonly format: "date-time";
+        };
+        readonly updatedAt: {
+            readonly type: "string";
+            readonly format: "date-time";
+        };
+    };
+    readonly required: readonly ["staffId", "businessId", "date", "hoursWorked", "tasksCompleted"];
+};
+export declare const submitEodJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly date: {
+            readonly type: "string";
+            readonly pattern: "^\\d{4}-\\d{2}-\\d{2}$";
+        };
+        readonly hoursWorked: {
+            readonly type: "number";
+            readonly minimum: 0;
+            readonly maximum: 24;
+        };
+        readonly tasksCompleted: {
+            readonly type: "string";
+            readonly maxLength: 5000;
+        };
+        readonly challenges: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly nextDayPlan: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly notes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+    };
+    readonly required: readonly ["date", "hoursWorked", "tasksCompleted"];
+};
+export declare const editOwnEodJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly hoursWorked: {
+            readonly type: "number";
+            readonly minimum: 0;
+            readonly maximum: 24;
+        };
+        readonly tasksCompleted: {
+            readonly type: "string";
+            readonly maxLength: 5000;
+        };
+        readonly challenges: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly nextDayPlan: {
+            readonly type: "string";
+            readonly maxLength: 2000;
+        };
+        readonly notes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+    };
+};
+export declare const reviewEodJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly status: {
+            readonly type: "string";
+            readonly enum: readonly ["reviewed", "needs_revision"];
+        };
+        readonly isApproved: {
+            readonly type: "boolean";
+        };
+        readonly adminNotes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+    };
+    readonly required: readonly ["status"];
+};
+export declare const adminEditEodJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly hoursWorked: {
+            readonly type: "number";
+            readonly minimum: 0;
+            readonly maximum: 24;
+        };
+        readonly tasksCompleted: {
+            readonly type: "string";
+            readonly maxLength: 5000;
+        };
+        readonly date: {
+            readonly type: "string";
+            readonly pattern: "^\\d{4}-\\d{2}-\\d{2}$";
+        };
+        readonly adminNotes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
+        readonly status: {
+            readonly type: "string";
+            readonly enum: readonly ["submitted", "reviewed", "needs_revision"];
+        };
+        readonly isApproved: {
+            readonly type: "boolean";
+        };
+    };
+};
+//# sourceMappingURL=eod.types.d.ts.map

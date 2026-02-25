@@ -1,0 +1,149 @@
+import { z } from "zod";
+// EOD Report status enum
+export const eodStatusEnum = z.enum([
+    "submitted",
+    "reviewed",
+    "needs_revision",
+]);
+// EOD Report schema
+export const eodReportSchema = z.object({
+    _id: z.string().optional(),
+    staffId: z.string().min(1, "Staff ID is required"),
+    businessId: z.string().min(1, "Business ID is required"),
+    // Core Report Data
+    date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
+    hoursWorked: z
+        .number()
+        .min(0, "Hours worked must be 0 or greater")
+        .max(24, "Hours worked cannot exceed 24"),
+    tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
+    // Optional Fields
+    challenges: z.string().max(2000).optional(),
+    nextDayPlan: z.string().max(2000).optional(),
+    notes: z.string().max(1000).optional(),
+    // Meta & Review
+    status: eodStatusEnum.default("submitted"),
+    isApproved: z.boolean().default(false),
+    adminNotes: z.string().max(1000).optional(),
+    reviewedBy: z.string().optional(),
+    reviewedAt: z.string().datetime().optional(),
+    // Native properties
+    isActive: z.boolean().default(true),
+    createdAt: z.string().datetime().optional(),
+    updatedAt: z.string().datetime().optional(),
+});
+// Schema for staff submitting an EOD report
+export const submitEodSchema = z.object({
+    date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
+    hoursWorked: z
+        .number()
+        .min(0, "Hours worked must be 0 or greater")
+        .max(24, "Hours worked cannot exceed 24"),
+    tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
+    challenges: z.string().max(2000).optional(),
+    nextDayPlan: z.string().max(2000).optional(),
+    notes: z.string().max(1000).optional(),
+});
+// Schema for staff editing their own EOD (when needs_revision)
+export const editOwnEodSchema = z.object({
+    hoursWorked: z.number().min(0).max(24).optional(),
+    tasksCompleted: z.string().min(1).max(5000).optional(),
+    challenges: z.string().max(2000).optional(),
+    nextDayPlan: z.string().max(2000).optional(),
+    notes: z.string().max(1000).optional(),
+});
+// Schema for admin reviewing an EOD report
+export const reviewEodSchema = z.object({
+    status: z.enum(["reviewed", "needs_revision"]),
+    isApproved: z.boolean().optional(),
+    adminNotes: z.string().max(1000).optional(),
+});
+// Schema for admin editing an EOD report (minor tweaks)
+export const adminEditEodSchema = z.object({
+    hoursWorked: z.number().min(0).max(24).optional(),
+    tasksCompleted: z.string().min(1).max(5000).optional(),
+    date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
+        .optional(),
+    adminNotes: z.string().max(1000).optional(),
+    status: eodStatusEnum.optional(),
+    isApproved: z.boolean().optional(),
+});
+// JSON Schemas for Fastify route validation
+export const eodReportJsonSchema = {
+    type: "object",
+    properties: {
+        _id: { type: "string" },
+        staffId: { type: "string" },
+        businessId: { type: "string" },
+        date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        tasksCompleted: { type: "string", maxLength: 5000 },
+        challenges: { type: "string", maxLength: 2000 },
+        nextDayPlan: { type: "string", maxLength: 2000 },
+        notes: { type: "string", maxLength: 1000 },
+        status: {
+            type: "string",
+            enum: ["submitted", "reviewed", "needs_revision"],
+        },
+        isApproved: { type: "boolean" },
+        adminNotes: { type: "string", maxLength: 1000 },
+        reviewedBy: { type: "string" },
+        reviewedAt: { type: "string", format: "date-time" },
+        isActive: { type: "boolean" },
+        createdAt: { type: "string", format: "date-time" },
+        updatedAt: { type: "string", format: "date-time" },
+    },
+    required: ["staffId", "businessId", "date", "hoursWorked", "tasksCompleted"],
+};
+export const submitEodJsonSchema = {
+    type: "object",
+    properties: {
+        date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        tasksCompleted: { type: "string", maxLength: 5000 },
+        challenges: { type: "string", maxLength: 2000 },
+        nextDayPlan: { type: "string", maxLength: 2000 },
+        notes: { type: "string", maxLength: 1000 },
+    },
+    required: ["date", "hoursWorked", "tasksCompleted"],
+};
+export const editOwnEodJsonSchema = {
+    type: "object",
+    properties: {
+        hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        tasksCompleted: { type: "string", maxLength: 5000 },
+        challenges: { type: "string", maxLength: 2000 },
+        nextDayPlan: { type: "string", maxLength: 2000 },
+        notes: { type: "string", maxLength: 1000 },
+    },
+};
+export const reviewEodJsonSchema = {
+    type: "object",
+    properties: {
+        status: { type: "string", enum: ["reviewed", "needs_revision"] },
+        isApproved: { type: "boolean" },
+        adminNotes: { type: "string", maxLength: 1000 },
+    },
+    required: ["status"],
+};
+export const adminEditEodJsonSchema = {
+    type: "object",
+    properties: {
+        hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        tasksCompleted: { type: "string", maxLength: 5000 },
+        date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        adminNotes: { type: "string", maxLength: 1000 },
+        status: {
+            type: "string",
+            enum: ["submitted", "reviewed", "needs_revision"],
+        },
+        isApproved: { type: "boolean" },
+    },
+};
+//# sourceMappingURL=eod.types.js.map
