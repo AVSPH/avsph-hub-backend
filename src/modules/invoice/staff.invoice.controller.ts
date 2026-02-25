@@ -1,0 +1,131 @@
+import type { FastifyRequest, FastifyReply } from "fastify";
+import { ObjectId } from "@fastify/mongodb";
+
+interface IdParams {
+  id: string;
+}
+
+// ==================== STAFF INVOICE ACTIONS ====================
+
+// Get my invoices (staff only — only approved or paid invoices)
+export async function getMyInvoices(
+  request: FastifyRequest<{
+    Querystring: {
+      status?: string;
+      startDate?: string;
+      endDate?: string;
+    };
+  }>,
+  reply: FastifyReply,
+) {
+  const invoices = request.server.mongo.db?.collection("invoices");
+
+  if (!invoices) {
+    return reply.status(500).send({ error: "Database not available" });
+  }
+
+  const { id: staffId, businessId } = request.user;
+
+  if (!staffId || !businessId) {
+    return reply.status(400).send({ error: "Invalid staff token" });
+  }
+
+  // Staff can only see approved or paid invoices
+  const query: any = {
+    staffId,
+    businessId,
+    isActive: true,
+    status: { $in: ["approved", "paid"] },
+  };
+
+  // If a specific status filter is provided, only allow approved/paid
+  if (request.query.status) {
+    if (
+      request.query.status !== "approved" &&
+      request.query.status !== "paid"
+    ) {
+      return reply.status(400).send({
+        error: "Invalid status filter",
+        message: "You can only view approved or paid invoices",
+      });
+    }
+    query.status = request.query.status;
+  }
+
+  // Date range filter
+  if (request.query.startDate || request.query.endDate) {
+    query.periodStart = {};
+    if (request.query.startDate) {
+      query.periodStart.$gte = request.query.startDate;
+    }
+    if (request.query.endDate) {
+      query.periodStart.$lte = request.query.endDate;
+    }
+  }
+
+  const result = await invoices.find(query).sort({ periodStart: -1 }).toArray();
+
+  return result;
+}
+
+// Get a single invoice by ID (staff only — own invoice, approved or paid)
+export async function getMyInvoiceById(
+  request: FastifyRequest<{ Params: IdParams }>,
+  reply: FastifyReply,
+) {
+  const invoices = request.server.mongo.db?.collection("invoices");
+  const eodReports = request.server.mongo.db?.collection("eod_reports");
+
+  if (!invoices || !eodReports) {
+    return reply.status(500).send({ error: "Database not available" });
+  }
+
+  const { id: staffId, businessId } = request.user;
+  const { id } = request.params;
+
+  if (!staffId || !businessId) {
+    return reply.status(400).send({ error: "Invalid staff token" });
+  }
+
+  if (!ObjectId.isValid(id)) {
+    return reply.status(400).send({ error: "Invalid invoice ID format" });
+  }
+
+  const invoice = await invoices.findOne({
+    _id: new ObjectId(id),
+    staffId,
+    businessId,
+    isActive: true,
+    status: { $in: ["approved", "paid"] },
+  });
+
+  if (!invoice) {
+    return reply.status(404).send({ error: "Invoice not found" });
+  }
+
+  // Fetch linked EOD reports for breakdown
+  const linkedEods =
+    invoice.eodIds && invoice.eodIds.length > 0
+      ? await eodReports
+          .find({
+            _id: {
+              $in: invoice.eodIds.map((eid: string) => new ObjectId(eid)),
+            },
+          })
+          .project({
+            _id: 1,
+            date: 1,
+            hoursWorked: 1,
+            tasksCompleted: 1,
+            status: 1,
+            isApproved: 1,
+          })
+          .sort({ date: 1 })
+          .toArray()
+      : [];
+
+  return {
+    ...invoice,
+    eodReports: linkedEods,
+  };
+}

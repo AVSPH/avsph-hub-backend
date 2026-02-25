@@ -108,7 +108,7 @@ The system will automatically generate `draft` invoices on a bi-monthly schedule
 ### Job Logic (per trigger)
 
 1. **Determine the period**: Based on the trigger date, calculate `periodStart` and `periodEnd`.
-2. **Fetch active staff**: Query all staff with `isActive: true` across all businesses.
+2. **Fetch active hourly staff**: Query all staff with `isActive: true` **and `salaryType: 'hourly'`** across all businesses. Staff with other salary types (daily, monthly, annual) are excluded from automatic generation.
 3. **For each staff member**:
    a. **Duplicate check**: Skip if an invoice already exists for this `staffId` + `businessId` + `periodStart` + `periodEnd`.
    b. **Query approved EODs**: Find all EOD reports where `staffId` matches, `date` is within the period, and `isApproved: true`.
@@ -125,29 +125,47 @@ import cron from "node-cron";
 import { FastifyInstance } from "fastify";
 
 export default fp(async (fastify: FastifyInstance) => {
-  // 1st of every month at midnight — covers previous month's 2nd half
-  cron.schedule("0 0 1 * *", async () => {
-    fastify.log.info(
-      "[CRON] Generating invoices for previous month 2nd half...",
-    );
+  // --- Startup Recovery: detect and generate any missing invoices ---
+  fastify.addHook("onReady", async () => {
+    fastify.log.info("[STARTUP] Checking for missing invoices...");
     try {
-      await generateInvoicesForPeriod(fastify, "second-half-previous");
+      await recoverMissingInvoices(fastify);
     } catch (err) {
-      fastify.log.error(err, "[CRON] Invoice generation failed");
+      fastify.log.error(err, "[STARTUP] Missing invoice recovery failed");
     }
   });
 
-  // 16th of every month at midnight — covers current month's 1st half
-  cron.schedule("0 0 16 * *", async () => {
-    fastify.log.info(
-      "[CRON] Generating invoices for current month 1st half...",
-    );
-    try {
-      await generateInvoicesForPeriod(fastify, "first-half-current");
-    } catch (err) {
-      fastify.log.error(err, "[CRON] Invoice generation failed");
-    }
-  });
+  // 1st of every month at midnight (Asia/Manila) — covers previous month's 2nd half
+  cron.schedule(
+    "0 0 1 * *",
+    async () => {
+      fastify.log.info(
+        "[CRON] Generating invoices for previous month 2nd half...",
+      );
+      try {
+        await generateInvoicesForPeriod(fastify, "second-half-previous");
+      } catch (err) {
+        fastify.log.error(err, "[CRON] Invoice generation failed");
+      }
+    },
+    { timezone: "Asia/Manila" },
+  );
+
+  // 16th of every month at midnight (Asia/Manila) — covers current month's 1st half
+  cron.schedule(
+    "0 0 16 * *",
+    async () => {
+      fastify.log.info(
+        "[CRON] Generating invoices for current month 1st half...",
+      );
+      try {
+        await generateInvoicesForPeriod(fastify, "first-half-current");
+      } catch (err) {
+        fastify.log.error(err, "[CRON] Invoice generation failed");
+      }
+    },
+    { timezone: "Asia/Manila" },
+  );
 
   // Graceful shutdown — stop all cron tasks when server closes
   fastify.addHook("onClose", () => {
@@ -208,19 +226,36 @@ npm install node-cron
 npm install -D @types/node-cron
 ```
 
-### Timezone Consideration
+### Timezone
 
-By default, `node-cron` uses the server's system timezone. To enforce a specific timezone (e.g., UTC or your business timezone):
-
-```typescript
-cron.schedule("0 0 1 * *", callback, { timezone: "Asia/Manila" });
-```
+All cron schedules are configured with `{ timezone: "Asia/Manila" }` as decided above. This ensures consistent invoice period boundaries regardless of which server or cloud region the app is deployed to.
 
 ---
 
-## Remaining Questions for You
+## Decisions (Resolved)
 
-1. **Pay Rate Structure**: Do ALL your VAs get paid hourly based on EOD hours, or do some have a fixed monthly salary where the hours logged are just for tracking and not direct pay calculation?
-2. **Draft vs Auto-Approve**: When the system runs the bi-monthly generation, should it automatically approve them if there are no errors, or do you prefer an admin manually reviews every invoice before the VA can see it?
-3. **Timezone**: What timezone should the cron jobs use? (e.g., `Asia/Manila`, `America/New_York`, or `UTC`?)
-4. **Missed Run Recovery**: Should the server auto-detect and generate missing invoices on startup, or is manual admin trigger sufficient?
+1. **Pay Rate Structure**: Most VAs are paid on an **hourly rate** basis. The primary calculation is `totalHoursWorked * baseSalary` (hourly rate). The `salaryType` field remains on the schema to support edge cases in the future, but the default and most common path is `hourly`. **Only staff with `salaryType: 'hourly'` are included in automatic (cron & startup recovery) invoice generation.** Staff with other salary types can still have invoices created manually by an admin if needed.
+
+2. **Draft vs Auto-Approve**: All generated invoices remain in **`draft`** status until an admin explicitly reviews and approves them. VAs/Staff should **not** see an invoice until its status is at least `approved`. This gives admins the opportunity to review hours, add adjustments (bonuses/deductions), and catch any discrepancies before the VA is notified.
+
+3. **Timezone**: All cron jobs will use **`Asia/Manila`** timezone.
+
+   ```typescript
+   cron.schedule("0 0 1 * *", callback, { timezone: "Asia/Manila" });
+   cron.schedule("0 0 16 * *", callback, { timezone: "Asia/Manila" });
+   ```
+
+4. **Missed Run Recovery**: The system will support **both** approaches:
+   - **Auto-detect on startup**: When the server boots, it checks for any invoice periods that should have been generated but weren't (e.g., server was down during a scheduled run). If missing periods are found, it automatically generates `draft` invoices for them.
+   - **Manual trigger**: Admins can also manually trigger invoice generation for any arbitrary period from the dashboard via a dedicated API endpoint (`POST /invoices/generate`). This reuses the same `generateInvoicesForPeriod` logic and includes duplicate prevention so it's safe to call multiple times.
+
+### Startup Recovery Logic
+
+On server start, the system will:
+
+1. Determine all expected invoice periods from the earliest active staff `createdAt` date up to the current date.
+2. For each period, check if invoices exist for all active **hourly-rate** staff members (`salaryType: 'hourly'`) assigned to businesses.
+3. For any missing staff+period combinations, generate `draft` invoices automatically.
+4. Log a summary of recovered invoices (e.g., `[STARTUP] Generated 3 missing draft invoices`).
+
+This ensures no invoices are lost due to server downtime, while the manual trigger serves as a fallback for ad-hoc or re-generation scenarios.
