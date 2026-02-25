@@ -1,1 +1,1 @@
-{"version":3,"file":"gmail.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/gmail/gmail.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAElD,QAAA,MAAM,WAAW,EAAE,kBAsFlB,CAAC;AAEF,eAAe,WAAW,CAAC"}
+{"version":3,"file":"gmail.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/gmail/gmail.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAElD,QAAA,MAAM,WAAW,EAAE,kBAqFlB,CAAC;AAEF,eAAe,WAAW,CAAC"}

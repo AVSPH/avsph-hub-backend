@@ -1,7 +1,6 @@
 const gmailRoutes = async (fastify) => {
     // POST /gmail/test - Send a test email via Gmail API (admin only)
     fastify.post("/gmail/test", {
-        preHandler: [fastify.authenticate],
         schema: {
             description: "Send a test email via the Gmail API to verify OAuth2 integration is working",
             tags: ["Gmail"],

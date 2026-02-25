@@ -32,7 +32,10 @@ export const envSchema = z.object({
     // Gmail OAuth2 Configuration
     GMAIL_CLIENT_ID: z.string().min(1, "GMAIL_CLIENT_ID is required"),
     GMAIL_CLIENT_SECRET: z.string().min(1, "GMAIL_CLIENT_SECRET is required"),
-    GMAIL_REDIRECT_URI: z.string().url().default("https://developers.google.com/oauthplayground"),
+    GMAIL_REDIRECT_URI: z
+        .string()
+        .url()
+        .default("https://developers.google.com/oauthplayground"),
     GMAIL_REFRESH_TOKEN: z.string().min(1, "GMAIL_REFRESH_TOKEN is required"),
 });
 //# sourceMappingURL=env.js.map
