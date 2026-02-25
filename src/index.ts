@@ -10,6 +10,7 @@ import {
   cloudinaryPlugin,
   multipartPlugin,
   nodemailerPlugin,
+  gmailPlugin,
 } from "./plugins/index.js";
 import routes from "./routes/routes.js";
 
@@ -38,6 +39,7 @@ async function buildApp() {
   await fastify.register(mongodbPlugin);
   await fastify.register(cloudinaryPlugin);
   await fastify.register(nodemailerPlugin);
+  await fastify.register(gmailPlugin);
   await fastify.register(authPlugin);
   await fastify.register(swaggerPlugin);
   await fastify.register(corsPlugin);

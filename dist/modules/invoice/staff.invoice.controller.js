@@ -38,10 +38,7 @@ export async function getMyInvoices(request, reply) {
             query.periodStart.$lte = request.query.endDate;
         }
     }
-    const result = await invoices
-        .find(query)
-        .sort({ periodStart: -1 })
-        .toArray();
+    const result = await invoices.find(query).sort({ periodStart: -1 }).toArray();
     return result;
 }
 // Get a single invoice by ID (staff only — own invoice, approved or paid)

@@ -17,6 +17,10 @@ export declare const envSchema: z.ZodObject<{
     SMTP_USER: z.ZodString;
     SMTP_PASS: z.ZodString;
     SMTP_FROM: z.ZodOptional<z.ZodString>;
+    GMAIL_CLIENT_ID: z.ZodString;
+    GMAIL_CLIENT_SECRET: z.ZodString;
+    GMAIL_REDIRECT_URI: z.ZodDefault<z.ZodString>;
+    GMAIL_REFRESH_TOKEN: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     PORT: number;
     HOST: string;
@@ -34,6 +38,10 @@ export declare const envSchema: z.ZodObject<{
     SMTP_SECURE: boolean;
     SMTP_USER: string;
     SMTP_PASS: string;
+    GMAIL_CLIENT_ID: string;
+    GMAIL_CLIENT_SECRET: string;
+    GMAIL_REDIRECT_URI: string;
+    GMAIL_REFRESH_TOKEN: string;
     SMTP_FROM?: string | undefined;
 }, {
     JWT_SECRET: string;
@@ -42,6 +50,9 @@ export declare const envSchema: z.ZodObject<{
     CLOUDINARY_API_SECRET: string;
     SMTP_USER: string;
     SMTP_PASS: string;
+    GMAIL_CLIENT_ID: string;
+    GMAIL_CLIENT_SECRET: string;
+    GMAIL_REFRESH_TOKEN: string;
     PORT?: string | undefined;
     HOST?: string | undefined;
     NODE_ENV?: "development" | "production" | "test" | undefined;
@@ -53,6 +64,7 @@ export declare const envSchema: z.ZodObject<{
     SMTP_PORT?: string | undefined;
     SMTP_SECURE?: string | undefined;
     SMTP_FROM?: string | undefined;
+    GMAIL_REDIRECT_URI?: string | undefined;
 }>;
 export type Env = z.infer<typeof envSchema>;
 declare module "fastify" {

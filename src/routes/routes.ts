@@ -13,6 +13,7 @@ import commentRoutes from "../modules/comment/comment.routes.js";
 import eodRoutes from "../modules/eod/eod.routes.js";
 import adminInvoiceRoutes from "../modules/invoice/admin.invoice.route.js";
 import staffInvoiceRoutes from "../modules/invoice/staff.invoice.route.js";
+import gmailRoutes from "../modules/gmail/gmail.routes.js";
 
 // Central routes aggregator - register all module routes here
 const routes: FastifyPluginAsync = async (fastify) => {
@@ -55,6 +56,9 @@ const routes: FastifyPluginAsync = async (fastify) => {
   // Invoice routes (admin + staff)
   await fastify.register(adminInvoiceRoutes);
   await fastify.register(staffInvoiceRoutes);
+
+  // Gmail routes (test)
+  await fastify.register(gmailRoutes);
 };
 
 export default routes;

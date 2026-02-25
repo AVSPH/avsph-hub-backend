@@ -54,7 +54,10 @@ const staffInvoiceRoutes = async (fastify) => {
             params: {
                 type: "object",
                 properties: {
-                    id: { type: "string", description: "Invoice ID (MongoDB ObjectId)" },
+                    id: {
+                        type: "string",
+                        description: "Invoice ID (MongoDB ObjectId)",
+                    },
                 },
                 required: ["id"],
             },

@@ -312,10 +312,7 @@ export async function getAllInvoices(request, reply) {
             query.businessId = { $in: businessIds };
         }
     }
-    const result = await invoices
-        .find(query)
-        .sort({ periodStart: -1 })
-        .toArray();
+    const result = await invoices.find(query).sort({ periodStart: -1 }).toArray();
     return result;
 }
 // Get invoice by ID
@@ -359,7 +356,9 @@ export async function getInvoiceById(request, reply) {
     const linkedEods = invoice.eodIds && invoice.eodIds.length > 0
         ? await eodReports
             .find({
-            _id: { $in: invoice.eodIds.map((eid) => new ObjectId(eid)) },
+            _id: {
+                $in: invoice.eodIds.map((eid) => new ObjectId(eid)),
+            },
         })
             .sort({ date: 1 })
             .toArray()
@@ -529,10 +528,7 @@ export async function getInvoicesByStaff(request, reply) {
             query.periodStart.$lte = request.query.endDate;
         }
     }
-    const result = await invoices
-        .find(query)
-        .sort({ periodStart: -1 })
-        .toArray();
+    const result = await invoices.find(query).sort({ periodStart: -1 }).toArray();
     return result;
 }
 // ==================== INVOICE ACTIONS ====================
