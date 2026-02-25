@@ -298,34 +298,65 @@ export async function getEodByBusiness(request, reply) {
         const matchingStaffIds = matchingStaff.map((s) => s._id.toString());
         query.staffId = { $in: matchingStaffIds };
     }
+    // Use aggregation pipeline with $lookup to join staff details
+    const pipeline = [
+        { $match: query },
+        { $sort: { date: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $addFields: {
+                staffObjectId: {
+                    $cond: {
+                        if: { $ne: [{ $type: "$staffId" }, "missing"] },
+                        then: { $toObjectId: "$staffId" },
+                        else: null,
+                    },
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: "staff",
+                localField: "staffObjectId",
+                foreignField: "_id",
+                as: "staffInfo",
+            },
+        },
+        {
+            $addFields: {
+                staffName: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$staffInfo" }, 0] },
+                        then: {
+                            $concat: [
+                                { $arrayElemAt: ["$staffInfo.firstName", 0] },
+                                " ",
+                                { $arrayElemAt: ["$staffInfo.lastName", 0] },
+                            ],
+                        },
+                        else: "Unknown",
+                    },
+                },
+                staffEmail: {
+                    $ifNull: [{ $arrayElemAt: ["$staffInfo.email", 0] }, null],
+                },
+            },
+        },
+        {
+            $project: {
+                staffInfo: 0,
+                staffObjectId: 0,
+            },
+        },
+    ];
     const [result, totalCount] = await Promise.all([
-        eodReports.find(query).sort({ date: -1 }).skip(skip).limit(limit).toArray(),
+        eodReports.aggregate(pipeline).toArray(),
         eodReports.countDocuments(query),
     ]);
-    // Enrich with staff details
-    const staffIds = [...new Set(result.map((r) => r.staffId))];
-    const staffMembers = staffIds.length
-        ? await staffCollection
-            .find({
-            _id: { $in: staffIds.map((id) => new ObjectId(id)) },
-        })
-            .project({ _id: 1, firstName: 1, lastName: 1, email: 1 })
-            .toArray()
-        : [];
-    const staffMap = new Map(staffMembers.map((s) => [
-        s._id.toString(),
-        {
-            staffName: `${s.firstName} ${s.lastName}`,
-            staffEmail: s.email,
-        },
-    ]));
-    const enrichedResult = result.map((r) => ({
-        ...r,
-        ...(staffMap.get(r.staffId) || {}),
-    }));
     const totalPages = Math.ceil(totalCount / limit);
     return {
-        data: enrichedResult,
+        data: result,
         pagination: {
             page,
             limit,

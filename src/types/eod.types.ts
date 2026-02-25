@@ -116,6 +116,9 @@ export const eodReportJsonSchema = {
     isActive: { type: "boolean" },
     createdAt: { type: "string", format: "date-time" },
     updatedAt: { type: "string", format: "date-time" },
+    // Enriched fields (populated by backend lookups)
+    staffName: { type: "string" },
+    staffEmail: { type: "string" },
   },
   required: ["staffId", "businessId", "date", "hoursWorked", "tasksCompleted"],
 } as const;

@@ -202,6 +202,12 @@ export declare const eodReportJsonSchema: {
             readonly type: "string";
             readonly format: "date-time";
         };
+        readonly staffName: {
+            readonly type: "string";
+        };
+        readonly staffEmail: {
+            readonly type: "string";
+        };
     };
     readonly required: readonly ["staffId", "businessId", "date", "hoursWorked", "tasksCompleted"];
 };

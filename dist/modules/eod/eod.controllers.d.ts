@@ -44,11 +44,7 @@ export declare function getEodByBusiness(request: FastifyRequest<{
     Params: BusinessIdParams;
     Querystring: EodQuery;
 }>, reply: FastifyReply): Promise<{
-    data: {
-        staffName?: string | undefined;
-        staffEmail?: any;
-        _id: ObjectId;
-    }[];
+    data: import("bson").Document[];
     pagination: {
         page: number;
         limit: number;
