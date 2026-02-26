@@ -11,6 +11,7 @@ import {
   editOwnEod,
   getMyEodReports,
   getMyEodById,
+  getMyExpectedEarnings,
   getAllEodReports,
   getEodByBusiness,
   getEodByStaff,
@@ -22,6 +23,73 @@ import {
 
 const eodRoutes: FastifyPluginAsync = async (fastify) => {
   // ==================== STAFF ROUTES ====================
+
+  // GET /eod/my-earnings - Staff views expected earnings for current pay cycle
+  fastify.get<{
+    Querystring: {
+      periodStart?: string;
+      periodEnd?: string;
+    };
+  }>(
+    "/eod/my-earnings",
+    {
+      preHandler: [fastify.authenticateStaff],
+      schema: {
+        description:
+          "Get expected earnings for the current (or specified) pay cycle based on approved EODs",
+        tags: ["EOD Reports"],
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: "object",
+          properties: {
+            periodStart: {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              description:
+                "Start of the pay period (YYYY-MM-DD). If omitted, auto-detects current cycle.",
+            },
+            periodEnd: {
+              type: "string",
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              description:
+                "End of the pay period (YYYY-MM-DD). If omitted, auto-detects current cycle.",
+            },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              periodStart: { type: "string" },
+              periodEnd: { type: "string" },
+              totalHoursWorked: { type: "number" },
+              totalDaysWorked: { type: "number" },
+              baseSalary: { type: "number" },
+              salaryType: { type: "string" },
+              estimatedPay: { type: "number" },
+              approvedEodCount: { type: "number" },
+              pendingEodCount: { type: "number" },
+              nextPayoutDate: { type: "string" },
+            },
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+          404: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    getMyExpectedEarnings,
+  );
 
   // POST /eod - Staff submits an EOD report
   fastify.post(

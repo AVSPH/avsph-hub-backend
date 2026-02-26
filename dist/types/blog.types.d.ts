@@ -23,8 +23,8 @@ export declare const blogSchema: z.ZodObject<{
     content: string;
     title: string;
     isActive: boolean;
-    slug: string;
     businessId: string;
+    slug: string;
     authorId: string;
     viewCount: number;
     commentCount: number;
@@ -39,8 +39,8 @@ export declare const blogSchema: z.ZodObject<{
 }, {
     content: string;
     title: string;
-    slug: string;
     businessId: string;
+    slug: string;
     authorId: string;
     status?: "draft" | "published" | undefined;
     _id?: string | undefined;
@@ -78,8 +78,8 @@ export declare const createBlogSchema: z.ZodObject<Omit<{
     content: string;
     title: string;
     isActive: boolean;
-    slug: string;
     businessId: string;
+    slug: string;
     viewCount: number;
     commentCount: number;
     excerpt?: string | undefined;
@@ -89,8 +89,8 @@ export declare const createBlogSchema: z.ZodObject<Omit<{
 }, {
     content: string;
     title: string;
-    slug: string;
     businessId: string;
+    slug: string;
     status?: "draft" | "published" | undefined;
     isActive?: boolean | undefined;
     excerpt?: string | undefined;
@@ -105,12 +105,12 @@ export declare const updateBlogSchema: z.ZodObject<Omit<{
     content: z.ZodOptional<z.ZodString>;
     title: z.ZodOptional<z.ZodString>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+    businessId: z.ZodOptional<z.ZodString>;
     slug: z.ZodOptional<z.ZodString>;
     excerpt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     featuredImage: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     contentImages: z.ZodOptional<z.ZodOptional<z.ZodArray<z.ZodString, "many">>>;
     category: z.ZodOptional<z.ZodOptional<z.ZodString>>;
-    businessId: z.ZodOptional<z.ZodString>;
     viewCount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     commentCount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
 }, "businessId">, "strip", z.ZodTypeAny, {

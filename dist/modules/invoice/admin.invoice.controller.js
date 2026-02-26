@@ -265,6 +265,97 @@ export async function generateBusinessInvoices(request, reply) {
         ...results,
     };
 }
+// ==================== RECALCULATE ====================
+// Recalculate invoice from current approved EODs (admin only — draft/calculated only)
+export async function recalculateInvoice(request, reply) {
+    const invoices = request.server.mongo.db?.collection("invoices");
+    const eodReports = request.server.mongo.db?.collection("eod_reports");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    if (!invoices || !eodReports || !businesses) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { id } = request.params;
+    if (!ObjectId.isValid(id)) {
+        return reply.status(400).send({ error: "Invalid invoice ID format" });
+    }
+    const invoice = await invoices.findOne({
+        _id: new ObjectId(id),
+        isActive: true,
+    });
+    if (!invoice) {
+        return reply.status(404).send({ error: "Invoice not found" });
+    }
+    // Only allow recalculate on draft or calculated invoices
+    if (invoice.status === "approved" || invoice.status === "paid") {
+        return reply.status(400).send({
+            error: "Cannot recalculate",
+            message: `Cannot recalculate an invoice with status '${invoice.status}'. Only draft or calculated invoices can be recalculated.`,
+        });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(invoice.businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this invoice",
+            });
+        }
+    }
+    // Store previous values for comparison
+    const previousTotal = invoice.totalHoursWorked;
+    const previousEodIds = new Set(invoice.eodIds || []);
+    // Re-query all currently approved EODs for the period
+    const eodRecords = await eodReports
+        .find({
+        staffId: invoice.staffId,
+        businessId: invoice.businessId,
+        isApproved: true,
+        isActive: true,
+        date: { $gte: invoice.periodStart, $lte: invoice.periodEnd },
+    })
+        .toArray();
+    const totalHoursWorked = eodRecords.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
+    const uniqueDates = new Set(eodRecords.map((record) => record.date));
+    const totalDaysWorked = uniqueDates.size;
+    const eodIds = eodRecords.map((record) => record._id.toString());
+    const newEodIdSet = new Set(eodIds);
+    // Calculate how many EODs were added/removed
+    const eodsAdded = eodIds.filter((eid) => !previousEodIds.has(eid)).length;
+    const eodsRemoved = [...previousEodIds].filter((eid) => !newEodIdSet.has(eid)).length;
+    const calculatedPay = calculatePay(invoice.salaryType, invoice.baseSalary, Math.round(totalHoursWorked * 100) / 100, totalDaysWorked);
+    // Recalculate net pay with existing adjustments
+    const deductionsTotal = (invoice.deductions || []).reduce((sum, d) => sum + d.amount, 0);
+    const additionsTotal = (invoice.additions || []).reduce((sum, a) => sum + a.amount, 0);
+    const netPay = Math.round((calculatedPay + additionsTotal - deductionsTotal) * 100) / 100;
+    const now = new Date().toISOString();
+    const result = await invoices.findOneAndUpdate({ _id: new ObjectId(id) }, {
+        $set: {
+            totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+            totalDaysWorked,
+            eodIds,
+            eodCount: eodRecords.length,
+            calculatedPay,
+            netPay,
+            updatedAt: now,
+        },
+    }, { returnDocument: "after" });
+    return {
+        ...result,
+        message: "Invoice recalculated successfully",
+        recalculation: {
+            previousHoursWorked: previousTotal,
+            newHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+            previousPay: invoice.calculatedPay,
+            newPay: calculatedPay,
+            eodsAdded,
+            eodsRemoved,
+        },
+    };
+}
 // ==================== INVOICE RETRIEVAL ====================
 // Get all invoices (admin — filtered by business access)
 export async function getAllInvoices(request, reply) {

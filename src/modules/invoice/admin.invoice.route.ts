@@ -13,6 +13,7 @@ import {
   getInvoiceById,
   getInvoicesByBusiness,
   getInvoicesByStaff,
+  recalculateInvoice,
   approveInvoice,
   markInvoicePaid,
   addInvoiceAdjustment,
@@ -385,6 +386,69 @@ const adminInvoiceRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // ==================== INVOICE ACTIONS ====================
+
+  // PUT /invoices/:id/recalculate - Recalculate invoice from current approved EODs
+  fastify.put<{ Params: { id: string } }>(
+    "/invoices/:id/recalculate",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "Recalculate an invoice by re-aggregating all currently approved EODs for its period. Only works on draft or calculated invoices.",
+        tags: ["Invoices"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "Invoice ID (MongoDB ObjectId)",
+            },
+          },
+          required: ["id"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              ...invoiceJsonSchema.properties,
+              message: { type: "string" },
+              recalculation: {
+                type: "object",
+                properties: {
+                  previousHoursWorked: { type: "number" },
+                  newHoursWorked: { type: "number" },
+                  previousPay: { type: "number" },
+                  newPay: { type: "number" },
+                  eodsAdded: { type: "number" },
+                  eodsRemoved: { type: "number" },
+                },
+              },
+            },
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+          403: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+          404: {
+            type: "object",
+            properties: { error: { type: "string" } },
+          },
+        },
+      },
+    },
+    recalculateInvoice,
+  );
 
   // PUT /invoices/:id/approve - Approve invoice
   fastify.put<{ Params: { id: string } }>(

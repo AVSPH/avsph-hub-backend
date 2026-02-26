@@ -1,6 +1,139 @@
 import { ObjectId } from "@fastify/mongodb";
 import { submitEodSchema, editOwnEodSchema, reviewEodSchema, adminEditEodSchema, } from "../../types/eod.types.js";
 // ==================== STAFF ACTIONS ====================
+// Helper: Get current pay cycle boundaries
+function getCurrentPayCycle() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed
+    const day = now.getDate();
+    if (day <= 15) {
+        // Current cycle: 1st – 15th, payout on the 16th
+        const start = new Date(year, month, 1);
+        const end = new Date(year, month, 15);
+        const payout = new Date(year, month, 16);
+        return {
+            periodStart: start.toISOString().split("T")[0],
+            periodEnd: end.toISOString().split("T")[0],
+            nextPayoutDate: payout.toISOString().split("T")[0],
+        };
+    }
+    else {
+        // Current cycle: 16th – last day, payout on the 1st of next month
+        const start = new Date(year, month, 16);
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const end = new Date(year, month, lastDay);
+        const payout = new Date(year, month + 1, 1);
+        return {
+            periodStart: start.toISOString().split("T")[0],
+            periodEnd: end.toISOString().split("T")[0],
+            nextPayoutDate: payout.toISOString().split("T")[0],
+        };
+    }
+}
+// Get expected earnings for current pay cycle (staff only — real-time aggregation)
+export async function getMyExpectedEarnings(request, reply) {
+    const eodReports = request.server.mongo.db?.collection("eod_reports");
+    const staff = request.server.mongo.db?.collection("staff");
+    if (!eodReports || !staff) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { id: staffId, businessId } = request.user;
+    if (!staffId || !businessId) {
+        return reply.status(400).send({ error: "Invalid staff token" });
+    }
+    // Get staff member for salary info
+    const staffMember = await staff.findOne({
+        _id: new ObjectId(staffId),
+        isActive: true,
+    });
+    if (!staffMember) {
+        return reply.status(404).send({ error: "Staff member not found" });
+    }
+    if (!staffMember.salary || !staffMember.salaryType) {
+        return reply.status(400).send({
+            error: "Missing salary information",
+            message: "Your salary configuration is not set up yet. Contact your admin.",
+        });
+    }
+    // Determine period: use query params or auto-detect current cycle
+    let periodStart;
+    let periodEnd;
+    let nextPayoutDate;
+    if (request.query.periodStart && request.query.periodEnd) {
+        periodStart = request.query.periodStart;
+        periodEnd = request.query.periodEnd;
+        // Calculate next payout based on period end
+        const endDate = new Date(periodEnd);
+        const endDay = endDate.getDate();
+        if (endDay <= 15) {
+            nextPayoutDate = new Date(endDate.getFullYear(), endDate.getMonth(), 16)
+                .toISOString()
+                .split("T")[0];
+        }
+        else {
+            nextPayoutDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1)
+                .toISOString()
+                .split("T")[0];
+        }
+    }
+    else {
+        const cycle = getCurrentPayCycle();
+        periodStart = cycle.periodStart;
+        periodEnd = cycle.periodEnd;
+        nextPayoutDate = cycle.nextPayoutDate;
+    }
+    // Query approved EODs
+    const approvedEods = await eodReports
+        .find({
+        staffId,
+        businessId,
+        isApproved: true,
+        isActive: true,
+        date: { $gte: periodStart, $lte: periodEnd },
+    })
+        .toArray();
+    // Query pending EODs (submitted but not yet approved)
+    const pendingEodCount = await eodReports.countDocuments({
+        staffId,
+        businessId,
+        isApproved: false,
+        isActive: true,
+        status: { $in: ["submitted", "needs_revision"] },
+        date: { $gte: periodStart, $lte: periodEnd },
+    });
+    const totalHoursWorked = approvedEods.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
+    const uniqueDates = new Set(approvedEods.map((r) => r.date));
+    const totalDaysWorked = uniqueDates.size;
+    // Calculate estimated pay
+    let estimatedPay = 0;
+    switch (staffMember.salaryType) {
+        case "hourly":
+            estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
+            break;
+        case "daily":
+            estimatedPay = Math.round(staffMember.salary * totalDaysWorked * 100) / 100;
+            break;
+        case "monthly":
+            estimatedPay = staffMember.salary;
+            break;
+        case "annual":
+            estimatedPay = Math.round((staffMember.salary / 12) * 100) / 100;
+            break;
+    }
+    return {
+        periodStart,
+        periodEnd,
+        totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+        totalDaysWorked,
+        baseSalary: staffMember.salary,
+        salaryType: staffMember.salaryType,
+        estimatedPay,
+        approvedEodCount: approvedEods.length,
+        pendingEodCount,
+        nextPayoutDate,
+    };
+}
 // Submit EOD Report (staff only)
 export async function submitEod(request, reply) {
     const eodReports = request.server.mongo.db?.collection("eod_reports");

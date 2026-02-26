@@ -1,5 +1,5 @@
 import { invoiceJsonSchema, generateInvoiceJsonSchema, generateBusinessInvoiceJsonSchema, approveInvoiceJsonSchema, addInvoiceAdjustmentJsonSchema, } from "../../types/invoice.types.js";
-import { generateInvoice, generateBusinessInvoices, getAllInvoices, getInvoiceById, getInvoicesByBusiness, getInvoicesByStaff, approveInvoice, markInvoicePaid, addInvoiceAdjustment, removeInvoiceAdjustment, deleteInvoice, } from "./admin.invoice.controller.js";
+import { generateInvoice, generateBusinessInvoices, getAllInvoices, getInvoiceById, getInvoicesByBusiness, getInvoicesByStaff, recalculateInvoice, approveInvoice, markInvoicePaid, addInvoiceAdjustment, removeInvoiceAdjustment, deleteInvoice, } from "./admin.invoice.controller.js";
 const adminInvoiceRoutes = async (fastify) => {
     // ==================== INVOICE GENERATION ====================
     // POST /invoices/generate - Generate invoice for a single staff member
@@ -303,6 +303,63 @@ const adminInvoiceRoutes = async (fastify) => {
         },
     }, getInvoicesByStaff);
     // ==================== INVOICE ACTIONS ====================
+    // PUT /invoices/:id/recalculate - Recalculate invoice from current approved EODs
+    fastify.put("/invoices/:id/recalculate", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "Recalculate an invoice by re-aggregating all currently approved EODs for its period. Only works on draft or calculated invoices.",
+            tags: ["Invoices"],
+            security: [{ bearerAuth: [] }],
+            params: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "string",
+                        description: "Invoice ID (MongoDB ObjectId)",
+                    },
+                },
+                required: ["id"],
+            },
+            response: {
+                200: {
+                    type: "object",
+                    properties: {
+                        ...invoiceJsonSchema.properties,
+                        message: { type: "string" },
+                        recalculation: {
+                            type: "object",
+                            properties: {
+                                previousHoursWorked: { type: "number" },
+                                newHoursWorked: { type: "number" },
+                                previousPay: { type: "number" },
+                                newPay: { type: "number" },
+                                eodsAdded: { type: "number" },
+                                eodsRemoved: { type: "number" },
+                            },
+                        },
+                    },
+                },
+                400: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        message: { type: "string" },
+                    },
+                },
+                403: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        message: { type: "string" },
+                    },
+                },
+                404: {
+                    type: "object",
+                    properties: { error: { type: "string" } },
+                },
+            },
+        },
+    }, recalculateInvoice);
     // PUT /invoices/:id/approve - Approve invoice
     fastify.put("/invoices/:id/approve", {
         preHandler: [fastify.authenticate],

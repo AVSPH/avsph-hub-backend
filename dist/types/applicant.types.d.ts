@@ -18,12 +18,12 @@ export declare const applicantSchema: z.ZodObject<{
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected";
+    isActive: boolean;
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     position: string;
-    isActive: boolean;
-    businessId: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -33,11 +33,11 @@ export declare const applicantSchema: z.ZodObject<{
     notes?: string | undefined;
     appliedAt?: string | undefined;
 }, {
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     position: string;
-    businessId: string;
     status?: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
@@ -66,22 +66,22 @@ export declare const createApplicantSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "status" | "_id" | "isActive" | "notes" | "appliedAt">, "strip", z.ZodTypeAny, {
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     position: string;
-    businessId: string;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
     resumeUrl?: string | undefined;
     coverLetter?: string | undefined;
 }, {
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     position: string;
-    businessId: string;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;

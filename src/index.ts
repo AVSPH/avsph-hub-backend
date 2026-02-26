@@ -11,6 +11,7 @@ import {
   multipartPlugin,
   nodemailerPlugin,
   gmailPlugin,
+  cronPlugin,
 } from "./plugins/index.js";
 import routes from "./routes/routes.js";
 
@@ -44,6 +45,7 @@ async function buildApp() {
   await fastify.register(swaggerPlugin);
   await fastify.register(corsPlugin);
   await fastify.register(securityPlugin);
+  await fastify.register(cronPlugin);
 
   // Register all API routes with /api prefix
   await fastify.register(routes, { prefix: "/api" });

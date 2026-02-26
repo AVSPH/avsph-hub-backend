@@ -64,8 +64,8 @@ export declare const invoiceSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status: "draft" | "approved" | "calculated" | "paid";
     isActive: boolean;
-    businessId: string;
     salaryType: "hourly" | "daily" | "monthly" | "annual";
+    businessId: string;
     staffId: string;
     periodStart: string;
     periodEnd: string;
@@ -94,8 +94,8 @@ export declare const invoiceSchema: z.ZodObject<{
     approvedAt?: string | undefined;
     paidAt?: string | undefined;
 }, {
-    businessId: string;
     salaryType: "hourly" | "daily" | "monthly" | "annual";
+    businessId: string;
     staffId: string;
     periodStart: string;
     periodEnd: string;
@@ -103,11 +103,6 @@ export declare const invoiceSchema: z.ZodObject<{
     status?: "draft" | "approved" | "calculated" | "paid" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
-    notes?: string | undefined;
-    approvedBy?: string | undefined;
-    approvedAt?: string | undefined;
     totalHoursWorked?: number | undefined;
     totalDaysWorked?: number | undefined;
     calculatedPay?: number | undefined;
@@ -122,9 +117,14 @@ export declare const invoiceSchema: z.ZodObject<{
         description?: string | undefined;
     }[] | undefined;
     netPay?: number | undefined;
-    paidAt?: string | undefined;
     eodIds?: string[] | undefined;
     eodCount?: number | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
+    notes?: string | undefined;
+    approvedBy?: string | undefined;
+    approvedAt?: string | undefined;
+    paidAt?: string | undefined;
 }>;
 export declare const generateInvoiceSchema: z.ZodObject<{
     staffId: z.ZodString;

@@ -56,23 +56,23 @@ export declare const staffSchema: z.ZodObject<{
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "active" | "on_leave" | "terminated";
+    isActive: boolean;
+    salaryType: "hourly" | "daily" | "monthly" | "annual";
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     position: string;
     dateHired: string;
-    isActive: boolean;
-    businessId: string;
-    salaryType: "hourly" | "daily" | "monthly" | "annual";
     employmentType: "full-time" | "part-time" | "contract";
     _id?: string | undefined;
+    salary?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     department?: string | undefined;
-    salary?: number | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -81,23 +81,23 @@ export declare const staffSchema: z.ZodObject<{
         uploadedAt: string;
     }[] | undefined;
 }, {
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     position: string;
     dateHired: string;
-    businessId: string;
     status?: "active" | "on_leave" | "terminated" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
+    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
+    salary?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     department?: string | undefined;
-    salary?: number | undefined;
-    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     photoUrl?: string | undefined;
     documents?: {
@@ -144,30 +144,30 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "status" | "_id" | "isActive" | "createdAt" | "updatedAt" | "notes" | "photoUrl" | "documents">, "strip", z.ZodTypeAny, {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    position: string;
-    dateHired: string;
-    businessId: string;
     salaryType: "hourly" | "daily" | "monthly" | "annual";
-    employmentType: "full-time" | "part-time" | "contract";
-    phone?: string | undefined;
-    department?: string | undefined;
-    salary?: number | undefined;
-}, {
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     position: string;
     dateHired: string;
-    businessId: string;
+    employmentType: "full-time" | "part-time" | "contract";
+    salary?: number | undefined;
     phone?: string | undefined;
     department?: string | undefined;
-    salary?: number | undefined;
+}, {
+    businessId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    position: string;
+    dateHired: string;
     salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
+    salary?: number | undefined;
+    phone?: string | undefined;
+    department?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
 }>;
 export declare const updateStaffSchema: z.ZodObject<{
@@ -186,31 +186,31 @@ export declare const updateStaffSchema: z.ZodObject<{
     isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     status?: "active" | "on_leave" | "terminated" | undefined;
+    isActive?: boolean | undefined;
+    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
+    salary?: number | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
     position?: string | undefined;
     dateHired?: string | undefined;
-    isActive?: boolean | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     department?: string | undefined;
-    salary?: number | undefined;
-    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
 }, {
     status?: "active" | "on_leave" | "terminated" | undefined;
+    isActive?: boolean | undefined;
+    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
+    salary?: number | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
     position?: string | undefined;
     dateHired?: string | undefined;
-    isActive?: boolean | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     department?: string | undefined;
-    salary?: number | undefined;
-    salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
 }>;
 export declare const staffLoginSchema: z.ZodObject<{

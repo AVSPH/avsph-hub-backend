@@ -4,6 +4,8 @@
 
 We are transitioning the traditional "Payroll" system to an **Invoice** system. Instead of calculating pay based on exact clock in/out times, we will generate bi-monthly invoices based on the `hoursWorked` logged in the **approved End of Day (EOD) Reports**.
 
+Staff/VAs can view their **expected earnings in real-time** (a live aggregation from approved EODs), independent of whether an invoice document exists yet. Invoices are admin-controlled artifacts that go through a `draft → calculated → approved → paid` lifecycle.
+
 ## Payout Schedule (Bi-Monthly)
 
 Invoices will be generated twice a month:
@@ -11,14 +13,61 @@ Invoices will be generated twice a month:
 1. **First Half**: 1st day of the month to the 15th day.
 2. **Second Half**: 16th day of the month to the last day of the month.
 
+---
+
+## Staff Expected Earnings (Real-Time — No Invoice Required)
+
+### Problem
+
+Staff need to see how much they will be paid for the current pay cycle **before** an invoice is generated or approved. This should not depend on an invoice document existing.
+
+### Solution — Live Aggregation Endpoint
+
+A lightweight read-only endpoint that queries approved EODs in real-time:
+
+```
+GET /eod/my-earnings?periodStart=2026-02-16&periodEnd=2026-02-28
+```
+
+If no dates are provided, the endpoint auto-detects the **current active pay cycle**:
+
+- If today is between the 1st–15th → period is `1st – 15th` of the current month.
+- If today is between the 16th–end → period is `16th – last day` of the current month.
+
+#### Response Shape
+
+```json
+{
+  "periodStart": "2026-02-16",
+  "periodEnd": "2026-02-28",
+  "totalHoursWorked": 72,
+  "totalDaysWorked": 9,
+  "baseSalary": 5,
+  "salaryType": "hourly",
+  "estimatedPay": 360,
+  "approvedEodCount": 9,
+  "pendingEodCount": 2,
+  "nextPayoutDate": "2026-03-01"
+}
+```
+
+#### Key Rules
+
+- **No document is created.** This is a pure aggregation query (`approved EODs` + `staff.salary`).
+- **Only approved EODs** count toward `estimatedPay`. Pending/needs_revision EODs are shown as `pendingEodCount` for transparency.
+- Staff sees this on their dashboard as an "Expected Earnings" card — always up to date.
+- `nextPayoutDate` is the upcoming 1st or 16th when the invoice would be generated.
+
+---
+
 ## Core Mechanics
 
 1. **EOD Linking**: When generating an invoice for a specific period, the system will query all _approved_ EOD reports for the `staffId` within that date range.
-2. **Calculation**: Total Pay = Sum(`EOD.hoursWorked`) \* `Staff.salary` (if hourly basis) or a pro-rated amount based on the salary type and days worked.
+2. **Calculation**: Total Pay = Sum(`EOD.hoursWorked`) \* `Staff.salary` (hourly rate). The `salaryType` field supports edge cases but the primary path is `hourly`.
 3. **Adjustments**: The admin can add manual additions (bonuses) or deductions before finalizing the invoice.
-4. **PDF Generation**: Once the invoice is approved/finalized, the system will generate a PDF copy that the staff/VA can download for their own records.
+4. **PDF Generation**: Frontend-only via `html2pdf.js`, `react-pdf`, or browser print-to-pdf.
 
-## Proposed Schema updates (`invoice.schema.ts` replacing `payroll.schema.ts`)
+## Invoice Schema (Already Implemented — `invoice.schema.ts`)
 
 ```typescript
 export interface InvoiceAdjustmentType {
@@ -33,12 +82,12 @@ export interface InvoiceDocumentType {
   businessId: string; // ID of the Client/Business
 
   // Period details
-  periodStart: string; // e.g., '2023-11-01'
-  periodEnd: string; // e.g., '2023-11-15'
+  periodStart: string; // e.g., '2026-02-01'
+  periodEnd: string; // e.g., '2026-02-15'
 
   // Calculation Base
   totalHoursWorked: number; // Sum of EOD hours
-  totalDaysWorked: number; // Count of EODs submitted
+  totalDaysWorked: number; // Count of approved EODs
   salaryType: "hourly" | "daily" | "monthly" | "annual";
   baseSalary: number; // The rate configured on the Staff member
 
@@ -49,11 +98,8 @@ export interface InvoiceDocumentType {
   netPay: number; // Final amount to be paid
 
   // Linkages
-  eodIds: string[]; // Replaces attendanceIds; references approved EODs
-  eodCount: number; // Handled instead of attendanceCount
-
-  // Document Generation (Removed backend storage requirement)
-  // pdfUrl?: string; // No longer needed, PDF is generated on the fly via frontend
+  eodIds: string[]; // References to approved EODs included in this invoice
+  eodCount: number;
 
   // State
   status: "draft" | "calculated" | "approved" | "paid";
@@ -69,6 +115,92 @@ export interface InvoiceDocumentType {
 }
 ```
 
+---
+
+## Invoice Generation Strategy: Generate Once + Recalculate on Demand
+
+### The Problem
+
+What happens when an EOD gets approved **after** the invoice for that period was already generated? For example:
+
+- Cron generates a draft invoice on March 1st for the Feb 16–28 period.
+- On March 3rd, the admin approves a late EOD from Feb 20th.
+- The existing draft invoice is now missing that EOD's hours.
+
+### The Solution — Three Mechanisms
+
+| Mechanism              | Endpoint                          | Purpose                                                                                                                                                                                                   |
+| ---------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cron auto-generate** | _(internal, runs on 1st/16th)_    | Creates `draft` invoices for all hourly staff. Uses unique constraint: `staffId + businessId + periodStart + periodEnd`. Safe to re-run.                                                                  |
+| **Recalculate**        | `PATCH /invoices/:id/recalculate` | Re-queries approved EODs for the invoice's period, updates `totalHoursWorked`, `eodIds`, `calculatedPay`, `netPay`. **Only works on `draft` or `calculated` status** — cannot recalculate after approval. |
+| **Manual generate**    | `POST /invoices/generate`         | Admin triggers for any arbitrary period. Same duplicate check. If an invoice already exists for that staff+period, it returns the existing one (admin can then recalculate if needed).                    |
+
+### Why This Approach?
+
+| Alternative                                  | Problem                                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Strict 1st/16th only (no recalculate)        | Breaks when an EOD gets approved late. Admin would have to delete and recreate the invoice.                                     |
+| Auto-update invoice on EOD approval          | Complex event-driven coupling between EOD and invoice modules. Race conditions, hard to debug, invoice amounts change silently. |
+| **Generate once + Recalculate on demand** ✅ | Simple, explicit, admin-controlled. Admin knows exactly when the numbers change. No silent mutations.                           |
+
+### The Complete Flow
+
+```
+Staff submits EOD → Admin approves EOD
+    ↓
+Staff sees updated "Expected Earnings" instantly (real-time aggregation query)
+    ↓
+1st or 16th arrives → Cron generates draft invoices (snapshot of approved EODs at that moment)
+    ↓
+Admin reviews draft → Notices a late EOD was approved after generation → Clicks "Recalculate"
+    ↓
+Invoice re-aggregates all approved EODs for that period → totals update
+    ↓
+Admin adds adjustments (bonuses/deductions) → Approves invoice
+    ↓
+Staff sees finalized invoice under "My Invoices" (only approved+ invoices are visible to staff)
+```
+
+---
+
+## Recalculate Endpoint Details
+
+### `PATCH /invoices/:id/recalculate`
+
+**Who can call**: Admin only
+**Allowed statuses**: `draft`, `calculated` (not `approved` or `paid`)
+
+#### Logic:
+
+1. Fetch the invoice by ID.
+2. Verify status is `draft` or `calculated` (reject otherwise — approved invoices are locked).
+3. Re-query all approved EODs for `staffId` + `businessId` where `date` is between `periodStart` and `periodEnd`.
+4. Recalculate:
+   - `totalHoursWorked` = sum of all matched EOD `hoursWorked`
+   - `totalDaysWorked` = count of matched EODs
+   - `eodIds` = array of matched EOD `_id`s
+   - `eodCount` = length of `eodIds`
+   - `calculatedPay` = `totalHoursWorked * baseSalary` (for hourly)
+   - `netPay` = `calculatedPay + sum(additions) - sum(deductions)`
+5. Update the invoice document.
+6. Return the updated invoice.
+
+#### Response:
+
+```json
+{
+  "message": "Invoice recalculated successfully",
+  "previousTotal": 320,
+  "newTotal": 360,
+  "eodsAdded": 1,
+  "eodsRemoved": 0
+}
+```
+
+> **Note:** If an EOD's approval is _revoked_ (e.g., admin un-approves it), recalculating will also remove that EOD from the invoice — the numbers always reflect the current state of approved EODs.
+
+---
+
 ## PDF Generation Workflow (Frontend-Only)
 
 Instead of generating and storing PDFs on the backend, the process is streamlined:
@@ -80,15 +212,24 @@ Instead of generating and storing PDFs on the backend, the process is streamline
 
 ## Dashboard Views (Frontend)
 
-1. **Admin/Manager View**:
-   - A table listing all generated invoices.
-   - Ability to "Generate Invoices" for a selected period (e.g., select First Half of Nov -> system finds all EODs for all active staff and creates `draft` invoices).
-   - Ability to click into an individual invoice, review the list of aggregated EODs, add bonuses/deductions, and click "Approve".
+### Admin/Manager View
 
-2. **VA/Staff View**:
-   - Under a "My Earnings" or "My Invoices" tab, they see a clean list of their finalized invoices.
-   - Click to see a breakdown of the hours worked for that period.
-   - A button to "Download PDF", which triggers the frontend string-to-pdf generation of their invoice view.
+- A table listing all generated invoices with filters (status, business, period, staff).
+- **"Generate Invoices"** button: select a period → system finds all EODs for all active hourly staff and creates `draft` invoices.
+- Click into an individual invoice:
+  - Review the list of aggregated EODs.
+  - **"Recalculate"** button (visible on `draft`/`calculated` invoices) — re-aggregates EODs to catch any late approvals.
+  - Add bonuses/deductions.
+  - Click "Approve" to finalize.
+
+### VA/Staff View
+
+- **"Expected Earnings" card** on the dashboard — real-time aggregation, always shows current pay cycle projection based on approved EODs. No invoice needed.
+- **"My Invoices" tab** — list of `approved` and `paid` invoices only (staff never sees `draft`).
+  - Click to see a breakdown of hours worked for that period.
+  - **"Download PDF"** button — frontend-only PDF generation.
+
+---
 
 ## Scheduled Invoice Generation (Background Job)
 
@@ -215,9 +356,10 @@ function getPeriodDates(type: "second-half-previous" | "first-half-current"): {
 ### Error Handling & Resilience
 
 - **Per-staff try/catch**: If invoice generation fails for one staff member, it logs the error and continues to the next. One failure does not block the entire batch.
-- **Duplicate prevention**: The job checks for existing invoices before creating. This means if the cron fires twice (server restart, etc.), it won't create duplicates.
+- **Duplicate prevention**: The job checks for existing invoices before creating. This means if the cron fires twice (server restart, etc.), it won't create duplicates. The unique constraint is: `staffId + businessId + periodStart + periodEnd`.
 - **Manual fallback**: Admins can still manually trigger invoice generation from the dashboard for any period. The same `generateInvoicesForPeriod` function is reused by both the cron job and the manual API endpoint.
-- **Missed runs**: If the server was down when a cron was supposed to fire, the admin can trigger it manually. Optionally, a startup check can look for "missing" invoices and generate them.
+- **Recalculate after late approvals**: If EODs are approved after the invoice was generated, admin clicks "Recalculate" on the draft invoice to pull in the newly approved EODs.
+- **Missed runs**: If the server was down when a cron was supposed to fire, the startup recovery auto-generates missing invoices. Admin can also trigger manually.
 
 ### Required Dependency
 
@@ -229,6 +371,32 @@ npm install -D @types/node-cron
 ### Timezone
 
 All cron schedules are configured with `{ timezone: "Asia/Manila" }` as decided above. This ensures consistent invoice period boundaries regardless of which server or cloud region the app is deployed to.
+
+---
+
+## API Endpoints Summary
+
+### Staff Endpoints (auth: staff token)
+
+| Method | Endpoint                    | Description                                                                           |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------- |
+| `GET`  | `/eod/my-earnings`          | Real-time expected earnings for current pay cycle (or custom period via query params) |
+| `GET`  | `/invoices/my-invoices`     | List of `approved`/`paid` invoices for the logged-in staff                            |
+| `GET`  | `/invoices/my-invoices/:id` | Single invoice detail with linked EOD breakdown                                       |
+
+### Admin Endpoints (auth: admin token)
+
+| Method   | Endpoint                                  | Description                                                           |
+| -------- | ----------------------------------------- | --------------------------------------------------------------------- |
+| `POST`   | `/invoices/generate`                      | Generate invoice for a single staff member for a given period         |
+| `POST`   | `/invoices/generate/business/:businessId` | Batch generate invoices for all hourly staff in a business            |
+| `GET`    | `/invoices`                               | List all invoices (with filters: status, businessId, staffId, period) |
+| `GET`    | `/invoices/:id`                           | Get single invoice with populated EOD details                         |
+| `PATCH`  | `/invoices/:id/recalculate`               | Re-aggregate approved EODs and update totals (draft/calculated only)  |
+| `PATCH`  | `/invoices/:id/approve`                   | Approve an invoice (locks it, sets approvedBy/approvedAt)             |
+| `PATCH`  | `/invoices/:id/adjustments`               | Add deduction or addition to an invoice                               |
+| `PATCH`  | `/invoices/:id/mark-paid`                 | Mark an approved invoice as paid                                      |
+| `DELETE` | `/invoices/:id`                           | Soft-delete an invoice                                                |
 
 ---
 
@@ -249,6 +417,10 @@ All cron schedules are configured with `{ timezone: "Asia/Manila" }` as decided 
    - **Auto-detect on startup**: When the server boots, it checks for any invoice periods that should have been generated but weren't (e.g., server was down during a scheduled run). If missing periods are found, it automatically generates `draft` invoices for them.
    - **Manual trigger**: Admins can also manually trigger invoice generation for any arbitrary period from the dashboard via a dedicated API endpoint (`POST /invoices/generate`). This reuses the same `generateInvoicesForPeriod` logic and includes duplicate prevention so it's safe to call multiple times.
 
+5. **Late EOD Approvals**: Handled via the **Recalculate** mechanism. When an EOD is approved after the invoice for that period was already generated, the admin uses `PATCH /invoices/:id/recalculate` to re-aggregate. This is explicit and admin-controlled — no silent invoice mutations.
+
+6. **Staff Earnings Visibility**: Staff see **real-time expected earnings** via a live aggregation query (`GET /eod/my-earnings`), independent of invoice existence. They see **finalized invoices** only after admin approval (`status: 'approved'` or `'paid'`).
+
 ### Startup Recovery Logic
 
 On server start, the system will:
@@ -259,3 +431,14 @@ On server start, the system will:
 4. Log a summary of recovered invoices (e.g., `[STARTUP] Generated 3 missing draft invoices`).
 
 This ensures no invoices are lost due to server downtime, while the manual trigger serves as a fallback for ad-hoc or re-generation scenarios.
+
+---
+
+## Implementation Order
+
+1. **Staff Expected Earnings endpoint** — `GET /eod/my-earnings` (real-time aggregation, no document created)
+2. **Invoice controllers & routes** — generate, recalculate, approve, adjustments, list/get, mark-paid, delete
+3. **Cron plugin** — auto-generates on 1st/16th with startup recovery
+4. **Frontend: Staff earnings card** — dashboard widget showing current cycle projection
+5. **Frontend: Admin invoice management** — generate, review, recalculate, approve, adjustments
+6. **Frontend: Staff invoice list** — view approved invoices, download PDF

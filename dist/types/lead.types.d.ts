@@ -15,8 +15,8 @@ export declare const leadSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status: "contacted" | "new" | "qualified" | "converted";
     name: string;
-    email: string;
     isActive: boolean;
+    email: string;
     phone: string;
     source: "blog_comment" | "contact_form" | "other";
     _id?: string | undefined;
@@ -49,8 +49,8 @@ export declare const createLeadSchema: z.ZodObject<Omit<{
 }, "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
     status: "contacted" | "new" | "qualified" | "converted";
     name: string;
-    email: string;
     isActive: boolean;
+    email: string;
     phone: string;
     source: "blog_comment" | "contact_form" | "other";
     notes?: string | undefined;
@@ -66,24 +66,24 @@ export declare const createLeadSchema: z.ZodObject<Omit<{
 export declare const updateLeadSchema: z.ZodObject<{
     status: z.ZodOptional<z.ZodDefault<z.ZodEnum<["new", "contacted", "qualified", "converted"]>>>;
     name: z.ZodOptional<z.ZodString>;
-    email: z.ZodOptional<z.ZodString>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+    email: z.ZodOptional<z.ZodString>;
     phone: z.ZodOptional<z.ZodString>;
     notes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     source: z.ZodOptional<z.ZodDefault<z.ZodEnum<["blog_comment", "contact_form", "other"]>>>;
 }, "strip", z.ZodTypeAny, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     name?: string | undefined;
-    email?: string | undefined;
     isActive?: boolean | undefined;
+    email?: string | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     source?: "blog_comment" | "contact_form" | "other" | undefined;
 }, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     name?: string | undefined;
-    email?: string | undefined;
     isActive?: boolean | undefined;
+    email?: string | undefined;
     phone?: string | undefined;
     notes?: string | undefined;
     source?: "blog_comment" | "contact_form" | "other" | undefined;

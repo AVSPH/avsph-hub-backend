@@ -32,6 +32,20 @@ export declare function generateBusinessInvoices(request: FastifyRequest<{
         errors: number;
     };
 }>;
+export declare function recalculateInvoice(request: FastifyRequest<{
+    Params: IdParams;
+}>, reply: FastifyReply): Promise<{
+    message: string;
+    recalculation: {
+        previousHoursWorked: any;
+        newHoursWorked: number;
+        previousPay: any;
+        newPay: number;
+        eodsAdded: number;
+        eodsRemoved: number;
+    };
+    _id?: ObjectId | undefined;
+}>;
 export declare function getAllInvoices(request: FastifyRequest<{
     Querystring: InvoiceQuery & {
         businessId?: string;

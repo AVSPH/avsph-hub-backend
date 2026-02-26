@@ -24,8 +24,8 @@ export declare const eodReportSchema: z.ZodObject<{
     isActive: boolean;
     businessId: string;
     staffId: string;
-    hoursWorked: number;
     isApproved: boolean;
+    hoursWorked: number;
     tasksCompleted: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
@@ -45,11 +45,11 @@ export declare const eodReportSchema: z.ZodObject<{
     status?: "reviewed" | "submitted" | "needs_revision" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
+    isApproved?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     notes?: string | undefined;
     adminNotes?: string | undefined;
-    isApproved?: boolean | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
     reviewedBy?: string | undefined;
@@ -84,14 +84,14 @@ export declare const editOwnEodSchema: z.ZodObject<{
     nextDayPlan: z.ZodOptional<z.ZodString>;
     notes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    notes?: string | undefined;
     hoursWorked?: number | undefined;
+    notes?: string | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
 }, {
-    notes?: string | undefined;
     hoursWorked?: number | undefined;
+    notes?: string | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -102,12 +102,12 @@ export declare const reviewEodSchema: z.ZodObject<{
     adminNotes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "reviewed" | "needs_revision";
-    adminNotes?: string | undefined;
     isApproved?: boolean | undefined;
+    adminNotes?: string | undefined;
 }, {
     status: "reviewed" | "needs_revision";
-    adminNotes?: string | undefined;
     isApproved?: boolean | undefined;
+    adminNotes?: string | undefined;
 }>;
 export declare const adminEditEodSchema: z.ZodObject<{
     hoursWorked: z.ZodOptional<z.ZodNumber>;
@@ -119,16 +119,16 @@ export declare const adminEditEodSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status?: "reviewed" | "submitted" | "needs_revision" | undefined;
     date?: string | undefined;
+    isApproved?: boolean | undefined;
     hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
-    isApproved?: boolean | undefined;
     tasksCompleted?: string | undefined;
 }, {
     status?: "reviewed" | "submitted" | "needs_revision" | undefined;
     date?: string | undefined;
+    isApproved?: boolean | undefined;
     hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
-    isApproved?: boolean | undefined;
     tasksCompleted?: string | undefined;
 }>;
 export type EodReport = z.infer<typeof eodReportSchema>;

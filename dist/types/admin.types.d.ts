@@ -12,11 +12,11 @@ export declare const adminSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    isActive: boolean;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
-    isActive: boolean;
     role: "admin" | "super-admin";
     businessIds: string[];
     _id?: string | undefined;
@@ -46,11 +46,11 @@ export declare const createAdminSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
+    isActive: boolean;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
-    isActive: boolean;
     role: "admin" | "super-admin";
     businessIds: string[];
 }, {
@@ -70,17 +70,17 @@ export declare const updateAdminSchema: z.ZodObject<{
     businessIds: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
+    isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
-    isActive?: boolean | undefined;
     role?: "admin" | "super-admin" | undefined;
     businessIds?: string[] | undefined;
 }, {
+    isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
-    isActive?: boolean | undefined;
     role?: "admin" | "super-admin" | undefined;
     businessIds?: string[] | undefined;
 }>;

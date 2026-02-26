@@ -20,6 +20,23 @@ interface EodQuery {
     page?: string;
     limit?: string;
 }
+export declare function getMyExpectedEarnings(request: FastifyRequest<{
+    Querystring: {
+        periodStart?: string;
+        periodEnd?: string;
+    };
+}>, reply: FastifyReply): Promise<{
+    periodStart: string;
+    periodEnd: string;
+    totalHoursWorked: number;
+    totalDaysWorked: number;
+    baseSalary: any;
+    salaryType: any;
+    estimatedPay: number;
+    approvedEodCount: number;
+    pendingEodCount: number;
+    nextPayoutDate: string;
+}>;
 export declare function submitEod(request: FastifyRequest, reply: FastifyReply): Promise<never>;
 export declare function editOwnEod(request: FastifyRequest<{
     Params: IdParams;

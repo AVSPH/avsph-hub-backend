@@ -8,10 +8,10 @@ export declare const commentSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    isApproved: boolean;
     comment: string;
     blogId: string;
     leadId: string;
-    isApproved: boolean;
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -20,9 +20,9 @@ export declare const commentSchema: z.ZodObject<{
     blogId: string;
     leadId: string;
     _id?: string | undefined;
+    isApproved?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    isApproved?: boolean | undefined;
 }>;
 export declare const createCommentSchema: z.ZodObject<Omit<{
     _id: z.ZodOptional<z.ZodString>;
@@ -33,9 +33,9 @@ export declare const createCommentSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "_id" | "createdAt" | "updatedAt" | "leadId">, "strip", z.ZodTypeAny, {
+    isApproved: boolean;
     comment: string;
     blogId: string;
-    isApproved: boolean;
 }, {
     comment: string;
     blogId: string;
@@ -61,11 +61,11 @@ export declare const updateCommentSchema: z.ZodObject<{
     comment: z.ZodOptional<z.ZodString>;
     isApproved: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    comment?: string | undefined;
     isApproved?: boolean | undefined;
+    comment?: string | undefined;
 }, {
-    comment?: string | undefined;
     isApproved?: boolean | undefined;
+    comment?: string | undefined;
 }>;
 export declare const approveCommentSchema: z.ZodObject<{
     isApproved: z.ZodBoolean;

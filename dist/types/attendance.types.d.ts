@@ -24,11 +24,11 @@ export declare const attendanceSchema: z.ZodObject<{
     clockIn: string;
     workDate: string;
     _id?: string | undefined;
+    hoursWorked?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     notes?: string | undefined;
     clockOut?: string | undefined;
-    hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
@@ -40,11 +40,11 @@ export declare const attendanceSchema: z.ZodObject<{
     status?: "pending" | "rejected" | "approved" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
+    hoursWorked?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     notes?: string | undefined;
     clockOut?: string | undefined;
-    hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;

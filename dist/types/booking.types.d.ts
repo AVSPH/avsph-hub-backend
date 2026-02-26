@@ -12,8 +12,8 @@ export declare const bookingSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status: "pending" | "contacted" | "completed" | "cancelled";
     message: string;
-    email: string;
     businessId: string;
+    email: string;
     fullName: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
@@ -21,8 +21,8 @@ export declare const bookingSchema: z.ZodObject<{
     companyName?: string | undefined;
 }, {
     message: string;
-    email: string;
     businessId: string;
+    email: string;
     fullName: string;
     status?: "pending" | "contacted" | "completed" | "cancelled" | undefined;
     _id?: string | undefined;
@@ -42,36 +42,36 @@ export declare const createBookingSchema: z.ZodObject<Omit<{
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "status" | "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
     message: string;
-    email: string;
     businessId: string;
+    email: string;
     fullName: string;
     companyName?: string | undefined;
 }, {
     message: string;
-    email: string;
     businessId: string;
+    email: string;
     fullName: string;
     companyName?: string | undefined;
 }>;
 export declare const updateBookingSchema: z.ZodObject<{
     status: z.ZodOptional<z.ZodDefault<z.ZodEnum<["pending", "contacted", "completed", "cancelled"]>>>;
     message: z.ZodOptional<z.ZodString>;
-    email: z.ZodOptional<z.ZodString>;
     businessId: z.ZodOptional<z.ZodString>;
+    email: z.ZodOptional<z.ZodString>;
     fullName: z.ZodOptional<z.ZodString>;
     companyName: z.ZodOptional<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     status?: "pending" | "contacted" | "completed" | "cancelled" | undefined;
     message?: string | undefined;
-    email?: string | undefined;
     businessId?: string | undefined;
+    email?: string | undefined;
     fullName?: string | undefined;
     companyName?: string | undefined;
 }, {
     status?: "pending" | "contacted" | "completed" | "cancelled" | undefined;
     message?: string | undefined;
-    email?: string | undefined;
     businessId?: string | undefined;
+    email?: string | undefined;
     fullName?: string | undefined;
     companyName?: string | undefined;
 }>;

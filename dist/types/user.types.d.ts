@@ -11,13 +11,13 @@ export declare const userSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
+    isActive: boolean;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     position: string;
     dateHired: string;
-    isActive: boolean;
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -45,13 +45,13 @@ export declare const createUserSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
+    isActive: boolean;
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     position: string;
     dateHired: string;
-    isActive: boolean;
 }, {
     firstName: string;
     lastName: string;
@@ -62,29 +62,29 @@ export declare const createUserSchema: z.ZodObject<Omit<{
     isActive?: boolean | undefined;
 }>;
 export declare const updateUserSchema: z.ZodObject<{
+    isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     firstName: z.ZodOptional<z.ZodString>;
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
     password: z.ZodOptional<z.ZodString>;
     position: z.ZodOptional<z.ZodString>;
     dateHired: z.ZodOptional<z.ZodString>;
-    isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
 }, "strip", z.ZodTypeAny, {
+    isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
     password?: string | undefined;
     position?: string | undefined;
     dateHired?: string | undefined;
-    isActive?: boolean | undefined;
 }, {
+    isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
     password?: string | undefined;
     position?: string | undefined;
     dateHired?: string | undefined;
-    isActive?: boolean | undefined;
 }>;
 export declare const userJsonSchema: {
     readonly type: "object";
