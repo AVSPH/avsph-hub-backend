@@ -276,4 +276,101 @@ export declare const loginResponseJsonSchema: {
     };
     readonly required: readonly ["token", "admin"];
 };
+export declare const updateAdminProfileSchema: z.ZodEffects<z.ZodObject<{
+    firstName: z.ZodOptional<z.ZodString>;
+    lastName: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}>, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+}>;
+export declare const updateAdminEmailSchema: z.ZodObject<{
+    email: z.ZodString;
+    currentPassword: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+    currentPassword: string;
+}, {
+    email: string;
+    currentPassword: string;
+}>;
+export declare const updateAdminPasswordSchema: z.ZodEffects<z.ZodObject<{
+    currentPassword: z.ZodString;
+    newPassword: z.ZodString;
+    confirmPassword: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}, {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}>, {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}, {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}>;
+export type UpdateAdminProfile = z.infer<typeof updateAdminProfileSchema>;
+export type UpdateAdminEmail = z.infer<typeof updateAdminEmailSchema>;
+export type UpdateAdminPassword = z.infer<typeof updateAdminPasswordSchema>;
+export declare const updateAdminProfileJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly firstName: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 50;
+        };
+        readonly lastName: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 50;
+        };
+    };
+};
+export declare const updateAdminEmailJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly email: {
+            readonly type: "string";
+            readonly format: "email";
+        };
+        readonly currentPassword: {
+            readonly type: "string";
+            readonly minLength: 1;
+        };
+    };
+    readonly required: readonly ["email", "currentPassword"];
+};
+export declare const updateAdminPasswordJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly currentPassword: {
+            readonly type: "string";
+            readonly minLength: 1;
+        };
+        readonly newPassword: {
+            readonly type: "string";
+            readonly minLength: 8;
+        };
+        readonly confirmPassword: {
+            readonly type: "string";
+            readonly minLength: 1;
+        };
+    };
+    readonly required: readonly ["currentPassword", "newPassword", "confirmPassword"];
+};
 //# sourceMappingURL=admin.types.d.ts.map

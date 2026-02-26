@@ -104,3 +104,69 @@ export const loginResponseJsonSchema = {
   },
   required: ["token", "admin"],
 } as const;
+
+// ── Admin Settings Schemas ────────────────────────────────────────────────────
+
+// Zod schemas
+export const updateAdminProfileSchema = z
+  .object({
+    firstName: z.string().min(1).max(50).optional(),
+    lastName: z.string().min(1).max(50).optional(),
+  })
+  .refine(
+    (data) => data.firstName !== undefined || data.lastName !== undefined,
+    {
+      message: "At least one of firstName or lastName must be provided",
+    },
+  );
+
+export const updateAdminEmailSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  currentPassword: z.string().min(1, "Current password is required"),
+});
+
+export const updateAdminPasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "New password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+// TypeScript types
+export type UpdateAdminProfile = z.infer<typeof updateAdminProfileSchema>;
+export type UpdateAdminEmail = z.infer<typeof updateAdminEmailSchema>;
+export type UpdateAdminPassword = z.infer<typeof updateAdminPasswordSchema>;
+
+// JSON schemas for Fastify Swagger
+export const updateAdminProfileJsonSchema = {
+  type: "object",
+  properties: {
+    firstName: { type: "string", minLength: 1, maxLength: 50 },
+    lastName: { type: "string", minLength: 1, maxLength: 50 },
+  },
+} as const;
+
+export const updateAdminEmailJsonSchema = {
+  type: "object",
+  properties: {
+    email: { type: "string", format: "email" },
+    currentPassword: { type: "string", minLength: 1 },
+  },
+  required: ["email", "currentPassword"],
+} as const;
+
+export const updateAdminPasswordJsonSchema = {
+  type: "object",
+  properties: {
+    currentPassword: { type: "string", minLength: 1 },
+    newPassword: { type: "string", minLength: 8 },
+    confirmPassword: { type: "string", minLength: 1 },
+  },
+  required: ["currentPassword", "newPassword", "confirmPassword"],
+} as const;
