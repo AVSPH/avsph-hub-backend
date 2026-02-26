@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { ObjectId } from "@fastify/mongodb";
 interface IdParams {
     id: string;
 }
@@ -19,15 +20,24 @@ interface StaffByBusinessQuery {
 }
 export declare function getAllStaff(request: FastifyRequest<{
     Querystring: StaffQuery;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>[]>;
+}>, reply: FastifyReply): Promise<{
+    [key: string]: any;
+    _id: ObjectId;
+}[]>;
 export declare function getStaffById(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
+}>, reply: FastifyReply): Promise<{
+    [key: string]: any;
+    _id: ObjectId;
+}>;
 export declare function getStaffByBusiness(request: FastifyRequest<{
     Params: BusinessIdParams;
     Querystring: StaffByBusinessQuery;
 }>, reply: FastifyReply): Promise<{
-    data: import("mongodb").WithId<import("bson").Document>[];
+    data: {
+        [key: string]: any;
+        _id: ObjectId;
+    }[];
     pagination: {
         page: number;
         limit: number;
@@ -39,7 +49,10 @@ export declare function getStaffByBusiness(request: FastifyRequest<{
 export declare function createStaff(request: FastifyRequest, reply: FastifyReply): Promise<never>;
 export declare function updateStaff(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
+}>, reply: FastifyReply): Promise<{
+    [key: string]: any;
+    _id: ObjectId;
+}>;
 export declare function deleteStaff(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<never>;

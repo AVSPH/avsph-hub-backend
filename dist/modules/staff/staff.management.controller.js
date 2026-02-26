@@ -42,7 +42,7 @@ export async function getAllStaff(request, reply) {
         }
     }
     const result = await staff.find(query).sort({ createdAt: -1 }).toArray();
-    return result;
+    return result.map(({ password: _, ...rest }) => rest);
 }
 // Get staff by ID (protected)
 export async function getStaffById(request, reply) {
@@ -72,7 +72,8 @@ export async function getStaffById(request, reply) {
             });
         }
     }
-    return staffMember;
+    const { password: _, ...staffWithoutPassword } = staffMember;
+    return staffWithoutPassword;
 }
 // Get staff by business (protected)
 export async function getStaffByBusiness(request, reply) {
@@ -135,7 +136,7 @@ export async function getStaffByBusiness(request, reply) {
         .limit(limit)
         .toArray();
     return {
-        data: result,
+        data: result.map(({ password: _, ...rest }) => rest),
         pagination: {
             page,
             limit,
@@ -185,9 +186,7 @@ export async function createStaff(request, reply) {
         isActive: true,
     });
     if (existingStaff) {
-        return reply
-            .status(409)
-            .send({
+        return reply.status(409).send({
             error: "Staff member with this email already exists in this business",
         });
     }
@@ -269,9 +268,7 @@ export async function updateStaff(request, reply) {
             isActive: true,
         });
         if (emailConflict) {
-            return reply
-                .status(409)
-                .send({
+            return reply.status(409).send({
                 error: "Staff member with this email already exists in this business",
             });
         }
@@ -284,7 +281,8 @@ export async function updateStaff(request, reply) {
     if (!result) {
         return reply.status(404).send({ error: "Staff member not found" });
     }
-    return result;
+    const { password: _, ...updatedWithoutPassword } = result;
+    return updatedWithoutPassword;
 }
 // Delete staff member (soft delete - protected)
 export async function deleteStaff(request, reply) {

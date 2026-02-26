@@ -83,7 +83,7 @@ export async function getAllStaff(
 
   const result = await staff.find(query).sort({ createdAt: -1 }).toArray();
 
-  return result;
+  return result.map(({ password: _, ...rest }) => rest);
 }
 
 // Get staff by ID (protected)
@@ -125,7 +125,8 @@ export async function getStaffById(
     }
   }
 
-  return staffMember;
+  const { password: _, ...staffWithoutPassword } = staffMember;
+  return staffWithoutPassword;
 }
 
 // Get staff by business (protected)
@@ -214,7 +215,7 @@ export async function getStaffByBusiness(
     .toArray();
 
   return {
-    data: result,
+    data: result.map(({ password: _, ...rest }) => rest),
     pagination: {
       page,
       limit,
@@ -291,11 +292,9 @@ export async function createStaff(
     isActive: true,
   });
   if (existingStaff) {
-    return reply
-      .status(409)
-      .send({
-        error: "Staff member with this email already exists in this business",
-      });
+    return reply.status(409).send({
+      error: "Staff member with this email already exists in this business",
+    });
   }
 
   // Hash the password
@@ -395,11 +394,9 @@ export async function updateStaff(
       isActive: true,
     });
     if (emailConflict) {
-      return reply
-        .status(409)
-        .send({
-          error: "Staff member with this email already exists in this business",
-        });
+      return reply.status(409).send({
+        error: "Staff member with this email already exists in this business",
+      });
     }
   }
 
@@ -418,7 +415,8 @@ export async function updateStaff(
     return reply.status(404).send({ error: "Staff member not found" });
   }
 
-  return result;
+  const { password: _, ...updatedWithoutPassword } = result;
+  return updatedWithoutPassword;
 }
 
 // Delete staff member (soft delete - protected)
