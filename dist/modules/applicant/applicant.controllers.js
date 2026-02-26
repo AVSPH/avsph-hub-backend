@@ -1,7 +1,7 @@
 import { ObjectId } from "@fastify/mongodb";
 import bcrypt from "bcrypt";
 import { updateApplicantSchema, updateApplicantStageSchema, hireApplicantSchema, } from "../../types/applicant.types.js";
-import { getApplicantHiredEmail } from "../../utils/emails/auth/applicant.creation.email.js";
+import { getApplicantHiredEmail } from "../../utils/emails/auth/applicant.hired.email.js";
 // ─── Helper: generate a temporary password ──────────────────────────────
 function generateTempPassword(firstName) {
     const digits = Math.floor(1000 + Math.random() * 9000); // 4 random digits

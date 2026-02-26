@@ -6,7 +6,7 @@ import {
     updateApplicantStageSchema,
     hireApplicantSchema,
 } from "../../types/applicant.types.js";
-import { getApplicantHiredEmail } from "../../utils/emails/auth/applicant.creation.email.js";
+import { getApplicantHiredEmail } from "../../utils/emails/auth/applicant.hired.email.js";
 
 interface IdParams {
     id: string;

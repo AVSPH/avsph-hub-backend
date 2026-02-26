@@ -5,6 +5,7 @@ import {
   createStaffSchema,
   updateStaffSchema,
 } from "../../types/staff.types.js";
+import { getStaffCreationEmail } from "../../utils/emails/auth/staff.creation.email.js";
 
 interface IdParams {
   id: string;
@@ -324,6 +325,35 @@ export async function createStaff(
   };
 
   const result = await staff.insertOne(newStaff);
+
+  // Send welcome email to the new staff member
+  try {
+    const businessName = business?.name || "Advanced Virtual Staff";
+
+    const emailHtml = getStaffCreationEmail(
+      firstName,
+      email,
+      password, // original plain-text password before hashing
+      position,
+      businessName,
+    );
+
+    await request.server.gmail.sendEmail({
+      to: email,
+      subject: `👋 Welcome to ${businessName} — Your Account is Ready!`,
+      body: emailHtml,
+    });
+
+    request.server.log.info(
+      `Staff creation welcome email sent to ${email}`,
+    );
+  } catch (emailError) {
+    // Log the error but don't fail the staff creation
+    request.server.log.error(
+      emailError,
+      `Failed to send staff creation email to ${email}`,
+    );
+  }
 
   // Remove password from response
   const { password: _, ...staffWithoutPassword } = newStaff;
