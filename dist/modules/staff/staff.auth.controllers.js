@@ -1,6 +1,23 @@
 import { ObjectId } from "@fastify/mongodb";
 import bcrypt from "bcrypt";
+import { z } from "zod";
 import { staffLoginSchema, staffChangePasswordSchema, } from "../../types/staff.types.js";
+import { getForgotPasswordEmail } from "../../utils/emails/auth/forgot.password.email.js";
+// ── Forgot / Reset password schemas ──────────────────────────────────────────
+const staffForgotPasswordSchema = z.object({
+    email: z.string().email("Invalid email address"),
+});
+const staffResetPasswordSchema = z.object({
+    email: z.string().email("Invalid email address"),
+    code: z
+        .string()
+        .length(6, "Reset code must be exactly 6 digits")
+        .regex(/^\d{6}$/, "Reset code must contain only digits"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+});
+function generateResetCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
 // Staff login
 export async function loginStaff(request, reply) {
     const staff = request.server.mongo.db?.collection("staff");
@@ -103,5 +120,116 @@ export async function changeStaffPassword(request, reply) {
         },
     });
     return { message: "Password changed successfully" };
+}
+// ── Forgot password ───────────────────────────────────────────────────────────
+/**
+ * POST /staff/forgot-password
+ * Generates a 6-digit reset code, stores it (hashed) and sends it via Gmail.
+ */
+export async function forgotStaffPassword(request, reply) {
+    const staffCol = request.server.mongo.db?.collection("staff");
+    if (!staffCol) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const parseResult = staffForgotPasswordSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { email } = parseResult.data;
+    const staffMember = await staffCol.findOne({
+        email,
+        isActive: true,
+        status: "active",
+    });
+    // Always return the same response to prevent email enumeration
+    if (!staffMember) {
+        return reply.status(200).send({
+            message: "If an account with that email exists, a reset code has been sent.",
+        });
+    }
+    const resetCode = generateResetCode();
+    const hashedCode = await bcrypt.hash(resetCode, 10);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    await staffCol.updateOne({ _id: staffMember._id }, {
+        $set: {
+            resetPasswordCode: hashedCode,
+            resetPasswordExpiry: expiresAt.toISOString(),
+            updatedAt: new Date().toISOString(),
+        },
+    });
+    try {
+        await request.server.gmail.sendEmail({
+            to: email,
+            subject: "AVS Dashboard – Staff Password Reset Code",
+            body: getForgotPasswordEmail(staffMember.firstName, resetCode, "Staff"),
+        });
+    }
+    catch (err) {
+        request.server.log.error({ err }, "Failed to send staff forgot-password email");
+        return reply
+            .status(500)
+            .send({ error: "Failed to send reset email. Please try again later." });
+    }
+    return reply.status(200).send({
+        message: "If an account with that email exists, a reset code has been sent.",
+    });
+}
+/**
+ * POST /staff/reset-password
+ * Verifies the 6-digit code and updates the staff member's password.
+ */
+export async function resetStaffPassword(request, reply) {
+    const staffCol = request.server.mongo.db?.collection("staff");
+    if (!staffCol) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const parseResult = staffResetPasswordSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { email, code, newPassword } = parseResult.data;
+    const staffMember = await staffCol.findOne({
+        email,
+        isActive: true,
+        status: "active",
+    });
+    if (!staffMember ||
+        !staffMember.resetPasswordCode ||
+        !staffMember.resetPasswordExpiry) {
+        return reply.status(400).send({ error: "Invalid or expired reset code." });
+    }
+    // Check expiry
+    const expiry = new Date(staffMember.resetPasswordExpiry);
+    if (Date.now() > expiry.getTime()) {
+        await staffCol.updateOne({ _id: staffMember._id }, { $unset: { resetPasswordCode: "", resetPasswordExpiry: "" } });
+        return reply
+            .status(400)
+            .send({ error: "Reset code has expired. Please request a new one." });
+    }
+    // Verify code
+    const isValidCode = await bcrypt.compare(code, staffMember.resetPasswordCode);
+    if (!isValidCode) {
+        return reply.status(400).send({ error: "Invalid reset code." });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await staffCol.updateOne({ _id: staffMember._id }, {
+        $set: {
+            password: hashedPassword,
+            updatedAt: new Date().toISOString(),
+        },
+        $unset: {
+            resetPasswordCode: "",
+            resetPasswordExpiry: "",
+        },
+    });
+    return reply
+        .status(200)
+        .send({ message: "Password has been reset successfully." });
 }
 //# sourceMappingURL=staff.auth.controllers.js.map

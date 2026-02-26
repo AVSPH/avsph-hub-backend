@@ -146,8 +146,26 @@ export async function getMyEodReports(request, reply) {
     if (request.query.status) {
         query.status = request.query.status;
     }
-    const result = await eodReports.find(query).sort({ date: -1 }).toArray();
-    return result;
+    // Pagination
+    const page = Math.max(1, parseInt(request.query.page || "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || "20", 10)));
+    const skip = (page - 1) * limit;
+    const [data, totalCount] = await Promise.all([
+        eodReports.find(query).sort({ date: -1 }).skip(skip).limit(limit).toArray(),
+        eodReports.countDocuments(query),
+    ]);
+    const totalPages = Math.ceil(totalCount / limit);
+    return {
+        data,
+        pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        },
+    };
 }
 // Get single EOD report (staff only — own report)
 export async function getMyEodById(request, reply) {
@@ -301,7 +319,7 @@ export async function getEodByBusiness(request, reply) {
     // Use aggregation pipeline with $lookup to join staff details
     const pipeline = [
         { $match: query },
-        { $sort: { date: -1 } },
+        { $sort: { date: -1, createdAt: -1 } },
         { $skip: skip },
         { $limit: limit },
         {

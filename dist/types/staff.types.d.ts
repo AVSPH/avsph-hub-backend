@@ -227,11 +227,11 @@ export declare const staffChangePasswordSchema: z.ZodObject<{
     currentPassword: z.ZodString;
     newPassword: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    currentPassword: string;
     newPassword: string;
+    currentPassword: string;
 }, {
-    currentPassword: string;
     newPassword: string;
+    currentPassword: string;
 }>;
 export type StaffLogin = z.infer<typeof staffLoginSchema>;
 export type StaffChangePassword = z.infer<typeof staffChangePasswordSchema>;

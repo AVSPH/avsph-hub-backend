@@ -68,7 +68,7 @@ const eodRoutes = async (fastify) => {
             },
         },
     }, editOwnEod);
-    // GET /eod/me - Staff views their own EOD reports
+    // GET /eod/me - Staff views their own EOD reports (paginated)
     fastify.get("/eod/me", {
         preHandler: [fastify.authenticateStaff],
         schema: {
@@ -84,12 +84,30 @@ const eodRoutes = async (fastify) => {
                         type: "string",
                         enum: ["submitted", "reviewed", "needs_revision"],
                     },
+                    page: { type: "string" },
+                    limit: { type: "string" },
                 },
             },
             response: {
                 200: {
-                    type: "array",
-                    items: eodReportJsonSchema,
+                    type: "object",
+                    properties: {
+                        data: {
+                            type: "array",
+                            items: eodReportJsonSchema,
+                        },
+                        pagination: {
+                            type: "object",
+                            properties: {
+                                page: { type: "number" },
+                                limit: { type: "number" },
+                                totalCount: { type: "number" },
+                                totalPages: { type: "number" },
+                                hasNextPage: { type: "boolean" },
+                                hasPrevPage: { type: "boolean" },
+                            },
+                        },
+                    },
                 },
             },
         },

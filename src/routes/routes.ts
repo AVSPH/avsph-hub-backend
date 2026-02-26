@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import userRoutes from "../modules/user/user.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
+import authAdminRoutes from "../modules/admin/auth/auth.admin.routes.js";
 import businessRoutes from "../modules/business/business.routes.js";
 import blogRoutes from "../modules/blog/blog.routes.js";
 import applicantRoutes from "../modules/applicant/applicant.routes.js";
@@ -19,6 +20,9 @@ import gmailRoutes from "../modules/gmail/gmail.routes.js";
 const routes: FastifyPluginAsync = async (fastify) => {
   // Admin auth routes
   await fastify.register(adminRoutes);
+
+  // Admin forgot/reset password routes
+  await fastify.register(authAdminRoutes);
 
   // User/Staff routes
   await fastify.register(userRoutes);

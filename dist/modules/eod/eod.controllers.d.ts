@@ -32,8 +32,20 @@ export declare function getMyEodReports(request: FastifyRequest<{
         startDate?: string;
         endDate?: string;
         status?: string;
+        page?: string;
+        limit?: string;
     };
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>[]>;
+}>, reply: FastifyReply): Promise<{
+    data: import("mongodb").WithId<import("bson").Document>[];
+    pagination: {
+        page: number;
+        limit: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    };
+}>;
 export declare function getMyEodById(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;

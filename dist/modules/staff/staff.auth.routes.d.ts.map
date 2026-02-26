@@ -1,1 +1,1 @@
-{"version":3,"file":"staff.auth.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/staff/staff.auth.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAalD,QAAA,MAAM,eAAe,EAAE,kBA2GtB,CAAC;AAEF,eAAe,eAAe,CAAC"}
+{"version":3,"file":"staff.auth.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/staff/staff.auth.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAelD,QAAA,MAAM,eAAe,EAAE,kBAyMtB,CAAC;AAEF,eAAe,eAAe,CAAC"}
