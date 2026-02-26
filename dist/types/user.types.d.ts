@@ -15,8 +15,8 @@ export declare const userSchema: z.ZodObject<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
@@ -25,8 +25,8 @@ export declare const userSchema: z.ZodObject<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     _id?: string | undefined;
     isActive?: boolean | undefined;
@@ -49,15 +49,15 @@ export declare const createUserSchema: z.ZodObject<Omit<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
 }, {
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     isActive?: boolean | undefined;
 }>;
@@ -66,24 +66,24 @@ export declare const updateUserSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
-    password: z.ZodOptional<z.ZodString>;
     position: z.ZodOptional<z.ZodString>;
+    password: z.ZodOptional<z.ZodString>;
     dateHired: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
-    password?: string | undefined;
     position?: string | undefined;
+    password?: string | undefined;
     dateHired?: string | undefined;
 }, {
     isActive?: boolean | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
-    password?: string | undefined;
     position?: string | undefined;
+    password?: string | undefined;
     dateHired?: string | undefined;
 }>;
 export declare const userJsonSchema: {

@@ -106,6 +106,9 @@ async function generateInvoicesForDateRange(fastify, periodStart, periodEnd) {
             await invoices.insertOne({
                 staffId,
                 businessId,
+                staffName,
+                staffEmail: staffMember.email,
+                staffPosition: staffMember.position || "",
                 periodStart,
                 periodEnd,
                 totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,

@@ -165,6 +165,9 @@ export async function generateInvoice(
   const newInvoice = {
     staffId,
     businessId: staffMember.businessId,
+    staffName: `${staffMember.firstName} ${staffMember.lastName}`,
+    staffEmail: staffMember.email,
+    staffPosition: staffMember.position || "",
     periodStart,
     periodEnd,
     totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
@@ -317,6 +320,9 @@ export async function generateBusinessInvoices(
       const newInvoice = {
         staffId,
         businessId,
+        staffName: `${staffMember.firstName} ${staffMember.lastName}`,
+        staffEmail: staffMember.email,
+        staffPosition: staffMember.position || "",
         periodStart,
         periodEnd,
         totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,

@@ -208,6 +208,15 @@ export declare const invoiceJsonSchema: {
         readonly businessId: {
             readonly type: "string";
         };
+        readonly staffName: {
+            readonly type: "string";
+        };
+        readonly staffEmail: {
+            readonly type: "string";
+        };
+        readonly staffPosition: {
+            readonly type: "string";
+        };
         readonly periodStart: {
             readonly type: "string";
             readonly pattern: "^\\d{4}-\\d{2}-\\d{2}$";

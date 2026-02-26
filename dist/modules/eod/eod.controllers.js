@@ -109,10 +109,12 @@ export async function getMyExpectedEarnings(request, reply) {
     let estimatedPay = 0;
     switch (staffMember.salaryType) {
         case "hourly":
-            estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
+            estimatedPay =
+                Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
             break;
         case "daily":
-            estimatedPay = Math.round(staffMember.salary * totalDaysWorked * 100) / 100;
+            estimatedPay =
+                Math.round(staffMember.salary * totalDaysWorked * 100) / 100;
             break;
         case "monthly":
             estimatedPay = staffMember.salary;

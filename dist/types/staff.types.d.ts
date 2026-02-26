@@ -62,8 +62,8 @@ export declare const staffSchema: z.ZodObject<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     employmentType: "full-time" | "part-time" | "contract";
     _id?: string | undefined;
@@ -85,8 +85,8 @@ export declare const staffSchema: z.ZodObject<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     status?: "active" | "on_leave" | "terminated" | undefined;
     _id?: string | undefined;
@@ -149,8 +149,8 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     employmentType: "full-time" | "part-time" | "contract";
     salary?: number | undefined;
@@ -161,8 +161,8 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     position: string;
+    password: string;
     dateHired: string;
     salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     salary?: number | undefined;
