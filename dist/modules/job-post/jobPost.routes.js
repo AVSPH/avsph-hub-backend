@@ -175,8 +175,8 @@ const jobPostRoutes = async (fastify) => {
         },
     }, deleteJobPost);
     // ─── Public Routes (no auth) ────────────────────────────────────────
-    // GET /api/public/jobs?businessId=xxx - List open jobs for a business
-    fastify.get("/api/public/jobs", {
+    // GET /public/jobs?businessId=xxx - List open jobs for a business
+    fastify.get("/public/jobs", {
         schema: {
             description: "List all open job posts for a specific business (public, no auth required)",
             tags: ["Public Jobs"],
@@ -214,7 +214,7 @@ const jobPostRoutes = async (fastify) => {
         },
     }, getPublicJobPosts);
     // GET /api/public/jobs/:id - Get single public job post
-    fastify.get("/api/public/jobs/:id", {
+    fastify.get("/public/jobs/:id", {
         schema: {
             description: "Get a single open job post detail (public, no auth required)",
             tags: ["Public Jobs"],
@@ -253,7 +253,7 @@ const jobPostRoutes = async (fastify) => {
         },
     }, getPublicJobPostById);
     // POST /api/public/jobs/:jobId/apply - Submit a job application
-    fastify.post("/api/public/jobs/:jobId/apply", {
+    fastify.post("/public/jobs/:jobId/apply", {
         schema: {
             description: "Submit a job application (public, no auth required)",
             tags: ["Public Jobs"],

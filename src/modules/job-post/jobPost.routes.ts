@@ -228,9 +228,9 @@ const jobPostRoutes: FastifyPluginAsync = async (fastify) => {
 
     // ─── Public Routes (no auth) ────────────────────────────────────────
 
-    // GET /api/public/jobs?businessId=xxx - List open jobs for a business
+    // GET /public/jobs?businessId=xxx - List open jobs for a business
     fastify.get<{ Querystring: { businessId: string } }>(
-        "/api/public/jobs",
+        "/public/jobs",
         {
             schema: {
                 description:
@@ -274,7 +274,7 @@ const jobPostRoutes: FastifyPluginAsync = async (fastify) => {
 
     // GET /api/public/jobs/:id - Get single public job post
     fastify.get<{ Params: { id: string } }>(
-        "/api/public/jobs/:id",
+        "/public/jobs/:id",
         {
             schema: {
                 description:
@@ -319,7 +319,7 @@ const jobPostRoutes: FastifyPluginAsync = async (fastify) => {
 
     // POST /api/public/jobs/:jobId/apply - Submit a job application
     fastify.post<{ Params: { jobId: string } }>(
-        "/api/public/jobs/:jobId/apply",
+        "/public/jobs/:jobId/apply",
         {
             schema: {
                 description:
