@@ -17,7 +17,7 @@ export declare const attendanceSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "pending" | "rejected" | "approved";
+    status: "rejected" | "pending" | "approved";
     isActive: boolean;
     businessId: string;
     staffId: string;
@@ -27,9 +27,9 @@ export declare const attendanceSchema: z.ZodObject<{
     hoursWorked?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
+    adminNotes?: string | undefined;
     notes?: string | undefined;
     clockOut?: string | undefined;
-    adminNotes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
 }, {
@@ -37,15 +37,15 @@ export declare const attendanceSchema: z.ZodObject<{
     staffId: string;
     clockIn: string;
     workDate: string;
-    status?: "pending" | "rejected" | "approved" | undefined;
+    status?: "rejected" | "pending" | "approved" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
     hoursWorked?: number | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
+    adminNotes?: string | undefined;
     notes?: string | undefined;
     clockOut?: string | undefined;
-    adminNotes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
 }>;
@@ -81,19 +81,19 @@ export declare const editAttendanceSchema: z.ZodObject<{
     adminNotes: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["pending", "approved", "rejected"]>>;
 }, "strip", z.ZodTypeAny, {
-    status?: "pending" | "rejected" | "approved" | undefined;
+    status?: "rejected" | "pending" | "approved" | undefined;
+    adminNotes?: string | undefined;
     notes?: string | undefined;
     clockIn?: string | undefined;
     clockOut?: string | undefined;
     workDate?: string | undefined;
-    adminNotes?: string | undefined;
 }, {
-    status?: "pending" | "rejected" | "approved" | undefined;
+    status?: "rejected" | "pending" | "approved" | undefined;
+    adminNotes?: string | undefined;
     notes?: string | undefined;
     clockIn?: string | undefined;
     clockOut?: string | undefined;
     workDate?: string | undefined;
-    adminNotes?: string | undefined;
 }>;
 export type Attendance = z.infer<typeof attendanceSchema>;
 export type ClockIn = z.infer<typeof clockInSchema>;

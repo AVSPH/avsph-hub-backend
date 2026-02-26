@@ -13,16 +13,19 @@ export type UpdateApplicantInput = z.infer<typeof updateApplicantSchema>;
 // MongoDB document type (with ObjectId)
 export interface ApplicantDocument {
     _id?: string;
+    jobId: string;
+    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     phone?: string;
     position: string;
-    resumeUrl?: string;
+    resume?: string; // Google Drive link (plain string)
     coverLetter?: string;
-    businessId: string;
-    status: 'pending' | 'reviewed' | 'shortlisted' | 'interviewed' | 'hired' | 'rejected';
-    notes?: string;
+    stage: string; // References a stage ID from the job post's stages array
+    adminNotes?: string;
+    isStaffConverted: boolean;
+    staffId?: string;
     isActive: boolean;
     appliedAt: string;
     createdAt: string;

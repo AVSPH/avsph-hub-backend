@@ -1,36 +1,41 @@
-import { z } from 'zod';
-export declare const applicantStatusEnum: z.ZodEnum<["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"]>;
+import { z } from "zod";
 export declare const applicantSchema: z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
+    jobId: z.ZodString;
+    businessId: z.ZodString;
     firstName: z.ZodString;
     lastName: z.ZodString;
     email: z.ZodString;
     phone: z.ZodOptional<z.ZodString>;
     position: z.ZodString;
-    resumeUrl: z.ZodOptional<z.ZodString>;
+    resume: z.ZodOptional<z.ZodString>;
     coverLetter: z.ZodOptional<z.ZodString>;
-    businessId: z.ZodString;
-    status: z.ZodDefault<z.ZodEnum<["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"]>>;
-    notes: z.ZodOptional<z.ZodString>;
+    stage: z.ZodString;
+    adminNotes: z.ZodOptional<z.ZodString>;
+    isStaffConverted: z.ZodDefault<z.ZodBoolean>;
+    staffId: z.ZodOptional<z.ZodString>;
     isActive: z.ZodDefault<z.ZodBoolean>;
     appliedAt: z.ZodOptional<z.ZodString>;
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected";
     isActive: boolean;
     businessId: string;
     firstName: string;
     lastName: string;
     email: string;
     position: string;
+    jobId: string;
+    stage: string;
+    isStaffConverted: boolean;
     _id?: string | undefined;
+    staffId?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
-    resumeUrl?: string | undefined;
+    resume?: string | undefined;
     coverLetter?: string | undefined;
-    notes?: string | undefined;
+    adminNotes?: string | undefined;
     appliedAt?: string | undefined;
 }, {
     businessId: string;
@@ -38,73 +43,79 @@ export declare const applicantSchema: z.ZodObject<{
     lastName: string;
     email: string;
     position: string;
-    status?: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected" | undefined;
+    jobId: string;
+    stage: string;
     _id?: string | undefined;
     isActive?: boolean | undefined;
+    staffId?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
-    resumeUrl?: string | undefined;
+    resume?: string | undefined;
     coverLetter?: string | undefined;
-    notes?: string | undefined;
+    adminNotes?: string | undefined;
+    isStaffConverted?: boolean | undefined;
     appliedAt?: string | undefined;
 }>;
-export declare const createApplicantSchema: z.ZodObject<Omit<{
-    _id: z.ZodOptional<z.ZodString>;
+export declare const createApplicantSchema: z.ZodObject<{
     firstName: z.ZodString;
     lastName: z.ZodString;
     email: z.ZodString;
     phone: z.ZodOptional<z.ZodString>;
-    position: z.ZodString;
-    resumeUrl: z.ZodOptional<z.ZodString>;
+    resume: z.ZodOptional<z.ZodString>;
     coverLetter: z.ZodOptional<z.ZodString>;
-    businessId: z.ZodString;
-    status: z.ZodDefault<z.ZodEnum<["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"]>>;
-    notes: z.ZodOptional<z.ZodString>;
-    isActive: z.ZodDefault<z.ZodBoolean>;
-    appliedAt: z.ZodOptional<z.ZodString>;
-    createdAt: z.ZodOptional<z.ZodString>;
-    updatedAt: z.ZodOptional<z.ZodString>;
-}, "status" | "_id" | "isActive" | "notes" | "appliedAt">, "strip", z.ZodTypeAny, {
-    businessId: string;
+}, "strip", z.ZodTypeAny, {
     firstName: string;
     lastName: string;
     email: string;
-    position: string;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
     phone?: string | undefined;
-    resumeUrl?: string | undefined;
+    resume?: string | undefined;
     coverLetter?: string | undefined;
 }, {
-    businessId: string;
     firstName: string;
     lastName: string;
     email: string;
-    position: string;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
     phone?: string | undefined;
-    resumeUrl?: string | undefined;
+    resume?: string | undefined;
     coverLetter?: string | undefined;
 }>;
 export declare const updateApplicantSchema: z.ZodObject<{
-    status: z.ZodOptional<z.ZodEnum<["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"]>>;
-    notes: z.ZodOptional<z.ZodString>;
+    adminNotes: z.ZodOptional<z.ZodString>;
     isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    status?: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected" | undefined;
     isActive?: boolean | undefined;
-    notes?: string | undefined;
+    adminNotes?: string | undefined;
 }, {
-    status?: "pending" | "reviewed" | "shortlisted" | "interviewed" | "hired" | "rejected" | undefined;
     isActive?: boolean | undefined;
-    notes?: string | undefined;
+    adminNotes?: string | undefined;
+}>;
+export declare const updateApplicantStageSchema: z.ZodObject<{
+    stage: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    stage: string;
+}, {
+    stage: string;
+}>;
+export declare const hireApplicantSchema: z.ZodObject<{
+    salary: z.ZodNumber;
+    salaryType: z.ZodEnum<["hourly", "daily", "monthly", "annual"]>;
+}, "strip", z.ZodTypeAny, {
+    salaryType: "hourly" | "daily" | "monthly" | "annual";
+    salary: number;
+}, {
+    salaryType: "hourly" | "daily" | "monthly" | "annual";
+    salary: number;
 }>;
 export declare const applicantJsonSchema: {
     readonly type: "object";
     readonly properties: {
         readonly _id: {
+            readonly type: "string";
+        };
+        readonly jobId: {
+            readonly type: "string";
+        };
+        readonly businessId: {
             readonly type: "string";
         };
         readonly firstName: {
@@ -130,24 +141,26 @@ export declare const applicantJsonSchema: {
             readonly minLength: 1;
             readonly maxLength: 100;
         };
-        readonly resumeUrl: {
+        readonly resume: {
             readonly type: "string";
-            readonly format: "uri";
+            readonly maxLength: 500;
         };
         readonly coverLetter: {
             readonly type: "string";
             readonly maxLength: 2000;
         };
-        readonly businessId: {
+        readonly stage: {
             readonly type: "string";
         };
-        readonly status: {
+        readonly adminNotes: {
             readonly type: "string";
-            readonly enum: readonly ["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"];
+            readonly maxLength: 2000;
         };
-        readonly notes: {
+        readonly isStaffConverted: {
+            readonly type: "boolean";
+        };
+        readonly staffId: {
             readonly type: "string";
-            readonly maxLength: 1000;
         };
         readonly isActive: {
             readonly type: "boolean";
@@ -165,7 +178,7 @@ export declare const applicantJsonSchema: {
             readonly format: "date-time";
         };
     };
-    readonly required: readonly ["firstName", "lastName", "email", "position", "businessId"];
+    readonly required: readonly ["jobId", "businessId", "firstName", "lastName", "email", "position", "stage"];
 };
 export declare const createApplicantJsonSchema: {
     readonly type: "object";
@@ -188,39 +201,50 @@ export declare const createApplicantJsonSchema: {
             readonly type: "string";
             readonly maxLength: 20;
         };
-        readonly position: {
+        readonly resume: {
             readonly type: "string";
-            readonly minLength: 1;
-            readonly maxLength: 100;
-        };
-        readonly resumeUrl: {
-            readonly type: "string";
-            readonly format: "uri";
+            readonly maxLength: 500;
         };
         readonly coverLetter: {
             readonly type: "string";
             readonly maxLength: 2000;
         };
-        readonly businessId: {
-            readonly type: "string";
-        };
     };
-    readonly required: readonly ["firstName", "lastName", "email", "position", "businessId"];
+    readonly required: readonly ["firstName", "lastName", "email"];
 };
 export declare const updateApplicantJsonSchema: {
     readonly type: "object";
     readonly properties: {
-        readonly status: {
+        readonly adminNotes: {
             readonly type: "string";
-            readonly enum: readonly ["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"];
-        };
-        readonly notes: {
-            readonly type: "string";
-            readonly maxLength: 1000;
+            readonly maxLength: 2000;
         };
         readonly isActive: {
             readonly type: "boolean";
         };
     };
+};
+export declare const updateApplicantStageJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly stage: {
+            readonly type: "string";
+            readonly minLength: 1;
+        };
+    };
+    readonly required: readonly ["stage"];
+};
+export declare const hireApplicantJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly salary: {
+            readonly type: "number";
+        };
+        readonly salaryType: {
+            readonly type: "string";
+            readonly enum: readonly ["hourly", "daily", "monthly", "annual"];
+        };
+    };
+    readonly required: readonly ["salary", "salaryType"];
 };
 //# sourceMappingURL=applicant.types.d.ts.map

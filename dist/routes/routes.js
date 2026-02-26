@@ -4,6 +4,7 @@ import authAdminRoutes from "../modules/admin/auth/auth.admin.routes.js";
 import businessRoutes from "../modules/business/business.routes.js";
 import blogRoutes from "../modules/blog/blog.routes.js";
 import applicantRoutes from "../modules/applicant/applicant.routes.js";
+import jobPostRoutes from "../modules/job-post/jobPost.routes.js";
 import staffRoutes from "../modules/staff/staff.management.route.js";
 import staffAuthRoutes from "../modules/staff/staff.auth.routes.js";
 import staffSelfRoutes from "../modules/staff/staff.route.js";
@@ -28,6 +29,8 @@ const routes = async (fastify) => {
     await fastify.register(businessRoutes);
     // Blog routes
     await fastify.register(blogRoutes);
+    // Job Post routes (admin CRUD + public listing/apply)
+    await fastify.register(jobPostRoutes);
     // Applicant routes
     await fastify.register(applicantRoutes);
     // Staff routes

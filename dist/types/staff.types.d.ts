@@ -71,8 +71,8 @@ export declare const staffSchema: z.ZodObject<{
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
     department?: string | undefined;
+    notes?: string | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -96,9 +96,9 @@ export declare const staffSchema: z.ZodObject<{
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
-    department?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
+    department?: string | undefined;
+    notes?: string | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -167,8 +167,8 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     salary?: number | undefined;
     phone?: string | undefined;
-    department?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
+    department?: string | undefined;
 }>;
 export declare const updateStaffSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
@@ -195,9 +195,9 @@ export declare const updateStaffSchema: z.ZodObject<{
     position?: string | undefined;
     dateHired?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
-    department?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
+    department?: string | undefined;
+    notes?: string | undefined;
 }, {
     status?: "active" | "on_leave" | "terminated" | undefined;
     isActive?: boolean | undefined;
@@ -209,9 +209,9 @@ export declare const updateStaffSchema: z.ZodObject<{
     position?: string | undefined;
     dateHired?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
-    department?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
+    department?: string | undefined;
+    notes?: string | undefined;
 }>;
 export declare const staffLoginSchema: z.ZodObject<{
     email: z.ZodString;

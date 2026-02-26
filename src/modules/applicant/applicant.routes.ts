@@ -1,27 +1,31 @@
 import type { FastifyPluginAsync } from "fastify";
 import {
     applicantJsonSchema,
-    createApplicantJsonSchema,
     updateApplicantJsonSchema,
+    updateApplicantStageJsonSchema,
+    hireApplicantJsonSchema,
 } from "../../types/applicant.types.js";
 import {
     getAllApplicants,
     getApplicantById,
-    getApplicantsByBusiness,
-    createApplicant,
+    getApplicantsByJob,
     updateApplicant,
+    updateApplicantStage,
+    hireApplicant,
     deleteApplicant,
-    uploadApplicantResume,
 } from "./applicant.controllers.js";
 
 const applicantRoutes: FastifyPluginAsync = async (fastify) => {
     // GET /applicants - Get all applicants (protected, filtered by access)
-    fastify.get<{ Querystring: { businessId?: string; status?: string } }>(
+    fastify.get<{
+        Querystring: { businessId?: string; jobId?: string; stage?: string };
+    }>(
         "/applicants",
         {
             preHandler: [fastify.authenticate],
             schema: {
-                description: "Get all applicants with optional filters (requires authentication)",
+                description:
+                    "Get all applicants with optional filters (requires authentication)",
                 tags: ["Applicants"],
                 security: [{ bearerAuth: [] }],
                 querystring: {
@@ -31,10 +35,13 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
                             type: "string",
                             description: "Filter by business ID",
                         },
-                        status: {
+                        jobId: {
                             type: "string",
-                            enum: ["pending", "reviewed", "shortlisted", "interviewed", "hired", "rejected"],
-                            description: "Filter by status",
+                            description: "Filter by job post ID",
+                        },
+                        stage: {
+                            type: "string",
+                            description: "Filter by stage ID",
                         },
                     },
                 },
@@ -61,7 +68,10 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
                 params: {
                     type: "object",
                     properties: {
-                        id: { type: "string", description: "Applicant ID (MongoDB ObjectId)" },
+                        id: {
+                            type: "string",
+                            description: "Applicant ID (MongoDB ObjectId)",
+                        },
                     },
                     required: ["id"],
                 },
@@ -84,24 +94,25 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
         getApplicantById,
     );
 
-    // GET /businesses/:businessId/applicants - Get applicants by business (protected)
-    fastify.get<{ Params: { businessId: string } }>(
-        "/businesses/:businessId/applicants",
+    // GET /job-posts/:jobId/applicants - Get applicants for a job post (Kanban view)
+    fastify.get<{ Params: { jobId: string } }>(
+        "/job-posts/:jobId/applicants",
         {
             preHandler: [fastify.authenticate],
             schema: {
-                description: "Get all applicants for a business (requires authentication)",
+                description:
+                    "Get all applicants for a specific job post (Kanban board view, requires authentication)",
                 tags: ["Applicants"],
                 security: [{ bearerAuth: [] }],
                 params: {
                     type: "object",
                     properties: {
-                        businessId: {
+                        jobId: {
                             type: "string",
-                            description: "Business ID (MongoDB ObjectId)",
+                            description: "Job Post ID (MongoDB ObjectId)",
                         },
                     },
-                    required: ["businessId"],
+                    required: ["jobId"],
                 },
                 response: {
                     200: {
@@ -115,29 +126,6 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
                             message: { type: "string" },
                         },
                     },
-                },
-            },
-        },
-        getApplicantsByBusiness,
-    );
-
-    // POST /applicants - Submit job application (PUBLIC)
-    fastify.post(
-        "/applicants",
-        {
-            schema: {
-                description: "Submit a job application (public endpoint)",
-                tags: ["Applicants"],
-                body: createApplicantJsonSchema,
-                response: {
-                    201: applicantJsonSchema,
-                    400: {
-                        type: "object",
-                        properties: {
-                            error: { type: "string" },
-                            details: { type: "array" },
-                        },
-                    },
                     404: {
                         type: "object",
                         properties: { error: { type: "string" } },
@@ -145,22 +133,26 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
                 },
             },
         },
-        createApplicant,
+        getApplicantsByJob,
     );
 
-    // PUT /applicants/:id - Update applicant (protected)
-    fastify.put<{ Params: { id: string } }>(
+    // PATCH /applicants/:id - Update applicant (notes, etc.)
+    fastify.patch<{ Params: { id: string } }>(
         "/applicants/:id",
         {
             preHandler: [fastify.authenticate],
             schema: {
-                description: "Update an applicant (status, notes) - requires authentication",
+                description:
+                    "Update an applicant (admin notes, etc.) - requires authentication",
                 tags: ["Applicants"],
                 security: [{ bearerAuth: [] }],
                 params: {
                     type: "object",
                     properties: {
-                        id: { type: "string", description: "Applicant ID (MongoDB ObjectId)" },
+                        id: {
+                            type: "string",
+                            description: "Applicant ID (MongoDB ObjectId)",
+                        },
                     },
                     required: ["id"],
                 },
@@ -191,6 +183,107 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
         updateApplicant,
     );
 
+    // PATCH /applicants/:id/stage - Move applicant to a different stage
+    fastify.patch<{ Params: { id: string } }>(
+        "/applicants/:id/stage",
+        {
+            preHandler: [fastify.authenticate],
+            schema: {
+                description:
+                    "Move an applicant to a different stage in the pipeline (requires authentication)",
+                tags: ["Applicants"],
+                security: [{ bearerAuth: [] }],
+                params: {
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "string",
+                            description: "Applicant ID (MongoDB ObjectId)",
+                        },
+                    },
+                    required: ["id"],
+                },
+                body: updateApplicantStageJsonSchema,
+                response: {
+                    200: applicantJsonSchema,
+                    400: {
+                        type: "object",
+                        properties: {
+                            error: { type: "string" },
+                            message: { type: "string" },
+                        },
+                    },
+                    404: {
+                        type: "object",
+                        properties: { error: { type: "string" } },
+                    },
+                },
+            },
+        },
+        updateApplicantStage,
+    );
+
+    // POST /applicants/:id/hire - Convert applicant to staff member
+    fastify.post<{ Params: { id: string } }>(
+        "/applicants/:id/hire",
+        {
+            preHandler: [fastify.authenticate],
+            schema: {
+                description:
+                    "Hire an applicant — creates a staff member, sends welcome email (requires authentication)",
+                tags: ["Applicants"],
+                security: [{ bearerAuth: [] }],
+                params: {
+                    type: "object",
+                    properties: {
+                        id: {
+                            type: "string",
+                            description: "Applicant ID (MongoDB ObjectId)",
+                        },
+                    },
+                    required: ["id"],
+                },
+                body: hireApplicantJsonSchema,
+                response: {
+                    201: {
+                        type: "object",
+                        properties: {
+                            message: { type: "string" },
+                            staff: {
+                                type: "object",
+                                properties: {
+                                    _id: { type: "string" },
+                                    firstName: { type: "string" },
+                                    lastName: { type: "string" },
+                                    email: { type: "string" },
+                                    position: { type: "string" },
+                                    businessId: { type: "string" },
+                                },
+                            },
+                            applicantId: { type: "string" },
+                            temporaryPassword: { type: "string" },
+                        },
+                    },
+                    400: {
+                        type: "object",
+                        properties: {
+                            error: { type: "string" },
+                            details: { type: "array" },
+                        },
+                    },
+                    409: {
+                        type: "object",
+                        properties: {
+                            error: { type: "string" },
+                            staffId: { type: "string" },
+                        },
+                    },
+                },
+            },
+        },
+        hireApplicant,
+    );
+
     // DELETE /applicants/:id - Soft delete applicant (protected)
     fastify.delete<{ Params: { id: string } }>(
         "/applicants/:id",
@@ -203,7 +296,10 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
                 params: {
                     type: "object",
                     properties: {
-                        id: { type: "string", description: "Applicant ID (MongoDB ObjectId)" },
+                        id: {
+                            type: "string",
+                            description: "Applicant ID (MongoDB ObjectId)",
+                        },
                     },
                     required: ["id"],
                 },
@@ -227,54 +323,6 @@ const applicantRoutes: FastifyPluginAsync = async (fastify) => {
             },
         },
         deleteApplicant,
-    );
-
-    // POST /applicants/:id/resume - Upload resume (public for initial submission)
-    fastify.post<{ Params: { id: string } }>(
-        "/applicants/:id/resume",
-        {
-            schema: {
-                description: "Upload a resume for an applicant (multipart/form-data)",
-                tags: ["Applicants"],
-                consumes: ["multipart/form-data"],
-                params: {
-                    type: "object",
-                    properties: {
-                        id: {
-                            type: "string",
-                            description: "Applicant ID (MongoDB ObjectId)",
-                        },
-                    },
-                    required: ["id"],
-                },
-                response: {
-                    200: {
-                        type: "object",
-                        properties: {
-                            message: { type: "string" },
-                            resumeUrl: { type: "string", format: "uri" },
-                            applicant: applicantJsonSchema,
-                        },
-                    },
-                    400: {
-                        type: "object",
-                        properties: { error: { type: "string" } },
-                    },
-                    404: {
-                        type: "object",
-                        properties: { error: { type: "string" } },
-                    },
-                    500: {
-                        type: "object",
-                        properties: {
-                            error: { type: "string" },
-                            message: { type: "string" },
-                        },
-                    },
-                },
-            },
-        },
-        uploadApplicantResume,
     );
 };
 

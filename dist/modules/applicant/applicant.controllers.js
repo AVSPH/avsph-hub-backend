@@ -1,5 +1,13 @@
 import { ObjectId } from "@fastify/mongodb";
-import { createApplicantSchema, updateApplicantSchema, } from "../../types/applicant.types.js";
+import bcrypt from "bcrypt";
+import { updateApplicantSchema, updateApplicantStageSchema, hireApplicantSchema, } from "../../types/applicant.types.js";
+import { getApplicantHiredEmail } from "../../utils/emails/auth/applicant.creation.email.js";
+// ─── Helper: generate a temporary password ──────────────────────────────
+function generateTempPassword(firstName) {
+    const digits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+    return `${firstName.charAt(0).toUpperCase()}${firstName.slice(1).toLowerCase()}${digits}`;
+}
+// ─── Admin Endpoints ────────────────────────────────────────────────────
 // Get all applicants (protected - filtered by business access)
 export async function getAllApplicants(request, reply) {
     const applicants = request.server.mongo.db?.collection("applicants");
@@ -15,9 +23,16 @@ export async function getAllApplicants(request, reply) {
         }
         query.businessId = request.query.businessId;
     }
-    // Filter by status if provided
-    if (request.query.status) {
-        query.status = request.query.status;
+    // Filter by job if provided
+    if (request.query.jobId) {
+        if (!ObjectId.isValid(request.query.jobId)) {
+            return reply.status(400).send({ error: "Invalid job ID format" });
+        }
+        query.jobId = request.query.jobId;
+    }
+    // Filter by stage if provided
+    if (request.query.stage) {
+        query.stage = request.query.stage;
     }
     // If not super-admin, filter by accessible businesses
     if (request.user.role !== "super-admin") {
@@ -36,7 +51,10 @@ export async function getAllApplicants(request, reply) {
             query.businessId = { $in: businessIds };
         }
     }
-    const result = await applicants.find(query).sort({ createdAt: -1 }).toArray();
+    const result = await applicants
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
     return result;
 }
 // Get applicant by ID (protected)
@@ -69,21 +87,27 @@ export async function getApplicantById(request, reply) {
     }
     return applicant;
 }
-// Get applicants by business (protected)
-export async function getApplicantsByBusiness(request, reply) {
+// Get applicants by job post (protected - for Kanban view)
+export async function getApplicantsByJob(request, reply) {
     const applicants = request.server.mongo.db?.collection("applicants");
     const businesses = request.server.mongo.db?.collection("businesses");
-    if (!applicants || !businesses) {
+    const jobPosts = request.server.mongo.db?.collection("jobPosts");
+    if (!applicants || !businesses || !jobPosts) {
         return reply.status(500).send({ error: "Database not available" });
     }
-    const { businessId } = request.params;
-    if (!ObjectId.isValid(businessId)) {
-        return reply.status(400).send({ error: "Invalid business ID format" });
+    const { jobId } = request.params;
+    if (!ObjectId.isValid(jobId)) {
+        return reply.status(400).send({ error: "Invalid job ID format" });
+    }
+    // Verify job post exists
+    const jobPost = await jobPosts.findOne({ _id: new ObjectId(jobId) });
+    if (!jobPost) {
+        return reply.status(404).send({ error: "Job post not found" });
     }
     // Check business access (unless super-admin)
     if (request.user.role !== "super-admin") {
         const business = await businesses.findOne({
-            _id: new ObjectId(businessId),
+            _id: new ObjectId(jobPost.businessId),
             adminIds: request.user.id,
         });
         if (!business) {
@@ -94,59 +118,10 @@ export async function getApplicantsByBusiness(request, reply) {
         }
     }
     const result = await applicants
-        .find({ businessId, isActive: true })
+        .find({ jobId, isActive: true })
         .sort({ createdAt: -1 })
         .toArray();
     return result;
-}
-// Create applicant (PUBLIC - for job applications)
-export async function createApplicant(request, reply) {
-    const applicants = request.server.mongo.db?.collection("applicants");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!applicants || !businesses) {
-        return reply.status(500).send({ error: "Database not available" });
-    }
-    const parseResult = createApplicantSchema.safeParse(request.body);
-    if (!parseResult.success) {
-        return reply.status(400).send({
-            error: "Validation failed",
-            details: parseResult.error.errors,
-        });
-    }
-    const { firstName, lastName, email, phone, position, resumeUrl, coverLetter, businessId, } = parseResult.data;
-    // Validate business exists
-    if (!ObjectId.isValid(businessId)) {
-        return reply.status(400).send({ error: "Invalid business ID format" });
-    }
-    const business = await businesses.findOne({
-        _id: new ObjectId(businessId),
-        isActive: true,
-    });
-    if (!business) {
-        return reply.status(404).send({ error: "Business not found" });
-    }
-    const now = new Date().toISOString();
-    const newApplicant = {
-        firstName,
-        lastName,
-        email,
-        phone,
-        position,
-        resumeUrl,
-        coverLetter,
-        businessId,
-        status: "pending",
-        notes: undefined,
-        isActive: true,
-        appliedAt: now,
-        createdAt: now,
-        updatedAt: now,
-    };
-    const result = await applicants.insertOne(newApplicant);
-    return reply.status(201).send({
-        _id: result.insertedId,
-        ...newApplicant,
-    });
 }
 // Update applicant (protected - admin only)
 export async function updateApplicant(request, reply) {
@@ -160,11 +135,13 @@ export async function updateApplicant(request, reply) {
         return reply.status(400).send({ error: "Invalid applicant ID format" });
     }
     // Get the applicant to check business access
-    const existingApplicant = await applicants.findOne({ _id: new ObjectId(id) });
+    const existingApplicant = await applicants.findOne({
+        _id: new ObjectId(id),
+    });
     if (!existingApplicant) {
         return reply.status(404).send({ error: "Applicant not found" });
     }
-    // Check if admin has access to the applicant's business (unless super-admin)
+    // Check if admin has access (unless super-admin)
     if (request.user.role !== "super-admin") {
         const business = await businesses.findOne({
             _id: new ObjectId(existingApplicant.businessId),
@@ -194,6 +171,198 @@ export async function updateApplicant(request, reply) {
     }
     return result;
 }
+// Move applicant to a different stage (protected)
+export async function updateApplicantStage(request, reply) {
+    const applicants = request.server.mongo.db?.collection("applicants");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    const jobPosts = request.server.mongo.db?.collection("jobPosts");
+    if (!applicants || !businesses || !jobPosts) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { id } = request.params;
+    if (!ObjectId.isValid(id)) {
+        return reply.status(400).send({ error: "Invalid applicant ID format" });
+    }
+    const existingApplicant = await applicants.findOne({
+        _id: new ObjectId(id),
+    });
+    if (!existingApplicant) {
+        return reply.status(404).send({ error: "Applicant not found" });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(existingApplicant.businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this applicant's business",
+            });
+        }
+    }
+    const parseResult = updateApplicantStageSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { stage } = parseResult.data;
+    // Validate stage exists in the job post's stages
+    const jobPost = await jobPosts.findOne({
+        _id: new ObjectId(existingApplicant.jobId),
+    });
+    if (!jobPost) {
+        return reply.status(404).send({ error: "Associated job post not found" });
+    }
+    const validStage = jobPost.stages.find((s) => s.id === stage);
+    if (!validStage) {
+        return reply.status(400).send({
+            error: "Invalid stage",
+            message: `Stage '${stage}' does not exist in this job post's pipeline`,
+        });
+    }
+    const result = await applicants.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { stage, updatedAt: new Date().toISOString() } }, { returnDocument: "after" });
+    if (!result) {
+        return reply.status(404).send({ error: "Applicant not found" });
+    }
+    return result;
+}
+// Hire applicant — convert to staff member (protected)
+export async function hireApplicant(request, reply) {
+    const applicants = request.server.mongo.db?.collection("applicants");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    const jobPosts = request.server.mongo.db?.collection("jobPosts");
+    const staffCollection = request.server.mongo.db?.collection("staff");
+    if (!applicants || !businesses || !jobPosts || !staffCollection) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { id } = request.params;
+    if (!ObjectId.isValid(id)) {
+        return reply.status(400).send({ error: "Invalid applicant ID format" });
+    }
+    const applicant = await applicants.findOne({ _id: new ObjectId(id) });
+    if (!applicant) {
+        return reply.status(404).send({ error: "Applicant not found" });
+    }
+    // Check if already converted
+    if (applicant.isStaffConverted) {
+        return reply.status(409).send({
+            error: "This applicant has already been converted to a staff member",
+            staffId: applicant.staffId,
+        });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(applicant.businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this applicant's business",
+            });
+        }
+    }
+    // Validate hire input (salary, salaryType)
+    const parseResult = hireApplicantSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { salary, salaryType } = parseResult.data;
+    // Get the job post for position and employment type
+    const jobPost = await jobPosts.findOne({
+        _id: new ObjectId(applicant.jobId),
+    });
+    if (!jobPost) {
+        return reply.status(404).send({ error: "Associated job post not found" });
+    }
+    // Get the business name for the email
+    const business = await businesses.findOne({
+        _id: new ObjectId(applicant.businessId),
+    });
+    // Check if email already exists in staff
+    const existingStaff = await staffCollection.findOne({
+        email: applicant.email,
+        isActive: true,
+    });
+    if (existingStaff) {
+        return reply.status(409).send({
+            error: "A staff member with this email already exists",
+        });
+    }
+    // Generate temporary password and hash it
+    const tempPassword = generateTempPassword(applicant.firstName);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const now = new Date().toISOString();
+    // Create the staff record
+    const newStaff = {
+        firstName: applicant.firstName,
+        lastName: applicant.lastName,
+        email: applicant.email,
+        password: hashedPassword,
+        phone: applicant.phone,
+        position: jobPost.title,
+        department: undefined,
+        dateHired: now,
+        salary,
+        salaryType,
+        employmentType: jobPost.employmentType,
+        businessId: applicant.businessId,
+        status: "active",
+        notes: `Hired from job application. Applicant ID: ${id}`,
+        photoUrl: undefined,
+        documents: [],
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+    };
+    const staffResult = await staffCollection.insertOne(newStaff);
+    // Find the "hired" stage in the job post
+    const hiredStage = jobPost.stages.find((s) => s.type === "hired");
+    // Update the applicant record
+    await applicants.findOneAndUpdate({ _id: new ObjectId(id) }, {
+        $set: {
+            isStaffConverted: true,
+            staffId: staffResult.insertedId.toString(),
+            stage: hiredStage?.id || applicant.stage,
+            updatedAt: now,
+        },
+    });
+    // Send welcome email via Gmail API
+    try {
+        const emailHtml = getApplicantHiredEmail(applicant.firstName, applicant.email, tempPassword, jobPost.title, business?.name || "Advanced Virtual Staff");
+        await request.server.gmail.sendEmail({
+            to: applicant.email,
+            subject: `🎉 Welcome to ${business?.name || "the Team"} — Your Account is Ready!`,
+            body: emailHtml,
+        });
+        request.server.log.info(`Welcome email sent to ${applicant.email} for staff conversion`);
+    }
+    catch (emailError) {
+        // Log the error but don't fail the hire — staff is already created
+        request.server.log.error(emailError, `Failed to send welcome email to ${applicant.email}`);
+    }
+    return reply.status(201).send({
+        message: "Applicant hired and staff member created successfully",
+        staff: {
+            _id: staffResult.insertedId,
+            firstName: newStaff.firstName,
+            lastName: newStaff.lastName,
+            email: newStaff.email,
+            position: newStaff.position,
+            businessId: newStaff.businessId,
+        },
+        applicantId: id,
+        temporaryPassword: tempPassword, // Return to admin for backup
+    });
+}
 // Delete applicant (soft delete - protected)
 export async function deleteApplicant(request, reply) {
     const applicants = request.server.mongo.db?.collection("applicants");
@@ -206,7 +375,9 @@ export async function deleteApplicant(request, reply) {
         return reply.status(400).send({ error: "Invalid applicant ID format" });
     }
     // Get the applicant to check business access
-    const existingApplicant = await applicants.findOne({ _id: new ObjectId(id) });
+    const existingApplicant = await applicants.findOne({
+        _id: new ObjectId(id),
+    });
     if (!existingApplicant) {
         return reply.status(404).send({ error: "Applicant not found" });
     }
@@ -228,72 +399,5 @@ export async function deleteApplicant(request, reply) {
         return reply.status(404).send({ error: "Applicant not found" });
     }
     return reply.status(200).send({ message: "Applicant deleted successfully" });
-}
-// Upload applicant resume (can be public or protected based on use case)
-export async function uploadApplicantResume(request, reply) {
-    const applicants = request.server.mongo.db?.collection("applicants");
-    if (!applicants) {
-        return reply.status(500).send({ error: "Database not available" });
-    }
-    const { id } = request.params;
-    if (!ObjectId.isValid(id)) {
-        return reply.status(400).send({ error: "Invalid applicant ID format" });
-    }
-    // Check if applicant exists
-    const applicant = await applicants.findOne({ _id: new ObjectId(id) });
-    if (!applicant) {
-        return reply.status(404).send({ error: "Applicant not found" });
-    }
-    try {
-        // Get the uploaded file
-        const data = await request.file();
-        if (!data) {
-            return reply.status(400).send({ error: "No file uploaded" });
-        }
-        // Validate file type (allow documents and images)
-        const allowedMimeTypes = [
-            "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "image/jpeg",
-            "image/png",
-        ];
-        if (!allowedMimeTypes.includes(data.mimetype)) {
-            return reply.status(400).send({
-                error: "Invalid file type. Allowed types: PDF, DOC, DOCX, JPEG, PNG",
-            });
-        }
-        // Convert file stream to buffer
-        const chunks = [];
-        for await (const chunk of data.file) {
-            chunks.push(chunk);
-        }
-        const fileBuffer = Buffer.concat(chunks);
-        // Upload to Cloudinary
-        const uploadResult = await request.server.uploadToCloudinary(fileBuffer, {
-            folder: `applicants/${applicant.businessId}/${id}`,
-            public_id: `resume_${Date.now()}`,
-            resource_type: "auto",
-        });
-        // Update applicant with resume URL
-        const result = await applicants.findOneAndUpdate({ _id: new ObjectId(id) }, {
-            $set: {
-                resumeUrl: uploadResult.secure_url,
-                updatedAt: new Date().toISOString(),
-            },
-        }, { returnDocument: "after" });
-        return reply.status(200).send({
-            message: "Resume uploaded successfully",
-            resumeUrl: uploadResult.secure_url,
-            applicant: result,
-        });
-    }
-    catch (error) {
-        request.server.log.error(error);
-        return reply.status(500).send({
-            error: "Failed to upload resume",
-            message: error instanceof Error ? error.message : "Unknown error",
-        });
-    }
 }
 //# sourceMappingURL=applicant.controllers.js.map

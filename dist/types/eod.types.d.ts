@@ -19,7 +19,7 @@ export declare const eodReportSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "reviewed" | "submitted" | "needs_revision";
+    status: "submitted" | "reviewed" | "needs_revision";
     date: string;
     isActive: boolean;
     businessId: string;
@@ -30,8 +30,8 @@ export declare const eodReportSchema: z.ZodObject<{
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    notes?: string | undefined;
     adminNotes?: string | undefined;
+    notes?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
     reviewedBy?: string | undefined;
@@ -42,14 +42,14 @@ export declare const eodReportSchema: z.ZodObject<{
     staffId: string;
     hoursWorked: number;
     tasksCompleted: string;
-    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    status?: "submitted" | "reviewed" | "needs_revision" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
     isApproved?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    notes?: string | undefined;
     adminNotes?: string | undefined;
+    notes?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
     reviewedBy?: string | undefined;
@@ -117,14 +117,14 @@ export declare const adminEditEodSchema: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["submitted", "reviewed", "needs_revision"]>>;
     isApproved: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    status?: "submitted" | "reviewed" | "needs_revision" | undefined;
     date?: string | undefined;
     isApproved?: boolean | undefined;
     hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
     tasksCompleted?: string | undefined;
 }, {
-    status?: "reviewed" | "submitted" | "needs_revision" | undefined;
+    status?: "submitted" | "reviewed" | "needs_revision" | undefined;
     date?: string | undefined;
     isApproved?: boolean | undefined;
     hoursWorked?: number | undefined;
