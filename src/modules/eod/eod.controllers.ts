@@ -461,7 +461,7 @@ export async function getEodByBusiness(
   // Use aggregation pipeline with $lookup to join staff details
   const pipeline: any[] = [
     { $match: query },
-    { $sort: { date: -1 } },
+    { $sort: { date: -1, createdAt: -1 } },
     { $skip: skip },
     { $limit: limit },
     {
