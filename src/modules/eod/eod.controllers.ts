@@ -189,7 +189,13 @@ export async function editOwnEod(
 // Get my EOD reports (staff only)
 export async function getMyEodReports(
   request: FastifyRequest<{
-    Querystring: { startDate?: string; endDate?: string; status?: string };
+    Querystring: {
+      startDate?: string;
+      endDate?: string;
+      status?: string;
+      page?: string;
+      limit?: string;
+    };
   }>,
   reply: FastifyReply,
 ) {
@@ -227,9 +233,32 @@ export async function getMyEodReports(
     query.status = request.query.status;
   }
 
-  const result = await eodReports.find(query).sort({ date: -1 }).toArray();
+  // Pagination
+  const page = Math.max(1, parseInt(request.query.page || "1", 10));
+  const limit = Math.min(
+    100,
+    Math.max(1, parseInt(request.query.limit || "20", 10)),
+  );
+  const skip = (page - 1) * limit;
 
-  return result;
+  const [data, totalCount] = await Promise.all([
+    eodReports.find(query).sort({ date: -1 }).skip(skip).limit(limit).toArray(),
+    eodReports.countDocuments(query),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      totalCount,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 }
 
 // Get single EOD report (staff only — own report)
