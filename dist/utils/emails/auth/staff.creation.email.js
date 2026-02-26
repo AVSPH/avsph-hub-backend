@@ -18,17 +18,6 @@ export function getStaffCreationEmail(firstName, email, temporaryPassword, posit
             <td align="center" style="padding: 40px 20px;">
                 <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
 
-                    <!-- Header with gradient -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
-                                Welcome Aboard!
-                            </h1>
-                            <p style="margin: 12px 0 0; color: rgba(255,255,255,0.85); font-size: 16px;">
-                                Your staff account has been created
-                            </p>
-                        </td>
-                    </tr>
 
                     <!-- Main Content -->
                     <tr>

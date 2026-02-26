@@ -1,6 +1,7 @@
 import { ObjectId } from "@fastify/mongodb";
 import bcrypt from "bcrypt";
 import { createAdminSchema, loginSchema, updateAdminSchema, } from "../../types/admin.types.js";
+import { getAdminCreationEmail } from "../../utils/emails/auth/admin.creation.email.js";
 // Login admin
 export async function loginAdmin(request, reply) {
     const admins = request.server.mongo.db?.collection("admins");
@@ -100,6 +101,22 @@ export async function createAdmin(request, reply) {
         if (businesses) {
             await businesses.updateMany({ _id: { $in: assignedBusinessIds.map((id) => new ObjectId(id)) } }, { $addToSet: { adminIds: newAdminId } });
         }
+    }
+    // Send welcome email to the new admin
+    try {
+        const adminRole = isFirstAdmin ? "Super Admin" : (parseResult.data.role || "Admin");
+        const emailHtml = getAdminCreationEmail(firstName, email, password, // original plain-text password before hashing
+        adminRole);
+        await request.server.gmail.sendEmail({
+            to: email,
+            subject: `Welcome to Advanced Virtual Staff! Your Admin Account is Ready!`,
+            body: emailHtml,
+        });
+        request.server.log.info(`Admin creation welcome email sent to ${email}`);
+    }
+    catch (emailError) {
+        // Log the error but don't fail the admin creation
+        request.server.log.error(emailError, `Failed to send admin creation email to ${email}`);
     }
     const { password: _, ...responseAdmin } = newAdmin;
     return reply.status(201).send({

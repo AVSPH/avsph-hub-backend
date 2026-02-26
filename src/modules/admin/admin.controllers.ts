@@ -8,6 +8,7 @@ import {
 } from "../../types/admin.types.js";
 import type { CreateAdmin, LoginRequest } from "../../types/admin.types.js";
 import { z } from "zod";
+import { getAdminCreationEmail } from "../../utils/emails/auth/admin.creation.email.js";
 
 // Login admin
 export async function loginAdmin(
@@ -149,6 +150,34 @@ export async function createAdmin(
         { $addToSet: { adminIds: newAdminId } },
       );
     }
+  }
+
+  // Send welcome email to the new admin
+  try {
+    const adminRole = isFirstAdmin ? "Super Admin" : (parseResult.data.role || "Admin");
+
+    const emailHtml = getAdminCreationEmail(
+      firstName,
+      email,
+      password, // original plain-text password before hashing
+      adminRole,
+    );
+
+    await request.server.gmail.sendEmail({
+      to: email,
+      subject: `Welcome to Advanced Virtual Staff! Your Admin Account is Ready!`,
+      body: emailHtml,
+    });
+
+    request.server.log.info(
+      `Admin creation welcome email sent to ${email}`,
+    );
+  } catch (emailError) {
+    // Log the error but don't fail the admin creation
+    request.server.log.error(
+      emailError,
+      `Failed to send admin creation email to ${email}`,
+    );
   }
 
   const { password: _, ...responseAdmin } = newAdmin;

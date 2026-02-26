@@ -340,7 +340,7 @@ export async function createStaff(
 
     await request.server.gmail.sendEmail({
       to: email,
-      subject: `👋 Welcome to ${businessName} — Your Account is Ready!`,
+      subject: `Welcome to ${businessName}! Your Account is Ready!`,
       body: emailHtml,
     });
 

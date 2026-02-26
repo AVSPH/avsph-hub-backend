@@ -1,14 +1,13 @@
 /**
- * Welcome email sent to a newly created staff member
+ * Welcome email sent to a newly created admin
  * in the AVS Dashboard. Instructs them to log in and
  * change their password immediately.
  */
-export function getStaffCreationEmail(
+export function getAdminCreationEmail(
     firstName: string,
     email: string,
     temporaryPassword: string,
-    position: string,
-    businessName: string,
+    role: string,
     loginUrl: string = "https://dashboard.advancedvirtualstaff.com/login",
 ): string {
     return `
@@ -17,14 +16,13 @@ export function getStaffCreationEmail(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Account Has Been Created</title>
+    <title>Your Admin Account Has Been Created</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa;">
     <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f7fa;">
         <tr>
             <td align="center" style="padding: 40px 20px;">
                 <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
-
 
                     <!-- Main Content -->
                     <tr>
@@ -34,7 +32,7 @@ export function getStaffCreationEmail(
                             </p>
 
                             <p style="margin: 0 0 24px; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                                An account has been created for you on the <strong style="color: #667eea;">${businessName}</strong> dashboard. You have been added as <strong>${position}</strong>. Please log in using the credentials below and change your password immediately.
+                                An admin account has been created for you on the <strong style="color: #667eea;">Advanced Virtual Staff</strong> dashboard. You have been assigned the role of <strong>${role}</strong>. Please log in using the credentials below and change your password immediately.
                             </p>
 
                             <!-- Credentials Box -->
@@ -120,7 +118,7 @@ export function getStaffCreationEmail(
                                             </td>
                                             <td style="padding-left: 12px;">
                                                 <p style="margin: 0; color: #4a5568; font-size: 15px; line-height: 1.5;">
-                                                    Complete your profile and start submitting your daily EOD reports
+                                                    Start managing your businesses and staff on the dashboard
                                                 </p>
                                             </td>
                                         </tr>
@@ -129,12 +127,12 @@ export function getStaffCreationEmail(
                             </div>
 
                             <p style="margin: 24px 0 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                                We're excited to have you on board!
+                                Welcome to the team!
                             </p>
 
                             <p style="margin: 16px 0 0; color: #2d3748; font-size: 16px; font-weight: 600;">
                                 Best regards,<br>
-                                <span style="color: #667eea;">The ${businessName} Team</span>
+                                <span style="color: #667eea;">Advanced Virtual Staff PH</span>
                             </p>
                         </td>
                     </tr>
