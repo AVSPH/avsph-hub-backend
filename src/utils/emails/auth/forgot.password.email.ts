@@ -17,18 +17,6 @@ export function getForgotPasswordEmail(
             <td align="center" style="padding: 40px 20px;">
                 <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
 
-                    <!-- Header -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
-                                Password Reset
-                            </h1>
-                            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.85); font-size: 15px;">
-                                AVS Dashboard ${role}
-                            </p>
-                        </td>
-                    </tr>
-
                     <!-- Main Content -->
                     <tr>
                         <td style="padding: 40px 30px;">
@@ -77,7 +65,7 @@ export function getForgotPasswordEmail(
                     <tr>
                         <td style="background-color: #f8fafc; padding: 24px 30px; border-top: 1px solid #e2e8f0; text-align: center;">
                             <p style="margin: 0; color: #718096; font-size: 13px; line-height: 1.5;">
-                                This email was sent by <strong>AVS Dashboard</strong>. If you have any concerns, please contact your system administrator.
+                                This email was sent from <strong>Advanced Virtual Staff PH</strong>. If you have any concerns, please contact your system administrator.
                             </p>
                         </td>
                     </tr>

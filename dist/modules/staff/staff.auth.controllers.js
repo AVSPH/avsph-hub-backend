@@ -163,7 +163,7 @@ export async function forgotStaffPassword(request, reply) {
     try {
         await request.server.gmail.sendEmail({
             to: email,
-            subject: "AVS Dashboard – Staff Password Reset Code",
+            subject: "Password Reset Code",
             body: getForgotPasswordEmail(staffMember.firstName, resetCode, "Staff"),
         });
     }

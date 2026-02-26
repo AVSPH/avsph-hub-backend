@@ -56,7 +56,7 @@ export async function forgotPassword(request, reply) {
     try {
         await request.server.gmail.sendEmail({
             to: email,
-            subject: "AVS Dashboard – Admin Password Reset Code",
+            subject: "Password Reset Code",
             body: getForgotPasswordEmail(admin.firstName, resetCode),
         });
     }
