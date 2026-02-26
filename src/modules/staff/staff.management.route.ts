@@ -13,7 +13,7 @@ import {
   deleteStaff,
   uploadStaffPhoto,
   uploadStaffDocument,
-} from "./staff.controllers.js";
+} from "./staff.management.controller.js";
 
 const staffRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /staff - Get all staff (protected, filtered by access)

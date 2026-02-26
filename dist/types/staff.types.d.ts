@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 export declare const staffStatusEnum: z.ZodEnum<["active", "on_leave", "terminated"]>;
 export declare const employmentTypeEnum: z.ZodEnum<["full-time", "part-time", "contract"]>;
 export declare const salaryTypeEnum: z.ZodEnum<["hourly", "daily", "monthly", "annual"]>;
@@ -616,5 +616,74 @@ export declare const staffChangePasswordJsonSchema: {
         };
     };
     readonly required: readonly ["currentPassword", "newPassword"];
+};
+export declare const updateStaffProfileSchema: z.ZodObject<{
+    firstName: z.ZodOptional<z.ZodString>;
+    lastName: z.ZodOptional<z.ZodString>;
+    phone: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phone?: string | undefined;
+}, {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phone?: string | undefined;
+}>;
+export type UpdateStaffProfile = z.infer<typeof updateStaffProfileSchema>;
+export declare const updateStaffProfileJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly firstName: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 50;
+        };
+        readonly lastName: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 50;
+        };
+        readonly phone: {
+            readonly type: "string";
+            readonly maxLength: 20;
+        };
+    };
+    readonly additionalProperties: false;
+};
+export declare const addStaffDocumentSchema: z.ZodObject<{
+    name: z.ZodString;
+    url: z.ZodString;
+    type: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    type: string;
+    url: string;
+    name: string;
+}, {
+    type: string;
+    url: string;
+    name: string;
+}>;
+export type AddStaffDocument = z.infer<typeof addStaffDocumentSchema>;
+export declare const addStaffDocumentJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly name: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 100;
+        };
+        readonly url: {
+            readonly type: "string";
+            readonly format: "uri";
+        };
+        readonly type: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 50;
+        };
+    };
+    readonly required: readonly ["name", "url", "type"];
+    readonly additionalProperties: false;
 };
 //# sourceMappingURL=staff.types.d.ts.map

@@ -5,8 +5,9 @@ import authAdminRoutes from "../modules/admin/auth/auth.admin.routes.js";
 import businessRoutes from "../modules/business/business.routes.js";
 import blogRoutes from "../modules/blog/blog.routes.js";
 import applicantRoutes from "../modules/applicant/applicant.routes.js";
-import staffRoutes from "../modules/staff/staff.routes.js";
+import staffRoutes from "../modules/staff/staff.management.route.js";
 import staffAuthRoutes from "../modules/staff/staff.auth.routes.js";
+import staffSelfRoutes from "../modules/staff/staff.route.js";
 import attendanceRoutes from "../modules/attendance/attendance.routes.js";
 import payrollRoutes from "../modules/payroll/payroll.routes.js";
 import bookingRoutes from "../modules/booking/booking.routes.js";
@@ -41,6 +42,9 @@ const routes: FastifyPluginAsync = async (fastify) => {
 
   // Staff auth routes
   await fastify.register(staffAuthRoutes);
+
+  // Staff self-service routes (profile update, document upload)
+  await fastify.register(staffSelfRoutes);
 
   // Attendance routes
   await fastify.register(attendanceRoutes);
