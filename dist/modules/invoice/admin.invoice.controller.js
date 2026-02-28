@@ -77,7 +77,7 @@ export async function generateInvoice(request, reply) {
     })
         .toArray();
     const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
-    const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd);
     const eodIds = eodRecords.map((record) => record._id.toString());
     const now = new Date().toISOString();
     const newInvoice = {
@@ -199,7 +199,7 @@ export async function generateBusinessInvoices(request, reply) {
             })
                 .toArray();
             const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
-            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
+            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd);
             const eodIds = eodRecords.map((record) => record._id.toString());
             const now = new Date().toISOString();
             const newInvoice = {
@@ -323,7 +323,7 @@ export async function recalculateInvoice(request, reply) {
         return reply.status(404).send({ error: "Staff member not found" });
     }
     const compensation = await resolveHourlyCompensationProfile(db, staffMember, invoice.periodEnd);
-    const financials = calculateInvoiceFinancials(eodRecords, compensation, invoice.additions || [], invoice.deductions || []);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, invoice.additions || [], invoice.deductions || [], invoice.periodEnd);
     const now = new Date().toISOString();
     const result = await invoices.findOneAndUpdate({ _id: new ObjectId(id) }, {
         $set: {

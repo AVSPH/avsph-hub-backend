@@ -30,7 +30,7 @@ export declare function getMyExpectedEarnings(request: FastifyRequest<{
     periodEnd: string;
     totalHoursWorked: number;
     totalDaysWorked: number;
-    baseSalary: any;
+    baseSalary: number;
     salaryType: string;
     estimatedPay: number;
     approvedEodCount: number;

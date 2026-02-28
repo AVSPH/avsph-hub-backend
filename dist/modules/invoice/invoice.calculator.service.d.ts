@@ -40,6 +40,6 @@ export interface InvoiceFinancialComputation {
     netPay: number;
 }
 export declare function resolveHourlyCompensationProfile(db: Db, staffMember: MinimalStaffDocument, periodEnd: string): Promise<ResolvedCompensationProfile>;
-export declare function calculateInvoiceFinancials(eodRecords: EodPayrollRecord[], compensation: ResolvedCompensationProfile, additions?: InvoiceAdjustmentType[], existingDeductions?: InvoiceAdjustmentType[]): InvoiceFinancialComputation;
+export declare function calculateInvoiceFinancials(eodRecords: EodPayrollRecord[], compensation: ResolvedCompensationProfile, additions?: InvoiceAdjustmentType[], existingDeductions?: InvoiceAdjustmentType[], periodEnd?: string): InvoiceFinancialComputation;
 export {};
 //# sourceMappingURL=invoice.calculator.service.d.ts.map

@@ -6,6 +6,10 @@ import {
   reviewEodSchema,
   adminEditEodSchema,
 } from "../../types/eod.types.js";
+import {
+  calculateInvoiceFinancials,
+  resolveHourlyCompensationProfile,
+} from "../invoice/invoice.calculator.service.js";
 
 interface IdParams {
   id: string;
@@ -78,10 +82,11 @@ export async function getMyExpectedEarnings(
   }>,
   reply: FastifyReply,
 ) {
-  const eodReports = request.server.mongo.db?.collection("eod_reports");
-  const staff = request.server.mongo.db?.collection("staff");
+  const db = request.server.mongo.db;
+  const eodReports = db?.collection("eod_reports");
+  const staff = db?.collection("staff");
 
-  if (!eodReports || !staff) {
+  if (!db || !eodReports || !staff) {
     return reply.status(500).send({ error: "Database not available" });
   }
 
@@ -99,14 +104,6 @@ export async function getMyExpectedEarnings(
 
   if (!staffMember) {
     return reply.status(404).send({ error: "Staff member not found" });
-  }
-
-  if (!staffMember.salary) {
-    return reply.status(400).send({
-      error: "Missing salary information",
-      message:
-        "Your salary configuration is not set up yet. Contact your admin.",
-    });
   }
 
   // Determine period: use query params or auto-detect current cycle
@@ -168,16 +165,27 @@ export async function getMyExpectedEarnings(
   const uniqueDates = new Set(approvedEods.map((r) => r.date));
   const totalDaysWorked = uniqueDates.size;
 
-  const estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
+  const compensation = await resolveHourlyCompensationProfile(
+    db,
+    staffMember,
+    periodEnd,
+  );
+  const financials = calculateInvoiceFinancials(
+    approvedEods,
+    compensation,
+    [],
+    [],
+    periodEnd,
+  );
 
   return {
     periodStart,
     periodEnd,
     totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
     totalDaysWorked,
-    baseSalary: staffMember.salary,
+    baseSalary: compensation.hourlyRate,
     salaryType: "hourly",
-    estimatedPay,
+    estimatedPay: financials.netPay,
     approvedEodCount: approvedEods.length,
     pendingEodCount,
     nextPayoutDate,

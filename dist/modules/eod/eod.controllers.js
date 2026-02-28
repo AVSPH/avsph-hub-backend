@@ -1,5 +1,6 @@
 import { ObjectId } from "@fastify/mongodb";
 import { submitEodSchema, editOwnEodSchema, reviewEodSchema, adminEditEodSchema, } from "../../types/eod.types.js";
+import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, } from "../invoice/invoice.calculator.service.js";
 // ==================== STAFF ACTIONS ====================
 // Helper: Get current pay cycle boundaries
 function getCurrentPayCycle() {
@@ -33,9 +34,10 @@ function getCurrentPayCycle() {
 }
 // Get expected earnings for current pay cycle (staff only — real-time aggregation)
 export async function getMyExpectedEarnings(request, reply) {
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    const staff = request.server.mongo.db?.collection("staff");
-    if (!eodReports || !staff) {
+    const db = request.server.mongo.db;
+    const eodReports = db?.collection("eod_reports");
+    const staff = db?.collection("staff");
+    if (!db || !eodReports || !staff) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id: staffId, businessId } = request.user;
@@ -49,12 +51,6 @@ export async function getMyExpectedEarnings(request, reply) {
     });
     if (!staffMember) {
         return reply.status(404).send({ error: "Staff member not found" });
-    }
-    if (!staffMember.salary) {
-        return reply.status(400).send({
-            error: "Missing salary information",
-            message: "Your salary configuration is not set up yet. Contact your admin.",
-        });
     }
     // Determine period: use query params or auto-detect current cycle
     let periodStart;
@@ -105,15 +101,16 @@ export async function getMyExpectedEarnings(request, reply) {
     const totalHoursWorked = approvedEods.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
     const uniqueDates = new Set(approvedEods.map((r) => r.date));
     const totalDaysWorked = uniqueDates.size;
-    const estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
+    const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
+    const financials = calculateInvoiceFinancials(approvedEods, compensation, [], [], periodEnd);
     return {
         periodStart,
         periodEnd,
         totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
         totalDaysWorked,
-        baseSalary: staffMember.salary,
+        baseSalary: compensation.hourlyRate,
         salaryType: "hourly",
-        estimatedPay,
+        estimatedPay: financials.netPay,
         approvedEodCount: approvedEods.length,
         pendingEodCount,
         nextPayoutDate,

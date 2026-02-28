@@ -17,6 +17,13 @@ function parseDateAsUtc(dateValue) {
     }
     return new Date(Date.UTC(year, month - 1, day));
 }
+function getPayrollPeriodHalf(periodEnd) {
+    const date = parseDateAsUtc(periodEnd);
+    if (!date) {
+        return "unknown";
+    }
+    return date.getUTCDate() <= 15 ? "first" : "second";
+}
 function isSunday(dateValue) {
     const date = parseDateAsUtc(dateValue);
     return date ? date.getUTCDay() === 0 : false;
@@ -129,7 +136,7 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
     }
     return merged;
 }
-export function calculateInvoiceFinancials(eodRecords, compensation, additions = [], existingDeductions = []) {
+export function calculateInvoiceFinancials(eodRecords, compensation, additions = [], existingDeductions = [], periodEnd) {
     let totalHoursWorked = 0;
     let regularHoursWorked = 0;
     let overtimeHoursWorked = 0;
@@ -176,14 +183,18 @@ export function calculateInvoiceFinancials(eodRecords, compensation, additions =
         nightDifferentialEarnings,
         riceAllowanceEarnings,
     };
+    const periodHalf = periodEnd ? getPayrollPeriodHalf(periodEnd) : "unknown";
+    const shouldApplySss = compensation.isSssEnabled && (periodHalf === "first" || periodHalf === "unknown");
+    const shouldApplyPagIbig = compensation.isPagIbigEnabled &&
+        (periodHalf === "first" || periodHalf === "unknown");
+    const shouldApplyPhilHealth = compensation.isPhilHealthEnabled &&
+        (periodHalf === "second" || periodHalf === "unknown");
     const statutoryDeductions = {
-        sss: compensation.isSssEnabled
-            ? roundMoney(compensation.sssDeductionFixedAmount)
-            : 0,
-        pagIbig: compensation.isPagIbigEnabled
+        sss: shouldApplySss ? roundMoney(compensation.sssDeductionFixedAmount) : 0,
+        pagIbig: shouldApplyPagIbig
             ? roundMoney(compensation.pagIbigDeductionFixedAmount)
             : 0,
-        philHealth: compensation.isPhilHealthEnabled
+        philHealth: shouldApplyPhilHealth
             ? roundMoney(compensation.philHealthDeductionFixedAmount)
             : 0,
     };

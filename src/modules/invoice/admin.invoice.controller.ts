@@ -131,7 +131,13 @@ export async function generateInvoice(
     periodEnd,
   );
 
-  const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
+  const financials = calculateInvoiceFinancials(
+    eodRecords,
+    compensation,
+    [],
+    [],
+    periodEnd,
+  );
 
   const eodIds = eodRecords.map((record) => record._id.toString());
 
@@ -286,6 +292,7 @@ export async function generateBusinessInvoices(
         compensation,
         [],
         [],
+        periodEnd,
       );
 
       const eodIds = eodRecords.map((record) => record._id.toString());
@@ -446,6 +453,7 @@ export async function recalculateInvoice(
     compensation,
     invoice.additions || [],
     invoice.deductions || [],
+    invoice.periodEnd,
   );
 
   const now = new Date().toISOString();

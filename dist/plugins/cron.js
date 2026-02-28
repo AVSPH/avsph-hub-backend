@@ -74,7 +74,7 @@ async function generateInvoicesForDateRange(fastify, periodStart, periodEnd) {
             })
                 .toArray();
             const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
-            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
+            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd);
             const eodIds = eodRecords.map((record) => record._id.toString());
             const now = new Date().toISOString();
             await invoices.insertOne({

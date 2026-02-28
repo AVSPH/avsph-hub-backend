@@ -123,6 +123,7 @@ async function generateInvoicesForDateRange(
         compensation,
         [],
         [],
+        periodEnd,
       );
       const eodIds = eodRecords.map((record) => record._id.toString());
 
@@ -225,4 +226,3 @@ export default fp(cronPlugin, {
   name: "cron",
   dependencies: ["mongodb"],
 });
-
