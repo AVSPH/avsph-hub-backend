@@ -29,6 +29,7 @@ export const staffSchema = z.object({
     dateHired: z.string().datetime({ message: "Invalid date format" }),
     salary: z.number().positive().optional(),
     salaryType: salaryTypeEnum.default("monthly"),
+    compensationProfileId: z.string().min(1).optional(),
     employmentType: employmentTypeEnum.default("full-time"),
     businessId: z.string().min(1, "Business ID is required"),
     status: staffStatusEnum.default("active"),
@@ -61,6 +62,7 @@ export const updateStaffSchema = z.object({
     dateHired: z.string().datetime().optional(),
     salary: z.number().positive().optional(),
     salaryType: salaryTypeEnum.optional(),
+    compensationProfileId: z.string().min(1).optional(),
     employmentType: employmentTypeEnum.optional(),
     status: staffStatusEnum.optional(),
     notes: z.string().max(1000).optional(),
@@ -103,6 +105,7 @@ export const staffJsonSchema = {
             type: "string",
             enum: ["hourly", "daily", "monthly", "annual"],
         },
+        compensationProfileId: { type: "string" },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],
@@ -141,6 +144,7 @@ export const createStaffJsonSchema = {
             type: "string",
             enum: ["hourly", "daily", "monthly", "annual"],
         },
+        compensationProfileId: { type: "string" },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],
@@ -172,6 +176,7 @@ export const updateStaffJsonSchema = {
             type: "string",
             enum: ["hourly", "daily", "monthly", "annual"],
         },
+        compensationProfileId: { type: "string" },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],

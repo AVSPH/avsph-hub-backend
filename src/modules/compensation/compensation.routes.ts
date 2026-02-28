@@ -69,9 +69,6 @@ const compensationRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
     Querystring: {
       businessId?: string;
-      profileScope?: "position" | "staff";
-      staffId?: string;
-      jobPosition?: string;
       isActive?: string;
     };
   }>(
@@ -86,9 +83,6 @@ const compensationRoutes: FastifyPluginAsync = async (fastify) => {
           type: "object",
           properties: {
             businessId: { type: "string" },
-            profileScope: { type: "string", enum: ["position", "staff"] },
-            staffId: { type: "string" },
-            jobPosition: { type: "string" },
             isActive: { type: "string", enum: ["true", "false"] },
           },
         },
@@ -142,4 +136,3 @@ const compensationRoutes: FastifyPluginAsync = async (fastify) => {
 };
 
 export default compensationRoutes;
-

@@ -17,8 +17,7 @@ async function canAccessBusiness(request, businessId) {
 }
 export async function createCompensationProfile(request, reply) {
     const profiles = request.server.mongo.db?.collection("compensation_profiles");
-    const staffCollection = request.server.mongo.db?.collection("staff");
-    if (!profiles || !staffCollection) {
+    if (!profiles) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const parseResult = createCompensationProfileSchema.safeParse(request.body);
@@ -38,23 +37,6 @@ export async function createCompensationProfile(request, reply) {
             error: "Forbidden",
             message: "You do not have access to this business",
         });
-    }
-    if (payload.profileScope === "staff") {
-        if (!payload.staffId || !ObjectId.isValid(payload.staffId)) {
-            return reply
-                .status(400)
-                .send({ error: "Valid staffId is required for staff profiles" });
-        }
-        const staff = await staffCollection.findOne({
-            _id: new ObjectId(payload.staffId),
-            businessId: payload.businessId,
-            isActive: true,
-        });
-        if (!staff) {
-            return reply.status(404).send({
-                error: "Staff member not found in this business",
-            });
-        }
     }
     const now = new Date().toISOString();
     const doc = {
@@ -146,15 +128,6 @@ export async function getCompensationProfiles(request, reply) {
         const businessIds = accessibleBusinesses.map((b) => b._id.toString());
         query.businessId = { $in: businessIds };
     }
-    if (request.query.profileScope) {
-        query.profileScope = request.query.profileScope;
-    }
-    if (request.query.staffId) {
-        query.staffId = request.query.staffId;
-    }
-    if (request.query.jobPosition) {
-        query.jobPosition = request.query.jobPosition;
-    }
     if (request.query.isActive !== undefined) {
         query.isActive = request.query.isActive === "true";
     }
@@ -195,20 +168,25 @@ export async function updateStaffStatutorySettings(request, reply) {
             message: "You do not have access to this staff member's business",
         });
     }
-    const latestStaffProfile = await profiles
-        .find({
-        businessId: staffMember.businessId,
-        profileScope: "staff",
-        staffId,
-        isActive: true,
-    })
-        .sort({ updatedAt: -1, effectiveFrom: -1 })
-        .limit(1)
-        .toArray();
     const now = new Date().toISOString();
     const settings = parseResult.data;
-    if (latestStaffProfile.length > 0) {
-        const result = await profiles.findOneAndUpdate({ _id: latestStaffProfile[0]._id }, {
+    const linkedProfileId = typeof staffMember.compensationProfileId === "string"
+        ? staffMember.compensationProfileId
+        : "";
+    if (linkedProfileId && !ObjectId.isValid(linkedProfileId)) {
+        return reply.status(400).send({
+            error: "Staff has an invalid compensation profile ID",
+        });
+    }
+    const linkedProfile = linkedProfileId
+        ? await profiles.findOne({
+            _id: new ObjectId(linkedProfileId),
+            businessId: staffMember.businessId,
+            isActive: true,
+        })
+        : null;
+    if (linkedProfile) {
+        const result = await profiles.findOneAndUpdate({ _id: linkedProfile._id }, {
             $set: {
                 ...settings,
                 updatedAt: now,
@@ -223,10 +201,7 @@ export async function updateStaffStatutorySettings(request, reply) {
     const newProfile = {
         name: `${staffMember.firstName} ${staffMember.lastName} Statutory Settings`,
         businessId: staffMember.businessId,
-        profileScope: "staff",
-        jobPosition: staffMember.position || "Unassigned",
-        staffId,
-        hourlyRate: staffMember.salary || 0,
+        hourlyRate: typeof staffMember.salary === "number" ? staffMember.salary : 0,
         overtimeRateMultiplier: 1,
         sundayRateMultiplier: 1,
         nightDifferentialRateMultiplier: 1,
@@ -244,6 +219,12 @@ export async function updateStaffStatutorySettings(request, reply) {
         updatedAt: now,
     };
     const result = await profiles.insertOne(newProfile);
+    await staffCollection.updateOne({ _id: new ObjectId(staffId) }, {
+        $set: {
+            compensationProfileId: result.insertedId.toString(),
+            updatedAt: now,
+        },
+    });
     return reply.status(201).send({
         _id: result.insertedId,
         ...newProfile,

@@ -21,9 +21,6 @@ export interface CompensationProfileDocumentType {
   _id?: string;
   name: string;
   businessId: string;
-  profileScope: "position" | "staff";
-  jobPosition: string;
-  staffId?: string;
 
   hourlyRate: number;
 
@@ -48,4 +45,3 @@ export interface CompensationProfileDocumentType {
   createdAt: string;
   updatedAt: string;
 }
-

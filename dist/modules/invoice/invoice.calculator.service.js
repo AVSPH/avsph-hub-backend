@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 const STATUTORY_ADJUSTMENT_TYPES = new Set(["SSS", "Pag-IBIG", "PhilHealth"]);
 function roundMoney(value) {
     return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -51,11 +52,15 @@ function manualDeductionsOnly(deductions) {
 function toNumeric(value, fallback) {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
-async function findLatestProfile(db, query, periodEnd) {
+async function findActiveProfileById(db, profileId, businessId, periodEnd) {
     const profiles = db.collection("compensation_profiles");
+    if (!profileId || !ObjectId.isValid(profileId)) {
+        return null;
+    }
     const rows = await profiles
         .find({
-        ...query,
+        _id: new ObjectId(profileId),
+        businessId,
         isActive: true,
         effectiveFrom: { $lte: periodEnd },
         $or: [
@@ -65,15 +70,13 @@ async function findLatestProfile(db, query, periodEnd) {
             { effectiveTo: { $gte: periodEnd } },
         ],
     })
-        .sort({ effectiveFrom: -1, updatedAt: -1 })
         .limit(1)
         .toArray();
     return rows[0] || null;
 }
 export async function resolveHourlyCompensationProfile(db, staffMember, periodEnd) {
-    const staffId = String(staffMember._id);
     const businessId = staffMember.businessId || "";
-    const jobPosition = staffMember.position || "";
+    const linkedProfileId = staffMember.compensationProfileId || "";
     if (!businessId) {
         return {
             source: "legacy_staff_salary",
@@ -91,17 +94,8 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
             philHealthDeductionFixedAmount: 0,
         };
     }
-    const staffProfile = await findLatestProfile(db, {
-        businessId,
-        profileScope: "staff",
-        staffId,
-    }, periodEnd);
-    const positionProfile = await findLatestProfile(db, {
-        businessId,
-        profileScope: "position",
-        jobPosition,
-    }, periodEnd);
     const fallbackHourlyRate = toNumeric(staffMember.salary, 0);
+    const linkedProfile = await findActiveProfileById(db, linkedProfileId, businessId, periodEnd);
     const merged = {
         source: "legacy_staff_salary",
         hourlyRate: fallbackHourlyRate,
@@ -117,37 +111,21 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
         pagIbigDeductionFixedAmount: 0,
         philHealthDeductionFixedAmount: 0,
     };
-    if (positionProfile) {
-        merged.source = "position_profile";
-        merged.profileId = String(positionProfile._id);
-        merged.hourlyRate = toNumeric(positionProfile.hourlyRate, merged.hourlyRate);
-        merged.overtimeRateMultiplier = toNumeric(positionProfile.overtimeRateMultiplier, merged.overtimeRateMultiplier);
-        merged.sundayRateMultiplier = toNumeric(positionProfile.sundayRateMultiplier, merged.sundayRateMultiplier);
-        merged.nightDifferentialRateMultiplier = toNumeric(positionProfile.nightDifferentialRateMultiplier, merged.nightDifferentialRateMultiplier);
-        merged.isRiceAllowanceEligible = !!positionProfile.isRiceAllowanceEligible;
-        merged.riceAllowanceFixedAmount = toNumeric(positionProfile.riceAllowanceFixedAmount, merged.riceAllowanceFixedAmount);
-        merged.isSssEnabled = !!positionProfile.isSssEnabled;
-        merged.isPagIbigEnabled = !!positionProfile.isPagIbigEnabled;
-        merged.isPhilHealthEnabled = !!positionProfile.isPhilHealthEnabled;
-        merged.sssDeductionFixedAmount = toNumeric(positionProfile.sssDeductionFixedAmount, merged.sssDeductionFixedAmount);
-        merged.pagIbigDeductionFixedAmount = toNumeric(positionProfile.pagIbigDeductionFixedAmount, merged.pagIbigDeductionFixedAmount);
-        merged.philHealthDeductionFixedAmount = toNumeric(positionProfile.philHealthDeductionFixedAmount, merged.philHealthDeductionFixedAmount);
-    }
-    if (staffProfile) {
-        merged.source = "staff_profile";
-        merged.profileId = String(staffProfile._id);
-        merged.hourlyRate = toNumeric(staffProfile.hourlyRate, merged.hourlyRate);
-        merged.overtimeRateMultiplier = toNumeric(staffProfile.overtimeRateMultiplier, merged.overtimeRateMultiplier);
-        merged.sundayRateMultiplier = toNumeric(staffProfile.sundayRateMultiplier, merged.sundayRateMultiplier);
-        merged.nightDifferentialRateMultiplier = toNumeric(staffProfile.nightDifferentialRateMultiplier, merged.nightDifferentialRateMultiplier);
-        merged.isRiceAllowanceEligible = !!staffProfile.isRiceAllowanceEligible;
-        merged.riceAllowanceFixedAmount = toNumeric(staffProfile.riceAllowanceFixedAmount, merged.riceAllowanceFixedAmount);
-        merged.isSssEnabled = !!staffProfile.isSssEnabled;
-        merged.isPagIbigEnabled = !!staffProfile.isPagIbigEnabled;
-        merged.isPhilHealthEnabled = !!staffProfile.isPhilHealthEnabled;
-        merged.sssDeductionFixedAmount = toNumeric(staffProfile.sssDeductionFixedAmount, merged.sssDeductionFixedAmount);
-        merged.pagIbigDeductionFixedAmount = toNumeric(staffProfile.pagIbigDeductionFixedAmount, merged.pagIbigDeductionFixedAmount);
-        merged.philHealthDeductionFixedAmount = toNumeric(staffProfile.philHealthDeductionFixedAmount, merged.philHealthDeductionFixedAmount);
+    if (linkedProfile) {
+        merged.source = "linked_profile";
+        merged.profileId = String(linkedProfile._id);
+        merged.hourlyRate = toNumeric(linkedProfile.hourlyRate, merged.hourlyRate);
+        merged.overtimeRateMultiplier = toNumeric(linkedProfile.overtimeRateMultiplier, merged.overtimeRateMultiplier);
+        merged.sundayRateMultiplier = toNumeric(linkedProfile.sundayRateMultiplier, merged.sundayRateMultiplier);
+        merged.nightDifferentialRateMultiplier = toNumeric(linkedProfile.nightDifferentialRateMultiplier, merged.nightDifferentialRateMultiplier);
+        merged.isRiceAllowanceEligible = !!linkedProfile.isRiceAllowanceEligible;
+        merged.riceAllowanceFixedAmount = toNumeric(linkedProfile.riceAllowanceFixedAmount, merged.riceAllowanceFixedAmount);
+        merged.isSssEnabled = !!linkedProfile.isSssEnabled;
+        merged.isPagIbigEnabled = !!linkedProfile.isPagIbigEnabled;
+        merged.isPhilHealthEnabled = !!linkedProfile.isPhilHealthEnabled;
+        merged.sssDeductionFixedAmount = toNumeric(linkedProfile.sssDeductionFixedAmount, merged.sssDeductionFixedAmount);
+        merged.pagIbigDeductionFixedAmount = toNumeric(linkedProfile.pagIbigDeductionFixedAmount, merged.pagIbigDeductionFixedAmount);
+        merged.philHealthDeductionFixedAmount = toNumeric(linkedProfile.philHealthDeductionFixedAmount, merged.philHealthDeductionFixedAmount);
     }
     return merged;
 }

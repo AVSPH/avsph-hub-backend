@@ -8,9 +8,6 @@ interface StaffIdParams {
 }
 interface CompensationQuery {
     businessId?: string;
-    profileScope?: "position" | "staff";
-    staffId?: string;
-    jobPosition?: string;
     isActive?: string;
 }
 export declare function createCompensationProfile(request: FastifyRequest, reply: FastifyReply): Promise<never>;

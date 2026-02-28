@@ -1,10 +1,10 @@
-import type { Db, Document } from "mongodb";
+import { type Db, type Document } from "mongodb";
 import type { InvoiceAdjustmentType, InvoiceEarningsBreakdownType, InvoiceStatutoryDeductionsType } from "../../schema/invoice.schema.js";
 interface MinimalStaffDocument extends Document {
     _id: unknown;
     businessId?: string;
-    position?: string;
     salary?: number;
+    compensationProfileId?: string;
 }
 interface EodPayrollRecord extends Document {
     _id: unknown;
@@ -15,7 +15,7 @@ interface EodPayrollRecord extends Document {
     nightDifferentialHours?: number;
 }
 export interface ResolvedCompensationProfile {
-    source: "staff_profile" | "position_profile" | "legacy_staff_salary";
+    source: "linked_profile" | "legacy_staff_salary";
     profileId?: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;

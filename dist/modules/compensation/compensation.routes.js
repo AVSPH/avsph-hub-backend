@@ -54,9 +54,6 @@ const compensationRoutes = async (fastify) => {
                 type: "object",
                 properties: {
                     businessId: { type: "string" },
-                    profileScope: { type: "string", enum: ["position", "staff"] },
-                    staffId: { type: "string" },
-                    jobPosition: { type: "string" },
                     isActive: { type: "string", enum: ["true", "false"] },
                 },
             },

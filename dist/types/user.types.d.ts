@@ -12,20 +12,20 @@ export declare const userSchema: z.ZodObject<{
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     isActive: boolean;
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     password: string;
     dateHired: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
 }, {
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     password: string;
     dateHired: string;
     _id?: string | undefined;
@@ -46,43 +46,43 @@ export declare const createUserSchema: z.ZodObject<Omit<{
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
     isActive: boolean;
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     password: string;
     dateHired: string;
 }, {
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     password: string;
     dateHired: string;
     isActive?: boolean | undefined;
 }>;
 export declare const updateUserSchema: z.ZodObject<{
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
-    position: z.ZodOptional<z.ZodString>;
     firstName: z.ZodOptional<z.ZodString>;
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
+    position: z.ZodOptional<z.ZodString>;
     password: z.ZodOptional<z.ZodString>;
     dateHired: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     isActive?: boolean | undefined;
-    position?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    position?: string | undefined;
     password?: string | undefined;
     dateHired?: string | undefined;
 }, {
     isActive?: boolean | undefined;
-    position?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    position?: string | undefined;
     password?: string | undefined;
     dateHired?: string | undefined;
 }>;

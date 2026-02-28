@@ -21,10 +21,10 @@ export declare const applicantSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     businessId: string;
     isActive: boolean;
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     jobId: string;
     stage: string;
     isStaffConverted: boolean;
@@ -39,10 +39,10 @@ export declare const applicantSchema: z.ZodObject<{
     appliedAt?: string | undefined;
 }, {
     businessId: string;
-    position: string;
     firstName: string;
     lastName: string;
     email: string;
+    position: string;
     jobId: string;
     stage: string;
     _id?: string | undefined;

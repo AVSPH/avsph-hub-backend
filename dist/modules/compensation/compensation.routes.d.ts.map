@@ -1,1 +1,1 @@
-{"version":3,"file":"compensation.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/compensation/compensation.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAclD,QAAA,MAAM,kBAAkB,EAAE,kBA+HzB,CAAC;AAEF,eAAe,kBAAkB,CAAC"}
+{"version":3,"file":"compensation.routes.d.ts","sourceRoot":"","sources":["../../../src/modules/compensation/compensation.routes.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAclD,QAAA,MAAM,kBAAkB,EAAE,kBAyHzB,CAAC;AAEF,eAAe,kBAAkB,CAAC"}

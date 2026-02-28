@@ -151,7 +151,8 @@ export async function getStaffByBusiness(request, reply) {
 export async function createStaff(request, reply) {
     const staff = request.server.mongo.db?.collection("staff");
     const businesses = request.server.mongo.db?.collection("businesses");
-    if (!staff || !businesses) {
+    const compensationProfiles = request.server.mongo.db?.collection("compensation_profiles");
+    if (!staff || !businesses || !compensationProfiles) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const parseResult = createStaffSchema.safeParse(request.body);
@@ -161,7 +162,7 @@ export async function createStaff(request, reply) {
             details: parseResult.error.errors,
         });
     }
-    const { firstName, lastName, email, password, phone, position, department, dateHired, salary, salaryType, employmentType, businessId, } = parseResult.data;
+    const { firstName, lastName, email, password, phone, position, department, dateHired, salary, salaryType, compensationProfileId, employmentType, businessId, } = parseResult.data;
     // Validate business exists and admin has access
     if (!ObjectId.isValid(businessId)) {
         return reply.status(400).send({ error: "Invalid business ID format" });
@@ -191,6 +192,23 @@ export async function createStaff(request, reply) {
             error: "Staff member with this email already exists in this business",
         });
     }
+    if (compensationProfileId) {
+        if (!ObjectId.isValid(compensationProfileId)) {
+            return reply.status(400).send({
+                error: "Invalid compensation profile ID format",
+            });
+        }
+        const linkedProfile = await compensationProfiles.findOne({
+            _id: new ObjectId(compensationProfileId),
+            businessId,
+            isActive: true,
+        });
+        if (!linkedProfile) {
+            return reply.status(404).send({
+                error: "Compensation profile not found in this business",
+            });
+        }
+    }
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
     const now = new Date().toISOString();
@@ -205,6 +223,7 @@ export async function createStaff(request, reply) {
         dateHired,
         salary,
         salaryType: salaryType || "monthly",
+        compensationProfileId,
         employmentType: employmentType || "full-time",
         businessId,
         status: "active",
@@ -243,7 +262,8 @@ export async function createStaff(request, reply) {
 export async function updateStaff(request, reply) {
     const staff = request.server.mongo.db?.collection("staff");
     const businesses = request.server.mongo.db?.collection("businesses");
-    if (!staff || !businesses) {
+    const compensationProfiles = request.server.mongo.db?.collection("compensation_profiles");
+    if (!staff || !businesses || !compensationProfiles) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id } = request.params;
@@ -274,6 +294,24 @@ export async function updateStaff(request, reply) {
             error: "Validation failed",
             details: parseResult.error.errors,
         });
+    }
+    if (parseResult.data.compensationProfileId) {
+        const { compensationProfileId } = parseResult.data;
+        if (!ObjectId.isValid(compensationProfileId)) {
+            return reply.status(400).send({
+                error: "Invalid compensation profile ID format",
+            });
+        }
+        const linkedProfile = await compensationProfiles.findOne({
+            _id: new ObjectId(compensationProfileId),
+            businessId: existingStaff.businessId,
+            isActive: true,
+        });
+        if (!linkedProfile) {
+            return reply.status(404).send({
+                error: "Compensation profile not found in this business",
+            });
+        }
     }
     // Check if email is being updated and if it conflicts
     if (parseResult.data.email &&

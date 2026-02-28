@@ -10,7 +10,6 @@ const STATUTORY_ADJUSTMENT_TYPES = new Set(["SSS", "Pag-IBIG", "PhilHealth"]);
 interface MinimalStaffDocument extends Document {
   _id: unknown;
   businessId?: string;
-  position?: string;
   salary?: number;
   compensationProfileId?: string;
 }
@@ -18,9 +17,6 @@ interface MinimalStaffDocument extends Document {
 interface CompensationProfileDocument extends Document {
   _id?: unknown;
   businessId: string;
-  profileScope: "position" | "staff";
-  jobPosition: string;
-  staffId?: string;
   hourlyRate?: number;
   overtimeRateMultiplier?: number;
   sundayRateMultiplier?: number;
@@ -45,11 +41,7 @@ interface EodPayrollRecord extends Document {
 }
 
 export interface ResolvedCompensationProfile {
-  source:
-    | "linked_profile"
-    | "staff_profile"
-    | "position_profile"
-    | "legacy_staff_salary";
+  source: "linked_profile" | "legacy_staff_salary";
   profileId?: string;
   hourlyRate: number;
   overtimeRateMultiplier: number;
@@ -140,31 +132,6 @@ function toNumeric(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
-async function findLatestProfile(
-  db: Db,
-  query: Record<string, unknown>,
-  periodEnd: string,
-): Promise<CompensationProfileDocument | null> {
-  const profiles = db.collection("compensation_profiles");
-  const rows = await profiles
-    .find({
-      ...query,
-      isActive: true,
-      effectiveFrom: { $lte: periodEnd },
-      $or: [
-        { effectiveTo: { $exists: false } },
-        { effectiveTo: null },
-        { effectiveTo: "" },
-        { effectiveTo: { $gte: periodEnd } },
-      ],
-    })
-    .sort({ effectiveFrom: -1, updatedAt: -1 })
-    .limit(1)
-    .toArray();
-
-  return (rows[0] as CompensationProfileDocument | undefined) || null;
-}
-
 async function findActiveProfileById(
   db: Db,
   profileId: string,
@@ -200,9 +167,7 @@ export async function resolveHourlyCompensationProfile(
   staffMember: MinimalStaffDocument,
   periodEnd: string,
 ): Promise<ResolvedCompensationProfile> {
-  const staffId = String(staffMember._id);
   const businessId = staffMember.businessId || "";
-  const jobPosition = staffMember.position || "";
   const linkedProfileId = staffMember.compensationProfileId || "";
 
   if (!businessId) {
@@ -222,26 +187,6 @@ export async function resolveHourlyCompensationProfile(
       philHealthDeductionFixedAmount: 0,
     };
   }
-
-  const staffProfile = await findLatestProfile(
-    db,
-    {
-      businessId,
-      profileScope: "staff",
-      staffId,
-    },
-    periodEnd,
-  );
-
-  const positionProfile = await findLatestProfile(
-    db,
-    {
-      businessId,
-      profileScope: "position",
-      jobPosition,
-    },
-    periodEnd,
-  );
 
   const fallbackHourlyRate = toNumeric(staffMember.salary, 0);
   const linkedProfile = await findActiveProfileById(
@@ -266,82 +211,6 @@ export async function resolveHourlyCompensationProfile(
     pagIbigDeductionFixedAmount: 0,
     philHealthDeductionFixedAmount: 0,
   };
-
-  if (positionProfile) {
-    merged.source = "position_profile";
-    merged.profileId = String(positionProfile._id);
-    merged.hourlyRate = toNumeric(positionProfile.hourlyRate, merged.hourlyRate);
-    merged.overtimeRateMultiplier = toNumeric(
-      positionProfile.overtimeRateMultiplier,
-      merged.overtimeRateMultiplier,
-    );
-    merged.sundayRateMultiplier = toNumeric(
-      positionProfile.sundayRateMultiplier,
-      merged.sundayRateMultiplier,
-    );
-    merged.nightDifferentialRateMultiplier = toNumeric(
-      positionProfile.nightDifferentialRateMultiplier,
-      merged.nightDifferentialRateMultiplier,
-    );
-    merged.isRiceAllowanceEligible = !!positionProfile.isRiceAllowanceEligible;
-    merged.riceAllowanceFixedAmount = toNumeric(
-      positionProfile.riceAllowanceFixedAmount,
-      merged.riceAllowanceFixedAmount,
-    );
-    merged.isSssEnabled = !!positionProfile.isSssEnabled;
-    merged.isPagIbigEnabled = !!positionProfile.isPagIbigEnabled;
-    merged.isPhilHealthEnabled = !!positionProfile.isPhilHealthEnabled;
-    merged.sssDeductionFixedAmount = toNumeric(
-      positionProfile.sssDeductionFixedAmount,
-      merged.sssDeductionFixedAmount,
-    );
-    merged.pagIbigDeductionFixedAmount = toNumeric(
-      positionProfile.pagIbigDeductionFixedAmount,
-      merged.pagIbigDeductionFixedAmount,
-    );
-    merged.philHealthDeductionFixedAmount = toNumeric(
-      positionProfile.philHealthDeductionFixedAmount,
-      merged.philHealthDeductionFixedAmount,
-    );
-  }
-
-  if (staffProfile) {
-    merged.source = "staff_profile";
-    merged.profileId = String(staffProfile._id);
-    merged.hourlyRate = toNumeric(staffProfile.hourlyRate, merged.hourlyRate);
-    merged.overtimeRateMultiplier = toNumeric(
-      staffProfile.overtimeRateMultiplier,
-      merged.overtimeRateMultiplier,
-    );
-    merged.sundayRateMultiplier = toNumeric(
-      staffProfile.sundayRateMultiplier,
-      merged.sundayRateMultiplier,
-    );
-    merged.nightDifferentialRateMultiplier = toNumeric(
-      staffProfile.nightDifferentialRateMultiplier,
-      merged.nightDifferentialRateMultiplier,
-    );
-    merged.isRiceAllowanceEligible = !!staffProfile.isRiceAllowanceEligible;
-    merged.riceAllowanceFixedAmount = toNumeric(
-      staffProfile.riceAllowanceFixedAmount,
-      merged.riceAllowanceFixedAmount,
-    );
-    merged.isSssEnabled = !!staffProfile.isSssEnabled;
-    merged.isPagIbigEnabled = !!staffProfile.isPagIbigEnabled;
-    merged.isPhilHealthEnabled = !!staffProfile.isPhilHealthEnabled;
-    merged.sssDeductionFixedAmount = toNumeric(
-      staffProfile.sssDeductionFixedAmount,
-      merged.sssDeductionFixedAmount,
-    );
-    merged.pagIbigDeductionFixedAmount = toNumeric(
-      staffProfile.pagIbigDeductionFixedAmount,
-      merged.pagIbigDeductionFixedAmount,
-    );
-    merged.philHealthDeductionFixedAmount = toNumeric(
-      staffProfile.philHealthDeductionFixedAmount,
-      merged.philHealthDeductionFixedAmount,
-    );
-  }
 
   if (linkedProfile) {
     merged.source = "linked_profile";

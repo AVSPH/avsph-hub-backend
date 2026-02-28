@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-export const profileScopeEnum = z.enum(["position", "staff"]);
-
 const dateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)");
@@ -14,9 +12,6 @@ const compensationProfileBaseSchema = z.object({
   _id: z.string().optional(),
   name: z.string().min(1).max(120),
   businessId: z.string().min(1, "Business ID is required"),
-  profileScope: profileScopeEnum,
-  jobPosition: z.string().min(1, "Job position is required"),
-  staffId: z.string().optional(),
 
   hourlyRate: z.number().min(0, "Hourly rate must be 0 or greater"),
 
@@ -42,63 +37,28 @@ const compensationProfileBaseSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 });
 
-export const compensationProfileSchema = compensationProfileBaseSchema.superRefine(
-  (value, ctx) => {
-    if (value.profileScope === "position" && value.staffId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["staffId"],
-        message: "staffId must be empty for position scope profiles",
-      });
-    }
-
-    if (value.profileScope === "staff" && !value.staffId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["staffId"],
-        message: "staffId is required for staff scope profiles",
-      });
-    }
-
-    if (value.effectiveTo && value.effectiveTo < value.effectiveFrom) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["effectiveTo"],
-        message: "effectiveTo cannot be earlier than effectiveFrom",
-      });
-    }
-  },
-);
-
-export const createCompensationProfileSchema = compensationProfileBaseSchema.omit({
-  _id: true,
-  createdAt: true,
-  updatedAt: true,
-}).superRefine((value, ctx) => {
-  if (value.profileScope === "position" && value.staffId) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["staffId"],
-      message: "staffId must be empty for position scope profiles",
-    });
-  }
-
-  if (value.profileScope === "staff" && !value.staffId) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["staffId"],
-      message: "staffId is required for staff scope profiles",
-    });
-  }
-
-  if (value.effectiveTo && value.effectiveTo < value.effectiveFrom) {
+const validateDateRange = (
+  value: { effectiveFrom?: string; effectiveTo?: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (value.effectiveFrom && value.effectiveTo && value.effectiveTo < value.effectiveFrom) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["effectiveTo"],
       message: "effectiveTo cannot be earlier than effectiveFrom",
     });
   }
-});
+};
+
+export const compensationProfileSchema = compensationProfileBaseSchema.superRefine(
+  validateDateRange,
+);
+
+export const createCompensationProfileSchema = compensationProfileBaseSchema.omit({
+  _id: true,
+  createdAt: true,
+  updatedAt: true,
+}).superRefine(validateDateRange);
 
 export const updateCompensationProfileSchema = compensationProfileBaseSchema
   .omit({
@@ -107,19 +67,7 @@ export const updateCompensationProfileSchema = compensationProfileBaseSchema
     updatedAt: true,
   })
   .partial()
-  .superRefine((value, ctx) => {
-    if (
-      value.profileScope === "position" &&
-      value.staffId !== undefined &&
-      value.staffId !== ""
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["staffId"],
-        message: "staffId must be empty for position scope profiles",
-      });
-    }
-  });
+  .superRefine(validateDateRange);
 
 export const updateStaffStatutorySettingsSchema = z.object({
   isSssEnabled: z.boolean().optional(),
@@ -147,9 +95,6 @@ export const compensationProfileJsonSchema = {
     _id: { type: "string" },
     name: { type: "string", minLength: 1, maxLength: 120 },
     businessId: { type: "string" },
-    profileScope: { type: "string", enum: ["position", "staff"] },
-    jobPosition: { type: "string", minLength: 1 },
-    staffId: { type: "string" },
 
     hourlyRate: { type: "number", minimum: 0 },
 
@@ -177,8 +122,6 @@ export const compensationProfileJsonSchema = {
   required: [
     "name",
     "businessId",
-    "profileScope",
-    "jobPosition",
     "hourlyRate",
     "effectiveFrom",
   ],
@@ -189,9 +132,6 @@ export const createCompensationProfileJsonSchema = {
   properties: {
     name: { type: "string", minLength: 1, maxLength: 120 },
     businessId: { type: "string" },
-    profileScope: { type: "string", enum: ["position", "staff"] },
-    jobPosition: { type: "string", minLength: 1 },
-    staffId: { type: "string" },
     hourlyRate: { type: "number", minimum: 0 },
     overtimeRateMultiplier: { type: "number", minimum: 1 },
     sundayRateMultiplier: { type: "number", minimum: 1 },
@@ -211,8 +151,6 @@ export const createCompensationProfileJsonSchema = {
   required: [
     "name",
     "businessId",
-    "profileScope",
-    "jobPosition",
     "hourlyRate",
     "effectiveFrom",
   ],

@@ -1,12 +1,8 @@
 import { z } from "zod";
-export declare const profileScopeEnum: z.ZodEnum<["position", "staff"]>;
 export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
     name: z.ZodString;
     businessId: z.ZodString;
-    profileScope: z.ZodEnum<["position", "staff"]>;
-    jobPosition: z.ZodString;
-    staffId: z.ZodOptional<z.ZodString>;
     hourlyRate: z.ZodNumber;
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
@@ -28,8 +24,6 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     businessId: string;
     isActive: boolean;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
@@ -44,19 +38,15 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     philHealthDeductionFixedAmount: number;
     effectiveFrom: string;
     _id?: string | undefined;
-    staffId?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
     name: string;
     businessId: string;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
-    staffId?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -76,8 +66,6 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     name: string;
     businessId: string;
     isActive: boolean;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
@@ -92,19 +80,15 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     philHealthDeductionFixedAmount: number;
     effectiveFrom: string;
     _id?: string | undefined;
-    staffId?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
     name: string;
     businessId: string;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
-    staffId?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -125,9 +109,6 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     _id: z.ZodOptional<z.ZodString>;
     name: z.ZodString;
     businessId: z.ZodString;
-    profileScope: z.ZodEnum<["position", "staff"]>;
-    jobPosition: z.ZodString;
-    staffId: z.ZodOptional<z.ZodString>;
     hourlyRate: z.ZodNumber;
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
@@ -149,8 +130,6 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     name: string;
     businessId: string;
     isActive: boolean;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
@@ -164,16 +143,12 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
     effectiveFrom: string;
-    staffId?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
     name: string;
     businessId: string;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     effectiveFrom: string;
-    staffId?: string | undefined;
     isActive?: boolean | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -191,8 +166,6 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     name: string;
     businessId: string;
     isActive: boolean;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
@@ -206,16 +179,12 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
     effectiveFrom: string;
-    staffId?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
     name: string;
     businessId: string;
-    profileScope: "staff" | "position";
-    jobPosition: string;
     hourlyRate: number;
     effectiveFrom: string;
-    staffId?: string | undefined;
     isActive?: boolean | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -232,11 +201,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
 }>;
 export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
-    staffId: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     businessId: z.ZodOptional<z.ZodString>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
-    profileScope: z.ZodOptional<z.ZodEnum<["position", "staff"]>>;
-    jobPosition: z.ZodOptional<z.ZodString>;
     hourlyRate: z.ZodOptional<z.ZodNumber>;
     overtimeRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     sundayRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
@@ -253,11 +219,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     effectiveTo: z.ZodOptional<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
-    staffId?: string | undefined;
     businessId?: string | undefined;
     isActive?: boolean | undefined;
-    profileScope?: "staff" | "position" | undefined;
-    jobPosition?: string | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -274,11 +237,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     effectiveTo?: string | undefined;
 }, {
     name?: string | undefined;
-    staffId?: string | undefined;
     businessId?: string | undefined;
     isActive?: boolean | undefined;
-    profileScope?: "staff" | "position" | undefined;
-    jobPosition?: string | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -295,11 +255,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     effectiveTo?: string | undefined;
 }>, {
     name?: string | undefined;
-    staffId?: string | undefined;
     businessId?: string | undefined;
     isActive?: boolean | undefined;
-    profileScope?: "staff" | "position" | undefined;
-    jobPosition?: string | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -316,11 +273,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     effectiveTo?: string | undefined;
 }, {
     name?: string | undefined;
-    staffId?: string | undefined;
     businessId?: string | undefined;
     isActive?: boolean | undefined;
-    profileScope?: "staff" | "position" | undefined;
-    jobPosition?: string | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -374,17 +328,6 @@ export declare const compensationProfileJsonSchema: {
             readonly maxLength: 120;
         };
         readonly businessId: {
-            readonly type: "string";
-        };
-        readonly profileScope: {
-            readonly type: "string";
-            readonly enum: readonly ["position", "staff"];
-        };
-        readonly jobPosition: {
-            readonly type: "string";
-            readonly minLength: 1;
-        };
-        readonly staffId: {
             readonly type: "string";
         };
         readonly hourlyRate: {
@@ -451,7 +394,7 @@ export declare const compensationProfileJsonSchema: {
             readonly format: "date-time";
         };
     };
-    readonly required: readonly ["name", "businessId", "profileScope", "jobPosition", "hourlyRate", "effectiveFrom"];
+    readonly required: readonly ["name", "businessId", "hourlyRate", "effectiveFrom"];
 };
 export declare const createCompensationProfileJsonSchema: {
     readonly type: "object";
@@ -462,17 +405,6 @@ export declare const createCompensationProfileJsonSchema: {
             readonly maxLength: 120;
         };
         readonly businessId: {
-            readonly type: "string";
-        };
-        readonly profileScope: {
-            readonly type: "string";
-            readonly enum: readonly ["position", "staff"];
-        };
-        readonly jobPosition: {
-            readonly type: "string";
-            readonly minLength: 1;
-        };
-        readonly staffId: {
             readonly type: "string";
         };
         readonly hourlyRate: {
@@ -531,7 +463,7 @@ export declare const createCompensationProfileJsonSchema: {
             readonly type: "boolean";
         };
     };
-    readonly required: readonly ["name", "businessId", "profileScope", "jobPosition", "hourlyRate", "effectiveFrom"];
+    readonly required: readonly ["name", "businessId", "hourlyRate", "effectiveFrom"];
 };
 export declare const updateCompensationProfileJsonSchema: {
     readonly type: "object";
@@ -542,17 +474,6 @@ export declare const updateCompensationProfileJsonSchema: {
             readonly maxLength: 120;
         };
         readonly businessId: {
-            readonly type: "string";
-        };
-        readonly profileScope: {
-            readonly type: "string";
-            readonly enum: readonly ["position", "staff"];
-        };
-        readonly jobPosition: {
-            readonly type: "string";
-            readonly minLength: 1;
-        };
-        readonly staffId: {
             readonly type: "string";
         };
         readonly hourlyRate: {
