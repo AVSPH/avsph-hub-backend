@@ -12,6 +12,18 @@ export const invoiceAdjustmentSchema = z.object({
     description: z.string().max(200).optional(),
     amount: z.number(),
 });
+export const earningsBreakdownSchema = z.object({
+    regularEarnings: z.number().default(0),
+    overtimeEarnings: z.number().default(0),
+    sundayPremiumEarnings: z.number().default(0),
+    nightDifferentialEarnings: z.number().default(0),
+    riceAllowanceEarnings: z.number().default(0),
+});
+export const statutoryDeductionsSchema = z.object({
+    sss: z.number().default(0),
+    pagIbig: z.number().default(0),
+    philHealth: z.number().default(0),
+});
 // Full invoice schema
 export const invoiceSchema = z.object({
     _id: z.string().optional(),
@@ -31,6 +43,18 @@ export const invoiceSchema = z.object({
     baseSalary: z.number().positive(),
     // Financials
     calculatedPay: z.number().default(0),
+    earningsBreakdown: earningsBreakdownSchema.default({
+        regularEarnings: 0,
+        overtimeEarnings: 0,
+        sundayPremiumEarnings: 0,
+        nightDifferentialEarnings: 0,
+        riceAllowanceEarnings: 0,
+    }),
+    statutoryDeductions: statutoryDeductionsSchema.default({
+        sss: 0,
+        pagIbig: 0,
+        philHealth: 0,
+    }),
     deductions: z.array(invoiceAdjustmentSchema).default([]),
     additions: z.array(invoiceAdjustmentSchema).default([]),
     netPay: z.number().default(0),
@@ -88,6 +112,32 @@ export const invoiceAdjustmentJsonSchema = {
     },
     required: ["type", "amount"],
 };
+export const earningsBreakdownJsonSchema = {
+    type: "object",
+    properties: {
+        regularEarnings: { type: "number" },
+        overtimeEarnings: { type: "number" },
+        sundayPremiumEarnings: { type: "number" },
+        nightDifferentialEarnings: { type: "number" },
+        riceAllowanceEarnings: { type: "number" },
+    },
+    required: [
+        "regularEarnings",
+        "overtimeEarnings",
+        "sundayPremiumEarnings",
+        "nightDifferentialEarnings",
+        "riceAllowanceEarnings",
+    ],
+};
+export const statutoryDeductionsJsonSchema = {
+    type: "object",
+    properties: {
+        sss: { type: "number" },
+        pagIbig: { type: "number" },
+        philHealth: { type: "number" },
+    },
+    required: ["sss", "pagIbig", "philHealth"],
+};
 export const invoiceJsonSchema = {
     type: "object",
     properties: {
@@ -107,6 +157,8 @@ export const invoiceJsonSchema = {
         },
         baseSalary: { type: "number" },
         calculatedPay: { type: "number" },
+        earningsBreakdown: earningsBreakdownJsonSchema,
+        statutoryDeductions: statutoryDeductionsJsonSchema,
         deductions: { type: "array", items: invoiceAdjustmentJsonSchema },
         additions: { type: "array", items: invoiceAdjustmentJsonSchema },
         netPay: { type: "number" },

@@ -23,6 +23,9 @@ export interface EODReportDocument {
   // Core Report Data
   date: string;
   hoursWorked: number;
+  regularHoursWorked?: number;
+  overtimeHoursWorked?: number;
+  nightDifferentialHours?: number;
   tasksCompleted: string;
 
   // Optional Fields

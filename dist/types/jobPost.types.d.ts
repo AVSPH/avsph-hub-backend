@@ -49,8 +49,8 @@ export declare const jobPostSchema: z.ZodObject<{
     status: "draft" | "open" | "closed";
     title: string;
     description: string;
-    isActive: boolean;
     businessId: string;
+    isActive: boolean;
     stages: {
         type: "active" | "hired" | "rejected";
         name: string;

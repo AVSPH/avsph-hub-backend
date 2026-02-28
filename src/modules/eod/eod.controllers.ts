@@ -101,7 +101,7 @@ export async function getMyExpectedEarnings(
     return reply.status(404).send({ error: "Staff member not found" });
   }
 
-  if (!staffMember.salary || !staffMember.salaryType) {
+  if (!staffMember.salary) {
     return reply.status(400).send({
       error: "Missing salary information",
       message:
@@ -168,24 +168,7 @@ export async function getMyExpectedEarnings(
   const uniqueDates = new Set(approvedEods.map((r) => r.date));
   const totalDaysWorked = uniqueDates.size;
 
-  // Calculate estimated pay
-  let estimatedPay = 0;
-  switch (staffMember.salaryType) {
-    case "hourly":
-      estimatedPay =
-        Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
-      break;
-    case "daily":
-      estimatedPay =
-        Math.round(staffMember.salary * totalDaysWorked * 100) / 100;
-      break;
-    case "monthly":
-      estimatedPay = staffMember.salary;
-      break;
-    case "annual":
-      estimatedPay = Math.round((staffMember.salary / 12) * 100) / 100;
-      break;
-  }
+  const estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
 
   return {
     periodStart,
@@ -193,7 +176,7 @@ export async function getMyExpectedEarnings(
     totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
     totalDaysWorked,
     baseSalary: staffMember.salary,
-    salaryType: staffMember.salaryType,
+    salaryType: "hourly",
     estimatedPay,
     approvedEodCount: approvedEods.length,
     pendingEodCount,
@@ -238,8 +221,17 @@ export async function submitEod(request: FastifyRequest, reply: FastifyReply) {
     });
   }
 
-  const { date, hoursWorked, tasksCompleted, challenges, nextDayPlan, notes } =
-    parseResult.data;
+  const {
+    date,
+    hoursWorked,
+    regularHoursWorked,
+    overtimeHoursWorked,
+    nightDifferentialHours,
+    tasksCompleted,
+    challenges,
+    nextDayPlan,
+    notes,
+  } = parseResult.data;
 
   // Enforce one EOD per staff per day
   const existingEod = await eodReports.findOne({
@@ -264,6 +256,9 @@ export async function submitEod(request: FastifyRequest, reply: FastifyReply) {
     businessId,
     date,
     hoursWorked,
+    regularHoursWorked,
+    overtimeHoursWorked,
+    nightDifferentialHours,
     tasksCompleted,
     challenges,
     nextDayPlan,

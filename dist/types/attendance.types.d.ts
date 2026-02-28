@@ -17,37 +17,37 @@ export declare const attendanceSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "rejected" | "pending" | "approved";
+    status: "approved" | "rejected" | "pending";
+    staffId: string;
+    businessId: string;
     isActive: boolean;
-    businessId: string;
-    staffId: string;
     clockIn: string;
     workDate: string;
     _id?: string | undefined;
-    hoursWorked?: number | undefined;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
-    adminNotes?: string | undefined;
-    notes?: string | undefined;
-    clockOut?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
+    notes?: string | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
+    hoursWorked?: number | undefined;
+    adminNotes?: string | undefined;
+    clockOut?: string | undefined;
 }, {
-    businessId: string;
     staffId: string;
+    businessId: string;
     clockIn: string;
     workDate: string;
-    status?: "rejected" | "pending" | "approved" | undefined;
+    status?: "approved" | "rejected" | "pending" | undefined;
     _id?: string | undefined;
-    isActive?: boolean | undefined;
-    hoursWorked?: number | undefined;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
-    adminNotes?: string | undefined;
-    notes?: string | undefined;
-    clockOut?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
+    notes?: string | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
+    hoursWorked?: number | undefined;
+    adminNotes?: string | undefined;
+    clockOut?: string | undefined;
 }>;
 export declare const clockInSchema: z.ZodObject<{
     notes: z.ZodOptional<z.ZodString>;
@@ -67,10 +67,10 @@ export declare const approveAttendanceSchema: z.ZodObject<{
     status: z.ZodEnum<["approved", "rejected"]>;
     adminNotes: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "rejected" | "approved";
+    status: "approved" | "rejected";
     adminNotes?: string | undefined;
 }, {
-    status: "rejected" | "approved";
+    status: "approved" | "rejected";
     adminNotes?: string | undefined;
 }>;
 export declare const editAttendanceSchema: z.ZodObject<{
@@ -81,16 +81,16 @@ export declare const editAttendanceSchema: z.ZodObject<{
     adminNotes: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["pending", "approved", "rejected"]>>;
 }, "strip", z.ZodTypeAny, {
-    status?: "rejected" | "pending" | "approved" | undefined;
-    adminNotes?: string | undefined;
+    status?: "approved" | "rejected" | "pending" | undefined;
     notes?: string | undefined;
+    adminNotes?: string | undefined;
     clockIn?: string | undefined;
     clockOut?: string | undefined;
     workDate?: string | undefined;
 }, {
-    status?: "rejected" | "pending" | "approved" | undefined;
-    adminNotes?: string | undefined;
+    status?: "approved" | "rejected" | "pending" | undefined;
     notes?: string | undefined;
+    adminNotes?: string | undefined;
     clockIn?: string | undefined;
     clockOut?: string | undefined;
     workDate?: string | undefined;

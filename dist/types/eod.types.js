@@ -18,6 +18,21 @@ export const eodReportSchema = z.object({
         .number()
         .min(0, "Hours worked must be 0 or greater")
         .max(24, "Hours worked cannot exceed 24"),
+    regularHoursWorked: z
+        .number()
+        .min(0, "Regular hours worked must be 0 or greater")
+        .max(24, "Regular hours worked cannot exceed 24")
+        .optional(),
+    overtimeHoursWorked: z
+        .number()
+        .min(0, "Overtime hours worked must be 0 or greater")
+        .max(24, "Overtime hours worked cannot exceed 24")
+        .optional(),
+    nightDifferentialHours: z
+        .number()
+        .min(0, "Night differential hours must be 0 or greater")
+        .max(24, "Night differential hours cannot exceed 24")
+        .optional(),
     tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
     // Optional Fields
     challenges: z.string().max(2000).optional(),
@@ -33,9 +48,28 @@ export const eodReportSchema = z.object({
     isActive: z.boolean().default(true),
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
+}).superRefine((value, ctx) => {
+    const regular = value.regularHoursWorked ?? value.hoursWorked;
+    const overtime = value.overtimeHoursWorked ?? 0;
+    const night = value.nightDifferentialHours ?? 0;
+    if (regular + overtime > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["overtimeHoursWorked"],
+            message: "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
+        });
+    }
+    if (night > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["nightDifferentialHours"],
+            message: "nightDifferentialHours cannot exceed hoursWorked",
+        });
+    }
 });
 // Schema for staff submitting an EOD report
-export const submitEodSchema = z.object({
+export const submitEodSchema = z
+    .object({
     date: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
@@ -43,18 +77,66 @@ export const submitEodSchema = z.object({
         .number()
         .min(0, "Hours worked must be 0 or greater")
         .max(24, "Hours worked cannot exceed 24"),
+    regularHoursWorked: z.number().min(0).max(24).optional(),
+    overtimeHoursWorked: z.number().min(0).max(24).optional(),
+    nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
+})
+    .superRefine((value, ctx) => {
+    const regular = value.regularHoursWorked ?? value.hoursWorked;
+    const overtime = value.overtimeHoursWorked ?? 0;
+    const night = value.nightDifferentialHours ?? 0;
+    if (regular + overtime > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["overtimeHoursWorked"],
+            message: "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
+        });
+    }
+    if (night > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["nightDifferentialHours"],
+            message: "nightDifferentialHours cannot exceed hoursWorked",
+        });
+    }
 });
 // Schema for staff editing their own EOD (when needs_revision)
-export const editOwnEodSchema = z.object({
+export const editOwnEodSchema = z
+    .object({
     hoursWorked: z.number().min(0).max(24).optional(),
+    regularHoursWorked: z.number().min(0).max(24).optional(),
+    overtimeHoursWorked: z.number().min(0).max(24).optional(),
+    nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
+})
+    .superRefine((value, ctx) => {
+    if (value.hoursWorked === undefined) {
+        return;
+    }
+    const regular = value.regularHoursWorked ?? value.hoursWorked;
+    const overtime = value.overtimeHoursWorked ?? 0;
+    const night = value.nightDifferentialHours ?? 0;
+    if (regular + overtime > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["overtimeHoursWorked"],
+            message: "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
+        });
+    }
+    if (night > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["nightDifferentialHours"],
+            message: "nightDifferentialHours cannot exceed hoursWorked",
+        });
+    }
 });
 // Schema for admin reviewing an EOD report
 export const reviewEodSchema = z.object({
@@ -63,8 +145,12 @@ export const reviewEodSchema = z.object({
     adminNotes: z.string().max(1000).optional(),
 });
 // Schema for admin editing an EOD report (minor tweaks)
-export const adminEditEodSchema = z.object({
+export const adminEditEodSchema = z
+    .object({
     hoursWorked: z.number().min(0).max(24).optional(),
+    regularHoursWorked: z.number().min(0).max(24).optional(),
+    overtimeHoursWorked: z.number().min(0).max(24).optional(),
+    nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
     date: z
         .string()
@@ -73,6 +159,28 @@ export const adminEditEodSchema = z.object({
     adminNotes: z.string().max(1000).optional(),
     status: eodStatusEnum.optional(),
     isApproved: z.boolean().optional(),
+})
+    .superRefine((value, ctx) => {
+    if (value.hoursWorked === undefined) {
+        return;
+    }
+    const regular = value.regularHoursWorked ?? value.hoursWorked;
+    const overtime = value.overtimeHoursWorked ?? 0;
+    const night = value.nightDifferentialHours ?? 0;
+    if (regular + overtime > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["overtimeHoursWorked"],
+            message: "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
+        });
+    }
+    if (night > value.hoursWorked) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["nightDifferentialHours"],
+            message: "nightDifferentialHours cannot exceed hoursWorked",
+        });
+    }
 });
 // JSON Schemas for Fastify route validation
 export const eodReportJsonSchema = {
@@ -83,6 +191,9 @@ export const eodReportJsonSchema = {
         businessId: { type: "string" },
         date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        regularHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
@@ -109,6 +220,9 @@ export const submitEodJsonSchema = {
     properties: {
         date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        regularHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
@@ -120,6 +234,9 @@ export const editOwnEodJsonSchema = {
     type: "object",
     properties: {
         hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        regularHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
@@ -139,6 +256,9 @@ export const adminEditEodJsonSchema = {
     type: "object",
     properties: {
         hoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        regularHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
+        nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
         date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         adminNotes: { type: "string", maxLength: 1000 },

@@ -22,8 +22,8 @@ export declare const blogSchema: z.ZodObject<{
     status: "draft" | "published";
     content: string;
     title: string;
-    isActive: boolean;
     businessId: string;
+    isActive: boolean;
     slug: string;
     authorId: string;
     viewCount: number;
@@ -77,8 +77,8 @@ export declare const createBlogSchema: z.ZodObject<Omit<{
     status: "draft" | "published";
     content: string;
     title: string;
-    isActive: boolean;
     businessId: string;
+    isActive: boolean;
     slug: string;
     viewCount: number;
     commentCount: number;
@@ -104,8 +104,8 @@ export declare const updateBlogSchema: z.ZodObject<Omit<{
     status: z.ZodOptional<z.ZodDefault<z.ZodEnum<["draft", "published"]>>>;
     content: z.ZodOptional<z.ZodString>;
     title: z.ZodOptional<z.ZodString>;
-    isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     businessId: z.ZodOptional<z.ZodString>;
+    isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     slug: z.ZodOptional<z.ZodString>;
     excerpt: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     featuredImage: z.ZodOptional<z.ZodOptional<z.ZodString>>;

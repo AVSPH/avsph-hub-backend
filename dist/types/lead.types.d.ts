@@ -16,23 +16,23 @@ export declare const leadSchema: z.ZodObject<{
     status: "contacted" | "new" | "qualified" | "converted";
     name: string;
     isActive: boolean;
+    source: "blog_comment" | "contact_form" | "other";
     email: string;
     phone: string;
-    source: "blog_comment" | "contact_form" | "other";
     _id?: string | undefined;
+    notes?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    notes?: string | undefined;
 }, {
     name: string;
     email: string;
     phone: string;
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     _id?: string | undefined;
+    notes?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    notes?: string | undefined;
     source?: "blog_comment" | "contact_form" | "other" | undefined;
 }>;
 export declare const createLeadSchema: z.ZodObject<Omit<{
@@ -50,43 +50,43 @@ export declare const createLeadSchema: z.ZodObject<Omit<{
     status: "contacted" | "new" | "qualified" | "converted";
     name: string;
     isActive: boolean;
+    source: "blog_comment" | "contact_form" | "other";
     email: string;
     phone: string;
-    source: "blog_comment" | "contact_form" | "other";
     notes?: string | undefined;
 }, {
     name: string;
     email: string;
     phone: string;
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
-    isActive?: boolean | undefined;
     notes?: string | undefined;
+    isActive?: boolean | undefined;
     source?: "blog_comment" | "contact_form" | "other" | undefined;
 }>;
 export declare const updateLeadSchema: z.ZodObject<{
     status: z.ZodOptional<z.ZodDefault<z.ZodEnum<["new", "contacted", "qualified", "converted"]>>>;
     name: z.ZodOptional<z.ZodString>;
+    notes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+    source: z.ZodOptional<z.ZodDefault<z.ZodEnum<["blog_comment", "contact_form", "other"]>>>;
     email: z.ZodOptional<z.ZodString>;
     phone: z.ZodOptional<z.ZodString>;
-    notes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
-    source: z.ZodOptional<z.ZodDefault<z.ZodEnum<["blog_comment", "contact_form", "other"]>>>;
 }, "strip", z.ZodTypeAny, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     name?: string | undefined;
+    notes?: string | undefined;
     isActive?: boolean | undefined;
+    source?: "blog_comment" | "contact_form" | "other" | undefined;
     email?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
-    source?: "blog_comment" | "contact_form" | "other" | undefined;
 }, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     name?: string | undefined;
+    notes?: string | undefined;
     isActive?: boolean | undefined;
+    source?: "blog_comment" | "contact_form" | "other" | undefined;
     email?: string | undefined;
     phone?: string | undefined;
-    notes?: string | undefined;
-    source?: "blog_comment" | "contact_form" | "other" | undefined;
 }>;
 export declare const updateLeadStatusSchema: z.ZodObject<{
     status: z.ZodEnum<["new", "contacted", "qualified", "converted"]>;

@@ -11,6 +11,18 @@ export interface InvoiceAdjustmentType {
     description?: string;
     amount: number;
 }
+export interface InvoiceEarningsBreakdownType {
+    regularEarnings: number;
+    overtimeEarnings: number;
+    sundayPremiumEarnings: number;
+    nightDifferentialEarnings: number;
+    riceAllowanceEarnings: number;
+}
+export interface InvoiceStatutoryDeductionsType {
+    sss: number;
+    pagIbig: number;
+    philHealth: number;
+}
 export interface InvoiceDocumentType {
     _id?: string;
     staffId: string;
@@ -22,6 +34,8 @@ export interface InvoiceDocumentType {
     salaryType: "hourly" | "daily" | "monthly" | "annual";
     baseSalary: number;
     calculatedPay: number;
+    earningsBreakdown: InvoiceEarningsBreakdownType;
+    statutoryDeductions: InvoiceStatutoryDeductionsType;
     deductions: InvoiceAdjustmentType[];
     additions: InvoiceAdjustmentType[];
     netPay: number;

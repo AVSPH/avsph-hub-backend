@@ -62,15 +62,14 @@ export declare const payrollSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "draft" | "approved" | "calculated" | "paid";
-    isActive: boolean;
-    salaryType: "hourly" | "daily" | "monthly" | "annual";
-    businessId: string;
+    status: "draft" | "calculated" | "approved" | "paid";
     staffId: string;
+    businessId: string;
     periodStart: string;
     periodEnd: string;
     totalHoursWorked: number;
     totalDaysWorked: number;
+    salaryType: "hourly" | "daily" | "monthly" | "annual";
     baseSalary: number;
     calculatedPay: number;
     deductions: {
@@ -84,25 +83,25 @@ export declare const payrollSchema: z.ZodObject<{
         description?: string | undefined;
     }[];
     netPay: number;
+    isActive: boolean;
     attendanceIds: string[];
     attendanceCount: number;
     _id?: string | undefined;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
-    notes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
     paidAt?: string | undefined;
+    notes?: string | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
 }, {
-    salaryType: "hourly" | "daily" | "monthly" | "annual";
-    businessId: string;
     staffId: string;
+    businessId: string;
     periodStart: string;
     periodEnd: string;
+    salaryType: "hourly" | "daily" | "monthly" | "annual";
     baseSalary: number;
-    status?: "draft" | "approved" | "calculated" | "paid" | undefined;
+    status?: "draft" | "calculated" | "approved" | "paid" | undefined;
     _id?: string | undefined;
-    isActive?: boolean | undefined;
     totalHoursWorked?: number | undefined;
     totalDaysWorked?: number | undefined;
     calculatedPay?: number | undefined;
@@ -117,14 +116,15 @@ export declare const payrollSchema: z.ZodObject<{
         description?: string | undefined;
     }[] | undefined;
     netPay?: number | undefined;
-    createdAt?: string | undefined;
-    updatedAt?: string | undefined;
-    notes?: string | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
+    paidAt?: string | undefined;
+    notes?: string | undefined;
+    isActive?: boolean | undefined;
+    createdAt?: string | undefined;
+    updatedAt?: string | undefined;
     attendanceIds?: string[] | undefined;
     attendanceCount?: number | undefined;
-    paidAt?: string | undefined;
 }>;
 export declare const generatePayrollSchema: z.ZodObject<{
     staffId: z.ZodString;

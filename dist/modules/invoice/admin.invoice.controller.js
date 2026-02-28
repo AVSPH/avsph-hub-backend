@@ -1,28 +1,15 @@
 import { ObjectId } from "@fastify/mongodb";
 import { generateInvoiceSchema, generateBusinessInvoiceSchema, approveInvoiceSchema, addInvoiceAdjustmentSchema, } from "../../types/invoice.types.js";
-// Helper function to calculate pay based on salary type
-function calculatePay(salaryType, baseSalary, totalHoursWorked, totalDaysWorked) {
-    switch (salaryType) {
-        case "hourly":
-            return Math.round(baseSalary * totalHoursWorked * 100) / 100;
-        case "daily":
-            return Math.round(baseSalary * totalDaysWorked * 100) / 100;
-        case "monthly":
-            return baseSalary;
-        case "annual":
-            return Math.round((baseSalary / 12) * 100) / 100;
-        default:
-            return 0;
-    }
-}
+import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, } from "./invoice.calculator.service.js";
 // ==================== INVOICE GENERATION ====================
 // Generate invoice for a single staff member
 export async function generateInvoice(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    const staff = request.server.mongo.db?.collection("staff");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!invoices || !eodReports || !staff || !businesses) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const eodReports = db?.collection("eod_reports");
+    const staff = db?.collection("staff");
+    const businesses = db?.collection("businesses");
+    if (!db || !invoices || !eodReports || !staff || !businesses) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const parseResult = generateInvoiceSchema.safeParse(request.body);
@@ -73,7 +60,7 @@ export async function generateInvoice(request, reply) {
         });
     }
     // Validate staff has salary info
-    if (!staffMember.salary || !staffMember.salaryType) {
+    if (!staffMember.salary) {
         return reply.status(400).send({
             error: "Missing salary information",
             message: "Staff member does not have salary configuration. Please update staff salary info first.",
@@ -89,14 +76,9 @@ export async function generateInvoice(request, reply) {
         date: { $gte: periodStart, $lte: periodEnd },
     })
         .toArray();
-    // Calculate totals
-    const totalHoursWorked = eodRecords.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
-    // Count unique dates for daily salary
-    const uniqueDates = new Set(eodRecords.map((record) => record.date));
-    const totalDaysWorked = uniqueDates.size;
+    const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
     const eodIds = eodRecords.map((record) => record._id.toString());
-    // Calculate pay
-    const calculatedPay = calculatePay(staffMember.salaryType, staffMember.salary, Math.round(totalHoursWorked * 100) / 100, totalDaysWorked);
     const now = new Date().toISOString();
     const newInvoice = {
         staffId,
@@ -106,14 +88,16 @@ export async function generateInvoice(request, reply) {
         staffPosition: staffMember.position || "",
         periodStart,
         periodEnd,
-        totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
-        totalDaysWorked,
-        salaryType: staffMember.salaryType,
-        baseSalary: staffMember.salary,
-        calculatedPay,
-        deductions: [],
+        totalHoursWorked: financials.totalHoursWorked,
+        totalDaysWorked: financials.totalDaysWorked,
+        salaryType: "hourly",
+        baseSalary: compensation.hourlyRate,
+        calculatedPay: financials.calculatedPay,
+        earningsBreakdown: financials.earningsBreakdown,
+        statutoryDeductions: financials.statutoryDeductions,
+        deductions: financials.deductions,
         additions: [],
-        netPay: calculatedPay,
+        netPay: financials.netPay,
         eodIds,
         eodCount: eodRecords.length,
         status: "draft",
@@ -130,11 +114,12 @@ export async function generateInvoice(request, reply) {
 }
 // Generate invoices for all hourly staff in a business
 export async function generateBusinessInvoices(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    const staffCollection = request.server.mongo.db?.collection("staff");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!invoices || !eodReports || !staffCollection || !businesses) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const eodReports = db?.collection("eod_reports");
+    const staffCollection = db?.collection("staff");
+    const businesses = db?.collection("businesses");
+    if (!db || !invoices || !eodReports || !staffCollection || !businesses) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { businessId } = request.params;
@@ -162,13 +147,12 @@ export async function generateBusinessInvoices(request, reply) {
             });
         }
     }
-    // Only fetch active hourly-rate staff for auto invoice generation
+    // Fetch all active staff; invoice computation is unified hourly-only
     const staffMembers = await staffCollection
         .find({
         businessId,
         isActive: true,
         status: "active",
-        salaryType: "hourly",
     })
         .toArray();
     const results = {
@@ -196,7 +180,7 @@ export async function generateBusinessInvoices(request, reply) {
                 continue;
             }
             // Check salary info
-            if (!staffMember.salary || !staffMember.salaryType) {
+            if (!staffMember.salary) {
                 results.errors.push({
                     staffId,
                     staffName: `${staffMember.firstName} ${staffMember.lastName}`,
@@ -214,11 +198,9 @@ export async function generateBusinessInvoices(request, reply) {
                 date: { $gte: periodStart, $lte: periodEnd },
             })
                 .toArray();
-            const totalHoursWorked = eodRecords.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
-            const uniqueDates = new Set(eodRecords.map((record) => record.date));
-            const totalDaysWorked = uniqueDates.size;
+            const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
+            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], []);
             const eodIds = eodRecords.map((record) => record._id.toString());
-            const calculatedPay = calculatePay(staffMember.salaryType, staffMember.salary, Math.round(totalHoursWorked * 100) / 100, totalDaysWorked);
             const now = new Date().toISOString();
             const newInvoice = {
                 staffId,
@@ -228,14 +210,16 @@ export async function generateBusinessInvoices(request, reply) {
                 staffPosition: staffMember.position || "",
                 periodStart,
                 periodEnd,
-                totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
-                totalDaysWorked,
-                salaryType: staffMember.salaryType,
-                baseSalary: staffMember.salary,
-                calculatedPay,
-                deductions: [],
+                totalHoursWorked: financials.totalHoursWorked,
+                totalDaysWorked: financials.totalDaysWorked,
+                salaryType: "hourly",
+                baseSalary: compensation.hourlyRate,
+                calculatedPay: financials.calculatedPay,
+                earningsBreakdown: financials.earningsBreakdown,
+                statutoryDeductions: financials.statutoryDeductions,
+                deductions: financials.deductions,
                 additions: [],
-                netPay: calculatedPay,
+                netPay: financials.netPay,
                 eodIds,
                 eodCount: eodRecords.length,
                 status: "draft",
@@ -248,8 +232,8 @@ export async function generateBusinessInvoices(request, reply) {
                 _id: result.insertedId,
                 staffId,
                 staffName: `${staffMember.firstName} ${staffMember.lastName}`,
-                calculatedPay,
-                netPay: calculatedPay,
+                calculatedPay: financials.calculatedPay,
+                netPay: financials.netPay,
             });
         }
         catch (err) {
@@ -274,10 +258,12 @@ export async function generateBusinessInvoices(request, reply) {
 // ==================== RECALCULATE ====================
 // Recalculate invoice from current approved EODs (admin only — draft/calculated only)
 export async function recalculateInvoice(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!invoices || !eodReports || !businesses) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const eodReports = db?.collection("eod_reports");
+    const businesses = db?.collection("businesses");
+    const staff = db?.collection("staff");
+    if (!db || !invoices || !eodReports || !businesses || !staff) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id } = request.params;
@@ -324,28 +310,34 @@ export async function recalculateInvoice(request, reply) {
         date: { $gte: invoice.periodStart, $lte: invoice.periodEnd },
     })
         .toArray();
-    const totalHoursWorked = eodRecords.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
-    const uniqueDates = new Set(eodRecords.map((record) => record.date));
-    const totalDaysWorked = uniqueDates.size;
     const eodIds = eodRecords.map((record) => record._id.toString());
     const newEodIdSet = new Set(eodIds);
     // Calculate how many EODs were added/removed
     const eodsAdded = eodIds.filter((eid) => !previousEodIds.has(eid)).length;
     const eodsRemoved = [...previousEodIds].filter((eid) => !newEodIdSet.has(eid)).length;
-    const calculatedPay = calculatePay(invoice.salaryType, invoice.baseSalary, Math.round(totalHoursWorked * 100) / 100, totalDaysWorked);
-    // Recalculate net pay with existing adjustments
-    const deductionsTotal = (invoice.deductions || []).reduce((sum, d) => sum + d.amount, 0);
-    const additionsTotal = (invoice.additions || []).reduce((sum, a) => sum + a.amount, 0);
-    const netPay = Math.round((calculatedPay + additionsTotal - deductionsTotal) * 100) / 100;
+    const staffMember = await staff.findOne({
+        _id: new ObjectId(invoice.staffId),
+        isActive: true,
+    });
+    if (!staffMember) {
+        return reply.status(404).send({ error: "Staff member not found" });
+    }
+    const compensation = await resolveHourlyCompensationProfile(db, staffMember, invoice.periodEnd);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, invoice.additions || [], invoice.deductions || []);
     const now = new Date().toISOString();
     const result = await invoices.findOneAndUpdate({ _id: new ObjectId(id) }, {
         $set: {
-            totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
-            totalDaysWorked,
+            totalHoursWorked: financials.totalHoursWorked,
+            totalDaysWorked: financials.totalDaysWorked,
             eodIds,
             eodCount: eodRecords.length,
-            calculatedPay,
-            netPay,
+            salaryType: "hourly",
+            baseSalary: compensation.hourlyRate,
+            calculatedPay: financials.calculatedPay,
+            earningsBreakdown: financials.earningsBreakdown,
+            statutoryDeductions: financials.statutoryDeductions,
+            deductions: financials.deductions,
+            netPay: financials.netPay,
             updatedAt: now,
         },
     }, { returnDocument: "after" });
@@ -354,9 +346,9 @@ export async function recalculateInvoice(request, reply) {
         message: "Invoice recalculated successfully",
         recalculation: {
             previousHoursWorked: previousTotal,
-            newHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+            newHoursWorked: financials.totalHoursWorked,
             previousPay: invoice.calculatedPay,
-            newPay: calculatedPay,
+            newPay: financials.calculatedPay,
             eodsAdded,
             eodsRemoved,
         },

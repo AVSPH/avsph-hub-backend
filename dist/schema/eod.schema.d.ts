@@ -11,6 +11,9 @@ export interface EODReportDocument {
     businessId: string;
     date: string;
     hoursWorked: number;
+    regularHoursWorked?: number;
+    overtimeHoursWorked?: number;
+    nightDifferentialHours?: number;
     tasksCompleted: string;
     challenges?: string;
     nextDayPlan?: string;

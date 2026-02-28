@@ -234,8 +234,9 @@ export async function createStaff(
 ) {
   const staff = request.server.mongo.db?.collection("staff");
   const businesses = request.server.mongo.db?.collection("businesses");
+  const compensationProfiles = request.server.mongo.db?.collection("compensation_profiles");
 
-  if (!staff || !businesses) {
+  if (!staff || !businesses || !compensationProfiles) {
     return reply.status(500).send({ error: "Database not available" });
   }
 
@@ -259,6 +260,7 @@ export async function createStaff(
     dateHired,
     salary,
     salaryType,
+    compensationProfileId,
     employmentType,
     businessId,
   } = parseResult.data;
@@ -298,6 +300,26 @@ export async function createStaff(
     });
   }
 
+  if (compensationProfileId) {
+    if (!ObjectId.isValid(compensationProfileId)) {
+      return reply.status(400).send({
+        error: "Invalid compensation profile ID format",
+      });
+    }
+
+    const linkedProfile = await compensationProfiles.findOne({
+      _id: new ObjectId(compensationProfileId),
+      businessId,
+      isActive: true,
+    });
+
+    if (!linkedProfile) {
+      return reply.status(404).send({
+        error: "Compensation profile not found in this business",
+      });
+    }
+  }
+
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -313,6 +335,7 @@ export async function createStaff(
     dateHired,
     salary,
     salaryType: salaryType || "monthly",
+    compensationProfileId,
     employmentType: employmentType || "full-time",
     businessId,
     status: "active" as const,
@@ -371,8 +394,9 @@ export async function updateStaff(
 ) {
   const staff = request.server.mongo.db?.collection("staff");
   const businesses = request.server.mongo.db?.collection("businesses");
+  const compensationProfiles = request.server.mongo.db?.collection("compensation_profiles");
 
-  if (!staff || !businesses) {
+  if (!staff || !businesses || !compensationProfiles) {
     return reply.status(500).send({ error: "Database not available" });
   }
 
@@ -410,6 +434,27 @@ export async function updateStaff(
       error: "Validation failed",
       details: parseResult.error.errors,
     });
+  }
+
+  if (parseResult.data.compensationProfileId) {
+    const { compensationProfileId } = parseResult.data;
+    if (!ObjectId.isValid(compensationProfileId)) {
+      return reply.status(400).send({
+        error: "Invalid compensation profile ID format",
+      });
+    }
+
+    const linkedProfile = await compensationProfiles.findOne({
+      _id: new ObjectId(compensationProfileId),
+      businessId: existingStaff.businessId,
+      isActive: true,
+    });
+
+    if (!linkedProfile) {
+      return reply.status(404).send({
+        error: "Compensation profile not found in this business",
+      });
+    }
   }
 
   // Check if email is being updated and if it conflicts

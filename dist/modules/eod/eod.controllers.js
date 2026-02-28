@@ -50,7 +50,7 @@ export async function getMyExpectedEarnings(request, reply) {
     if (!staffMember) {
         return reply.status(404).send({ error: "Staff member not found" });
     }
-    if (!staffMember.salary || !staffMember.salaryType) {
+    if (!staffMember.salary) {
         return reply.status(400).send({
             error: "Missing salary information",
             message: "Your salary configuration is not set up yet. Contact your admin.",
@@ -105,31 +105,14 @@ export async function getMyExpectedEarnings(request, reply) {
     const totalHoursWorked = approvedEods.reduce((sum, record) => sum + (record.hoursWorked || 0), 0);
     const uniqueDates = new Set(approvedEods.map((r) => r.date));
     const totalDaysWorked = uniqueDates.size;
-    // Calculate estimated pay
-    let estimatedPay = 0;
-    switch (staffMember.salaryType) {
-        case "hourly":
-            estimatedPay =
-                Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
-            break;
-        case "daily":
-            estimatedPay =
-                Math.round(staffMember.salary * totalDaysWorked * 100) / 100;
-            break;
-        case "monthly":
-            estimatedPay = staffMember.salary;
-            break;
-        case "annual":
-            estimatedPay = Math.round((staffMember.salary / 12) * 100) / 100;
-            break;
-    }
+    const estimatedPay = Math.round(staffMember.salary * totalHoursWorked * 100) / 100;
     return {
         periodStart,
         periodEnd,
         totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
         totalDaysWorked,
         baseSalary: staffMember.salary,
-        salaryType: staffMember.salaryType,
+        salaryType: "hourly",
         estimatedPay,
         approvedEodCount: approvedEods.length,
         pendingEodCount,
@@ -165,7 +148,7 @@ export async function submitEod(request, reply) {
             details: parseResult.error.errors,
         });
     }
-    const { date, hoursWorked, tasksCompleted, challenges, nextDayPlan, notes } = parseResult.data;
+    const { date, hoursWorked, regularHoursWorked, overtimeHoursWorked, nightDifferentialHours, tasksCompleted, challenges, nextDayPlan, notes, } = parseResult.data;
     // Enforce one EOD per staff per day
     const existingEod = await eodReports.findOne({
         staffId,
@@ -186,6 +169,9 @@ export async function submitEod(request, reply) {
         businessId,
         date,
         hoursWorked,
+        regularHoursWorked,
+        overtimeHoursWorked,
+        nightDifferentialHours,
         tasksCompleted,
         challenges,
         nextDayPlan,

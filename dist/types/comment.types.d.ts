@@ -20,9 +20,9 @@ export declare const commentSchema: z.ZodObject<{
     blogId: string;
     leadId: string;
     _id?: string | undefined;
-    isApproved?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
+    isApproved?: boolean | undefined;
 }>;
 export declare const createCommentSchema: z.ZodObject<Omit<{
     _id: z.ZodOptional<z.ZodString>;
