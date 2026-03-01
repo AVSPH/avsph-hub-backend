@@ -27,6 +27,7 @@ export interface InvoiceDocumentType {
     _id?: string;
     staffId: string;
     businessId: string;
+    currency: string;
     periodStart: string;
     periodEnd: string;
     totalHoursWorked: number;
@@ -39,6 +40,14 @@ export interface InvoiceDocumentType {
     deductions: InvoiceAdjustmentType[];
     additions: InvoiceAdjustmentType[];
     netPay: number;
+    phpConversion?: {
+        exchangeRate: number;
+        baseSalaryPhp: number;
+        calculatedPayPhp: number;
+        netPayPhp: number;
+        statutoryDeductions: InvoiceStatutoryDeductionsType;
+        earningsBreakdownPhp: InvoiceEarningsBreakdownType;
+    };
     eodIds: string[];
     eodCount: number;
     status: "draft" | "calculated" | "approved" | "paid";

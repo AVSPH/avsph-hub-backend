@@ -8,6 +8,7 @@ export interface CompensationProfileDocumentType {
     _id?: string;
     name: string;
     businessId: string;
+    currency: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;

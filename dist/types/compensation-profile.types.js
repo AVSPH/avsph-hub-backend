@@ -9,6 +9,7 @@ const compensationProfileBaseSchema = z.object({
     _id: z.string().optional(),
     name: z.string().min(1).max(120),
     businessId: z.string().min(1, "Business ID is required"),
+    currency: z.string().min(1).max(10).toUpperCase().default("PHP"),
     hourlyRate: z.number().min(0, "Hourly rate must be 0 or greater"),
     overtimeRateMultiplier: positiveMultiplierSchema.default(1),
     sundayRateMultiplier: positiveMultiplierSchema.default(1),
@@ -28,7 +29,9 @@ const compensationProfileBaseSchema = z.object({
     updatedAt: z.string().datetime().optional(),
 });
 const validateDateRange = (value, ctx) => {
-    if (value.effectiveFrom && value.effectiveTo && value.effectiveTo < value.effectiveFrom) {
+    if (value.effectiveFrom &&
+        value.effectiveTo &&
+        value.effectiveTo < value.effectiveFrom) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["effectiveTo"],
@@ -37,11 +40,13 @@ const validateDateRange = (value, ctx) => {
     }
 };
 export const compensationProfileSchema = compensationProfileBaseSchema.superRefine(validateDateRange);
-export const createCompensationProfileSchema = compensationProfileBaseSchema.omit({
+export const createCompensationProfileSchema = compensationProfileBaseSchema
+    .omit({
     _id: true,
     createdAt: true,
     updatedAt: true,
-}).superRefine(validateDateRange);
+})
+    .superRefine(validateDateRange);
 export const updateCompensationProfileSchema = compensationProfileBaseSchema
     .omit({
     _id: true,
@@ -64,6 +69,7 @@ export const compensationProfileJsonSchema = {
         _id: { type: "string" },
         name: { type: "string", minLength: 1, maxLength: 120 },
         businessId: { type: "string" },
+        currency: { type: "string", minLength: 1, maxLength: 10 },
         hourlyRate: { type: "number", minimum: 0 },
         overtimeRateMultiplier: { type: "number", minimum: 1 },
         sundayRateMultiplier: { type: "number", minimum: 1 },
@@ -82,18 +88,14 @@ export const compensationProfileJsonSchema = {
         createdAt: { type: "string", format: "date-time" },
         updatedAt: { type: "string", format: "date-time" },
     },
-    required: [
-        "name",
-        "businessId",
-        "hourlyRate",
-        "effectiveFrom",
-    ],
+    required: ["name", "businessId", "hourlyRate", "effectiveFrom"],
 };
 export const createCompensationProfileJsonSchema = {
     type: "object",
     properties: {
         name: { type: "string", minLength: 1, maxLength: 120 },
         businessId: { type: "string" },
+        currency: { type: "string", minLength: 1, maxLength: 10 },
         hourlyRate: { type: "number", minimum: 0 },
         overtimeRateMultiplier: { type: "number", minimum: 1 },
         sundayRateMultiplier: { type: "number", minimum: 1 },
@@ -110,12 +112,7 @@ export const createCompensationProfileJsonSchema = {
         effectiveTo: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         isActive: { type: "boolean" },
     },
-    required: [
-        "name",
-        "businessId",
-        "hourlyRate",
-        "effectiveFrom",
-    ],
+    required: ["name", "businessId", "hourlyRate", "effectiveFrom"],
 };
 export const updateCompensationProfileJsonSchema = {
     type: "object",

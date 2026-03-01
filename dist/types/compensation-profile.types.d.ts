@@ -3,6 +3,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
     name: z.ZodString;
     businessId: z.ZodString;
+    currency: z.ZodDefault<z.ZodString>;
     hourlyRate: z.ZodNumber;
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
@@ -23,6 +24,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     businessId: string;
+    currency: string;
     isActive: boolean;
     hourlyRate: number;
     overtimeRateMultiplier: number;
@@ -47,6 +49,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -65,6 +68,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     name: string;
     businessId: string;
+    currency: string;
     isActive: boolean;
     hourlyRate: number;
     overtimeRateMultiplier: number;
@@ -89,6 +93,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
@@ -109,6 +114,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     _id: z.ZodOptional<z.ZodString>;
     name: z.ZodString;
     businessId: z.ZodString;
+    currency: z.ZodDefault<z.ZodString>;
     hourlyRate: z.ZodNumber;
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
@@ -129,6 +135,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
 }, "_id" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
     name: string;
     businessId: string;
+    currency: string;
     isActive: boolean;
     hourlyRate: number;
     overtimeRateMultiplier: number;
@@ -149,6 +156,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     businessId: string;
     hourlyRate: number;
     effectiveFrom: string;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -165,6 +173,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
 }>, {
     name: string;
     businessId: string;
+    currency: string;
     isActive: boolean;
     hourlyRate: number;
     overtimeRateMultiplier: number;
@@ -185,6 +194,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     businessId: string;
     hourlyRate: number;
     effectiveFrom: string;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
@@ -202,6 +212,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
 export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
     businessId: z.ZodOptional<z.ZodString>;
+    currency: z.ZodOptional<z.ZodDefault<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     hourlyRate: z.ZodOptional<z.ZodNumber>;
     overtimeRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
@@ -220,6 +231,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name?: string | undefined;
     businessId?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
@@ -238,6 +250,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }, {
     name?: string | undefined;
     businessId?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
@@ -256,6 +269,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }>, {
     name?: string | undefined;
     businessId?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
@@ -274,6 +288,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
 }, {
     name?: string | undefined;
     businessId?: string | undefined;
+    currency?: string | undefined;
     isActive?: boolean | undefined;
     hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
@@ -329,6 +344,11 @@ export declare const compensationProfileJsonSchema: {
         };
         readonly businessId: {
             readonly type: "string";
+        };
+        readonly currency: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 10;
         };
         readonly hourlyRate: {
             readonly type: "number";
@@ -407,6 +427,11 @@ export declare const createCompensationProfileJsonSchema: {
         readonly businessId: {
             readonly type: "string";
         };
+        readonly currency: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 10;
+        };
         readonly hourlyRate: {
             readonly type: "number";
             readonly minimum: 0;
@@ -475,6 +500,11 @@ export declare const updateCompensationProfileJsonSchema: {
         };
         readonly businessId: {
             readonly type: "string";
+        };
+        readonly currency: {
+            readonly type: "string";
+            readonly minLength: 1;
+            readonly maxLength: 10;
         };
         readonly hourlyRate: {
             readonly type: "number";

@@ -18,9 +18,10 @@ export async function getMyInvoices(
   }>,
   reply: FastifyReply,
 ) {
-  const invoices = request.server.mongo.db?.collection("invoices");
+  const db = request.server.mongo.db;
+  const invoices = db?.collection("invoices");
 
-  if (!invoices) {
+  if (!db || !invoices) {
     return reply.status(500).send({ error: "Database not available" });
   }
 
@@ -73,10 +74,11 @@ export async function getMyInvoiceById(
   request: FastifyRequest<{ Params: IdParams }>,
   reply: FastifyReply,
 ) {
-  const invoices = request.server.mongo.db?.collection("invoices");
-  const eodReports = request.server.mongo.db?.collection("eod_reports");
+  const db = request.server.mongo.db;
+  const invoices = db?.collection("invoices");
+  const eodReports = db?.collection("eod_reports");
 
-  if (!invoices || !eodReports) {
+  if (!db || !invoices || !eodReports) {
     return reply.status(500).send({ error: "Database not available" });
   }
 

@@ -2,8 +2,9 @@ import { ObjectId } from "@fastify/mongodb";
 // ==================== STAFF INVOICE ACTIONS ====================
 // Get my invoices (staff only — only approved or paid invoices)
 export async function getMyInvoices(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    if (!invoices) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    if (!db || !invoices) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id: staffId, businessId } = request.user;
@@ -43,9 +44,10 @@ export async function getMyInvoices(request, reply) {
 }
 // Get a single invoice by ID (staff only — own invoice, approved or paid)
 export async function getMyInvoiceById(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    if (!invoices || !eodReports) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const eodReports = db?.collection("eod_reports");
+    if (!db || !invoices || !eodReports) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id: staffId, businessId } = request.user;

@@ -83,8 +83,7 @@ export async function updateCompensationProfile(request, reply) {
             message: "You do not have access to this business",
         });
     }
-    if (updates.businessId &&
-        updates.businessId !== existingProfile.businessId) {
+    if (updates.businessId && updates.businessId !== existingProfile.businessId) {
         return reply.status(400).send({
             error: "Business ID cannot be changed",
         });
@@ -201,6 +200,7 @@ export async function updateStaffStatutorySettings(request, reply) {
     const newProfile = {
         name: `${staffMember.firstName} ${staffMember.lastName} Statutory Settings`,
         businessId: staffMember.businessId,
+        currency: "PHP",
         hourlyRate: typeof staffMember.salary === "number" ? staffMember.salary : 0,
         overtimeRateMultiplier: 1,
         sundayRateMultiplier: 1,

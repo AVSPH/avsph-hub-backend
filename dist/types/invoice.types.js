@@ -29,6 +29,8 @@ export const invoiceSchema = z.object({
     _id: z.string().optional(),
     staffId: z.string().min(1, "Staff ID is required"),
     businessId: z.string().min(1, "Business ID is required"),
+    // Currency
+    currency: z.string().min(1).max(10).default("PHP"),
     // Period details
     periodStart: z
         .string()
@@ -58,6 +60,21 @@ export const invoiceSchema = z.object({
     deductions: z.array(invoiceAdjustmentSchema).default([]),
     additions: z.array(invoiceAdjustmentSchema).default([]),
     netPay: z.number().default(0),
+    // PHP conversion (stored at generate/recalculate time for non-PHP invoices)
+    phpConversion: z
+        .object({
+        exchangeRate: z.number(),
+        baseSalaryPhp: z.number(),
+        calculatedPayPhp: z.number(),
+        netPayPhp: z.number(),
+        statutoryDeductions: statutoryDeductionsSchema.default({
+            sss: 0,
+            pagIbig: 0,
+            philHealth: 0,
+        }),
+        earningsBreakdownPhp: earningsBreakdownSchema,
+    })
+        .optional(),
     // Linkages (EOD-based)
     eodIds: z.array(z.string()).default([]),
     eodCount: z.number().default(0),
@@ -144,6 +161,7 @@ export const invoiceJsonSchema = {
         _id: { type: "string" },
         staffId: { type: "string" },
         businessId: { type: "string" },
+        currency: { type: "string" },
         staffName: { type: "string" },
         staffEmail: { type: "string" },
         staffPosition: { type: "string" },
@@ -162,6 +180,17 @@ export const invoiceJsonSchema = {
         deductions: { type: "array", items: invoiceAdjustmentJsonSchema },
         additions: { type: "array", items: invoiceAdjustmentJsonSchema },
         netPay: { type: "number" },
+        phpConversion: {
+            type: "object",
+            properties: {
+                exchangeRate: { type: "number" },
+                baseSalaryPhp: { type: "number" },
+                calculatedPayPhp: { type: "number" },
+                netPayPhp: { type: "number" },
+                statutoryDeductions: statutoryDeductionsJsonSchema,
+                earningsBreakdownPhp: earningsBreakdownJsonSchema,
+            },
+        },
         eodIds: { type: "array", items: { type: "string" } },
         eodCount: { type: "number" },
         status: {

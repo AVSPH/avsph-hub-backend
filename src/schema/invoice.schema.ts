@@ -47,6 +47,9 @@ export interface InvoiceDocumentType {
   staffId: string;
   businessId: string;
 
+  // Currency
+  currency: string;
+
   // Period details
   periodStart: string;
   periodEnd: string;
@@ -64,6 +67,16 @@ export interface InvoiceDocumentType {
   deductions: InvoiceAdjustmentType[];
   additions: InvoiceAdjustmentType[];
   netPay: number;
+
+  // PHP conversion (persisted for non-PHP invoices)
+  phpConversion?: {
+    exchangeRate: number;
+    baseSalaryPhp: number;
+    calculatedPayPhp: number;
+    netPayPhp: number;
+    statutoryDeductions: InvoiceStatutoryDeductionsType;
+    earningsBreakdownPhp: InvoiceEarningsBreakdownType;
+  };
 
   // Linkages
   eodIds: string[];

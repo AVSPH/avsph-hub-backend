@@ -123,7 +123,10 @@ export async function updateCompensationProfile(
     return reply.status(404).send({ error: "Compensation profile not found" });
   }
 
-  const hasAccess = await canAccessBusiness(request, existingProfile.businessId);
+  const hasAccess = await canAccessBusiness(
+    request,
+    existingProfile.businessId,
+  );
   if (!hasAccess) {
     return reply.status(403).send({
       error: "Forbidden",
@@ -131,10 +134,7 @@ export async function updateCompensationProfile(
     });
   }
 
-  if (
-    updates.businessId &&
-    updates.businessId !== existingProfile.businessId
-  ) {
+  if (updates.businessId && updates.businessId !== existingProfile.businessId) {
     return reply.status(400).send({
       error: "Business ID cannot be changed",
     });
@@ -175,7 +175,10 @@ export async function getCompensationProfiles(
       return reply.status(400).send({ error: "Invalid business ID format" });
     }
 
-    const hasAccess = await canAccessBusiness(request, request.query.businessId);
+    const hasAccess = await canAccessBusiness(
+      request,
+      request.query.businessId,
+    );
     if (!hasAccess) {
       return reply.status(403).send({
         error: "Forbidden",
@@ -222,7 +225,9 @@ export async function updateStaffStatutorySettings(
     return reply.status(400).send({ error: "Invalid staff ID format" });
   }
 
-  const parseResult = updateStaffStatutorySettingsSchema.safeParse(request.body);
+  const parseResult = updateStaffStatutorySettingsSchema.safeParse(
+    request.body,
+  );
   if (!parseResult.success) {
     return reply.status(400).send({
       error: "Validation failed",
@@ -291,8 +296,8 @@ export async function updateStaffStatutorySettings(
   const newProfile = {
     name: `${staffMember.firstName} ${staffMember.lastName} Statutory Settings`,
     businessId: staffMember.businessId,
-    hourlyRate:
-      typeof staffMember.salary === "number" ? staffMember.salary : 0,
+    currency: "PHP",
+    hourlyRate: typeof staffMember.salary === "number" ? staffMember.salary : 0,
 
     overtimeRateMultiplier: 1,
     sundayRateMultiplier: 1,
@@ -305,7 +310,8 @@ export async function updateStaffStatutorySettings(
     isPhilHealthEnabled: settings.isPhilHealthEnabled ?? false,
     sssDeductionFixedAmount: settings.sssDeductionFixedAmount ?? 0,
     pagIbigDeductionFixedAmount: settings.pagIbigDeductionFixedAmount ?? 0,
-    philHealthDeductionFixedAmount: settings.philHealthDeductionFixedAmount ?? 0,
+    philHealthDeductionFixedAmount:
+      settings.philHealthDeductionFixedAmount ?? 0,
 
     effectiveFrom,
     isActive: true,

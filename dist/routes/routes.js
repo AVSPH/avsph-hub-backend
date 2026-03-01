@@ -18,6 +18,7 @@ import staffInvoiceRoutes from "../modules/invoice/staff.invoice.route.js";
 import gmailRoutes from "../modules/gmail/gmail.routes.js";
 import adminSettingsRoutes from "../modules/admin/admin-settings/admin.settings.route.js";
 import compensationRoutes from "../modules/compensation/compensation.routes.js";
+import exchangeRateRoutes from "../modules/exchange-rate/exchange-rate.routes.js";
 // Central routes aggregator - register all module routes here
 const routes = async (fastify) => {
     // Admin auth routes
@@ -55,6 +56,8 @@ const routes = async (fastify) => {
     await fastify.register(staffInvoiceRoutes);
     // Compensation profile routes
     await fastify.register(compensationRoutes);
+    // Exchange rate routes
+    await fastify.register(exchangeRateRoutes);
     // Admin settings routes (profile, email, password)
     await fastify.register(adminSettingsRoutes);
     // Gmail routes (test)

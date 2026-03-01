@@ -22,6 +22,7 @@ export interface CompensationProfileDocumentType {
   name: string;
   businessId: string;
 
+  currency: string;
   hourlyRate: number;
 
   overtimeRateMultiplier: number;

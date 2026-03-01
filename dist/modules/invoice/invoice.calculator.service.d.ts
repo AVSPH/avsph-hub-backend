@@ -17,6 +17,7 @@ interface EodPayrollRecord extends Document {
 export interface ResolvedCompensationProfile {
     source: "linked_profile" | "legacy_staff_salary";
     profileId?: string;
+    currency: string;
     hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
@@ -40,6 +41,21 @@ export interface InvoiceFinancialComputation {
     netPay: number;
 }
 export declare function resolveHourlyCompensationProfile(db: Db, staffMember: MinimalStaffDocument, periodEnd: string): Promise<ResolvedCompensationProfile>;
-export declare function calculateInvoiceFinancials(eodRecords: EodPayrollRecord[], compensation: ResolvedCompensationProfile, additions?: InvoiceAdjustmentType[], existingDeductions?: InvoiceAdjustmentType[], periodEnd?: string): InvoiceFinancialComputation;
+export declare function calculateInvoiceFinancials(eodRecords: EodPayrollRecord[], compensation: ResolvedCompensationProfile, additions?: InvoiceAdjustmentType[], existingDeductions?: InvoiceAdjustmentType[], periodEnd?: string, currency?: string): InvoiceFinancialComputation;
+export interface PhpConversion {
+    exchangeRate: number;
+    baseSalaryPhp: number;
+    calculatedPayPhp: number;
+    netPayPhp: number;
+    statutoryDeductions: InvoiceStatutoryDeductionsType;
+    earningsBreakdownPhp: InvoiceEarningsBreakdownType;
+}
+export declare function getExchangeRateValue(db: Db, fromCurrency: string, toCurrency: string): Promise<number | null>;
+export declare function computePhpConversion(invoice: {
+    baseSalary: number;
+    calculatedPay: number;
+    netPay: number;
+    earningsBreakdown: InvoiceEarningsBreakdownType;
+}, exchangeRate: number, statutoryDeductions?: InvoiceStatutoryDeductionsType): PhpConversion;
 export {};
 //# sourceMappingURL=invoice.calculator.service.d.ts.map

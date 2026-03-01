@@ -87,6 +87,7 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
     if (!businessId) {
         return {
             source: "legacy_staff_salary",
+            currency: "PHP",
             hourlyRate: toNumeric(staffMember.salary, 0),
             overtimeRateMultiplier: 1,
             sundayRateMultiplier: 1,
@@ -105,6 +106,7 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
     const linkedProfile = await findActiveProfileById(db, linkedProfileId, businessId, periodEnd);
     const merged = {
         source: "legacy_staff_salary",
+        currency: "PHP",
         hourlyRate: fallbackHourlyRate,
         overtimeRateMultiplier: 1,
         sundayRateMultiplier: 1,
@@ -121,6 +123,7 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
     if (linkedProfile) {
         merged.source = "linked_profile";
         merged.profileId = String(linkedProfile._id);
+        merged.currency = (linkedProfile.currency || "PHP").toUpperCase();
         merged.hourlyRate = toNumeric(linkedProfile.hourlyRate, merged.hourlyRate);
         merged.overtimeRateMultiplier = toNumeric(linkedProfile.overtimeRateMultiplier, merged.overtimeRateMultiplier);
         merged.sundayRateMultiplier = toNumeric(linkedProfile.sundayRateMultiplier, merged.sundayRateMultiplier);
@@ -136,7 +139,7 @@ export async function resolveHourlyCompensationProfile(db, staffMember, periodEn
     }
     return merged;
 }
-export function calculateInvoiceFinancials(eodRecords, compensation, additions = [], existingDeductions = [], periodEnd) {
+export function calculateInvoiceFinancials(eodRecords, compensation, additions = [], existingDeductions = [], periodEnd, currency) {
     let totalHoursWorked = 0;
     let regularHoursWorked = 0;
     let overtimeHoursWorked = 0;
@@ -184,7 +187,8 @@ export function calculateInvoiceFinancials(eodRecords, compensation, additions =
         riceAllowanceEarnings,
     };
     const periodHalf = periodEnd ? getPayrollPeriodHalf(periodEnd) : "unknown";
-    const shouldApplySss = compensation.isSssEnabled && (periodHalf === "first" || periodHalf === "unknown");
+    const shouldApplySss = compensation.isSssEnabled &&
+        (periodHalf === "first" || periodHalf === "unknown");
     const shouldApplyPagIbig = compensation.isPagIbigEnabled &&
         (periodHalf === "first" || periodHalf === "unknown");
     const shouldApplyPhilHealth = compensation.isPhilHealthEnabled &&
@@ -198,7 +202,13 @@ export function calculateInvoiceFinancials(eodRecords, compensation, additions =
             ? roundMoney(compensation.philHealthDeductionFixedAmount)
             : 0,
     };
-    const statutoryAdjustments = statutoryToAdjustments(statutoryDeductions);
+    // For non-PHP currencies, statutory deductions are PHP-denominated and must
+    // NOT be subtracted from the base-currency pay.  They will be applied in the
+    // phpConversion instead.
+    const isPhp = !currency || currency === "PHP";
+    const statutoryAdjustments = isPhp
+        ? statutoryToAdjustments(statutoryDeductions)
+        : [];
     const manualDeductions = manualDeductionsOnly(existingDeductions);
     const deductions = [...manualDeductions, ...statutoryAdjustments];
     const calculatedPay = roundMoney(regularEarnings +
@@ -217,6 +227,40 @@ export function calculateInvoiceFinancials(eodRecords, compensation, additions =
         deductions,
         calculatedPay,
         netPay,
+    };
+}
+export async function getExchangeRateValue(db, fromCurrency, toCurrency) {
+    const exchangeRates = db.collection("exchange_rates");
+    const record = await exchangeRates.findOne({
+        fromCurrency: fromCurrency.toUpperCase(),
+        toCurrency: toCurrency.toUpperCase(),
+    });
+    return record?.rate ?? null;
+}
+export function computePhpConversion(invoice, exchangeRate, statutoryDeductions = {
+    sss: 0,
+    pagIbig: 0,
+    philHealth: 0,
+}) {
+    const totalStatutory = statutoryDeductions.sss +
+        statutoryDeductions.pagIbig +
+        statutoryDeductions.philHealth;
+    // netPay (base currency) already excludes statutory for non-PHP invoices,
+    // so convert it to PHP then subtract the PHP statutory deductions.
+    const netPayPhp = roundMoney(invoice.netPay * exchangeRate - totalStatutory);
+    return {
+        exchangeRate,
+        baseSalaryPhp: roundMoney(invoice.baseSalary * exchangeRate),
+        calculatedPayPhp: roundMoney(invoice.calculatedPay * exchangeRate),
+        netPayPhp,
+        statutoryDeductions,
+        earningsBreakdownPhp: {
+            regularEarnings: roundMoney(invoice.earningsBreakdown.regularEarnings * exchangeRate),
+            overtimeEarnings: roundMoney(invoice.earningsBreakdown.overtimeEarnings * exchangeRate),
+            sundayPremiumEarnings: roundMoney(invoice.earningsBreakdown.sundayPremiumEarnings * exchangeRate),
+            nightDifferentialEarnings: roundMoney(invoice.earningsBreakdown.nightDifferentialEarnings * exchangeRate),
+            riceAllowanceEarnings: roundMoney(invoice.earningsBreakdown.riceAllowanceEarnings * exchangeRate),
+        },
     };
 }
 //# sourceMappingURL=invoice.calculator.service.js.map

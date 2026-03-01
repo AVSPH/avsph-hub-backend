@@ -1,6 +1,19 @@
 import { ObjectId } from "@fastify/mongodb";
 import { generateInvoiceSchema, generateBusinessInvoiceSchema, approveInvoiceSchema, addInvoiceAdjustmentSchema, } from "../../types/invoice.types.js";
-import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, } from "./invoice.calculator.service.js";
+import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, getExchangeRateValue, computePhpConversion, } from "./invoice.calculator.service.js";
+// Helper: compute phpConversion for a non-PHP invoice (returns null for PHP invoices)
+async function buildPhpConversion(db, currency, invoice, statutoryDeductions = {
+    sss: 0,
+    pagIbig: 0,
+    philHealth: 0,
+}) {
+    if (!currency || currency === "PHP")
+        return null;
+    const rate = await getExchangeRateValue(db, currency, "PHP");
+    if (!rate)
+        return null;
+    return computePhpConversion(invoice, rate, statutoryDeductions);
+}
 // ==================== INVOICE GENERATION ====================
 // Generate invoice for a single staff member
 export async function generateInvoice(request, reply) {
@@ -77,12 +90,20 @@ export async function generateInvoice(request, reply) {
     })
         .toArray();
     const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
-    const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd, compensation.currency);
     const eodIds = eodRecords.map((record) => record._id.toString());
     const now = new Date().toISOString();
+    // Compute PHP conversion before inserting
+    const phpConversion = await buildPhpConversion(db, compensation.currency, {
+        baseSalary: compensation.hourlyRate,
+        calculatedPay: financials.calculatedPay,
+        netPay: financials.netPay,
+        earningsBreakdown: financials.earningsBreakdown,
+    }, financials.statutoryDeductions);
     const newInvoice = {
         staffId,
         businessId: staffMember.businessId,
+        currency: compensation.currency,
         staffName: `${staffMember.firstName} ${staffMember.lastName}`,
         staffEmail: staffMember.email,
         staffPosition: staffMember.position || "",
@@ -98,6 +119,7 @@ export async function generateInvoice(request, reply) {
         deductions: financials.deductions,
         additions: [],
         netPay: financials.netPay,
+        ...(phpConversion ? { phpConversion } : {}),
         eodIds,
         eodCount: eodRecords.length,
         status: "draft",
@@ -199,12 +221,20 @@ export async function generateBusinessInvoices(request, reply) {
             })
                 .toArray();
             const compensation = await resolveHourlyCompensationProfile(db, staffMember, periodEnd);
-            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd);
+            const financials = calculateInvoiceFinancials(eodRecords, compensation, [], [], periodEnd, compensation.currency);
             const eodIds = eodRecords.map((record) => record._id.toString());
             const now = new Date().toISOString();
+            // Compute PHP conversion before inserting
+            const phpConversion = await buildPhpConversion(db, compensation.currency, {
+                baseSalary: compensation.hourlyRate,
+                calculatedPay: financials.calculatedPay,
+                netPay: financials.netPay,
+                earningsBreakdown: financials.earningsBreakdown,
+            }, financials.statutoryDeductions);
             const newInvoice = {
                 staffId,
                 businessId,
+                currency: compensation.currency,
                 staffName: `${staffMember.firstName} ${staffMember.lastName}`,
                 staffEmail: staffMember.email,
                 staffPosition: staffMember.position || "",
@@ -220,6 +250,7 @@ export async function generateBusinessInvoices(request, reply) {
                 deductions: financials.deductions,
                 additions: [],
                 netPay: financials.netPay,
+                ...(phpConversion ? { phpConversion } : {}),
                 eodIds,
                 eodCount: eodRecords.length,
                 status: "draft",
@@ -323,24 +354,38 @@ export async function recalculateInvoice(request, reply) {
         return reply.status(404).send({ error: "Staff member not found" });
     }
     const compensation = await resolveHourlyCompensationProfile(db, staffMember, invoice.periodEnd);
-    const financials = calculateInvoiceFinancials(eodRecords, compensation, invoice.additions || [], invoice.deductions || [], invoice.periodEnd);
+    const financials = calculateInvoiceFinancials(eodRecords, compensation, invoice.additions || [], invoice.deductions || [], invoice.periodEnd, compensation.currency);
     const now = new Date().toISOString();
-    const result = await invoices.findOneAndUpdate({ _id: new ObjectId(id) }, {
-        $set: {
-            totalHoursWorked: financials.totalHoursWorked,
-            totalDaysWorked: financials.totalDaysWorked,
-            eodIds,
-            eodCount: eodRecords.length,
-            salaryType: "hourly",
-            baseSalary: compensation.hourlyRate,
-            calculatedPay: financials.calculatedPay,
-            earningsBreakdown: financials.earningsBreakdown,
-            statutoryDeductions: financials.statutoryDeductions,
-            deductions: financials.deductions,
-            netPay: financials.netPay,
-            updatedAt: now,
-        },
-    }, { returnDocument: "after" });
+    // Compute PHP conversion for recalculated values
+    const phpConversion = await buildPhpConversion(db, compensation.currency, {
+        baseSalary: compensation.hourlyRate,
+        calculatedPay: financials.calculatedPay,
+        netPay: financials.netPay,
+        earningsBreakdown: financials.earningsBreakdown,
+    }, financials.statutoryDeductions);
+    const $set = {
+        currency: compensation.currency,
+        totalHoursWorked: financials.totalHoursWorked,
+        totalDaysWorked: financials.totalDaysWorked,
+        eodIds,
+        eodCount: eodRecords.length,
+        salaryType: "hourly",
+        baseSalary: compensation.hourlyRate,
+        calculatedPay: financials.calculatedPay,
+        earningsBreakdown: financials.earningsBreakdown,
+        statutoryDeductions: financials.statutoryDeductions,
+        deductions: financials.deductions,
+        netPay: financials.netPay,
+        updatedAt: now,
+    };
+    if (phpConversion) {
+        $set.phpConversion = phpConversion;
+    }
+    else {
+        // Remove stale phpConversion if currency changed to PHP
+        $set.phpConversion = null;
+    }
+    const result = await invoices.findOneAndUpdate({ _id: new ObjectId(id) }, { $set }, { returnDocument: "after" });
     return {
         ...result,
         message: "Invoice recalculated successfully",
@@ -357,9 +402,10 @@ export async function recalculateInvoice(request, reply) {
 // ==================== INVOICE RETRIEVAL ====================
 // Get all invoices (admin — filtered by business access)
 export async function getAllInvoices(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!invoices || !businesses) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const businesses = db?.collection("businesses");
+    if (!db || !invoices || !businesses) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const query = { isActive: true };
@@ -406,11 +452,12 @@ export async function getAllInvoices(request, reply) {
 }
 // Get invoice by ID
 export async function getInvoiceById(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    const staff = request.server.mongo.db?.collection("staff");
-    const eodReports = request.server.mongo.db?.collection("eod_reports");
-    if (!invoices || !businesses || !staff || !eodReports) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const businesses = db?.collection("businesses");
+    const staff = db?.collection("staff");
+    const eodReports = db?.collection("eod_reports");
+    if (!db || !invoices || !businesses || !staff || !eodReports) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { id } = request.params;
@@ -467,10 +514,11 @@ export async function getInvoiceById(request, reply) {
 }
 // Get invoices by business (paginated)
 export async function getInvoicesByBusiness(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    const staffCollection = request.server.mongo.db?.collection("staff");
-    if (!invoices || !businesses || !staffCollection) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const businesses = db?.collection("businesses");
+    const staffCollection = db?.collection("staff");
+    if (!db || !invoices || !businesses || !staffCollection) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { businessId } = request.params;
@@ -558,13 +606,13 @@ export async function getInvoicesByBusiness(request, reply) {
             staffPosition: s.position,
         },
     ]));
-    const enrichedResult = result.map((r) => ({
+    const staffEnriched = result.map((r) => ({
         ...r,
         ...(staffMap.get(r.staffId) || {}),
     }));
     const totalPages = Math.ceil(totalCount / limit);
     return {
-        data: enrichedResult,
+        data: staffEnriched,
         pagination: {
             page,
             limit,
@@ -577,10 +625,11 @@ export async function getInvoicesByBusiness(request, reply) {
 }
 // Get invoices by staff
 export async function getInvoicesByStaff(request, reply) {
-    const invoices = request.server.mongo.db?.collection("invoices");
-    const staff = request.server.mongo.db?.collection("staff");
-    const businesses = request.server.mongo.db?.collection("businesses");
-    if (!invoices || !staff || !businesses) {
+    const db = request.server.mongo.db;
+    const invoices = db?.collection("invoices");
+    const staff = db?.collection("staff");
+    const businesses = db?.collection("businesses");
+    if (!db || !invoices || !staff || !businesses) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { staffId } = request.params;

@@ -49,6 +49,7 @@ export declare const invoiceSchema: z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
     staffId: z.ZodString;
     businessId: z.ZodString;
+    currency: z.ZodDefault<z.ZodString>;
     periodStart: z.ZodString;
     periodEnd: z.ZodString;
     totalHoursWorked: z.ZodDefault<z.ZodNumber>;
@@ -115,6 +116,78 @@ export declare const invoiceSchema: z.ZodObject<{
         description?: string | undefined;
     }>, "many">>;
     netPay: z.ZodDefault<z.ZodNumber>;
+    phpConversion: z.ZodOptional<z.ZodObject<{
+        exchangeRate: z.ZodNumber;
+        baseSalaryPhp: z.ZodNumber;
+        calculatedPayPhp: z.ZodNumber;
+        netPayPhp: z.ZodNumber;
+        statutoryDeductions: z.ZodDefault<z.ZodObject<{
+            sss: z.ZodDefault<z.ZodNumber>;
+            pagIbig: z.ZodDefault<z.ZodNumber>;
+            philHealth: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            sss: number;
+            pagIbig: number;
+            philHealth: number;
+        }, {
+            sss?: number | undefined;
+            pagIbig?: number | undefined;
+            philHealth?: number | undefined;
+        }>>;
+        earningsBreakdownPhp: z.ZodObject<{
+            regularEarnings: z.ZodDefault<z.ZodNumber>;
+            overtimeEarnings: z.ZodDefault<z.ZodNumber>;
+            sundayPremiumEarnings: z.ZodDefault<z.ZodNumber>;
+            nightDifferentialEarnings: z.ZodDefault<z.ZodNumber>;
+            riceAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            regularEarnings: number;
+            overtimeEarnings: number;
+            sundayPremiumEarnings: number;
+            nightDifferentialEarnings: number;
+            riceAllowanceEarnings: number;
+        }, {
+            regularEarnings?: number | undefined;
+            overtimeEarnings?: number | undefined;
+            sundayPremiumEarnings?: number | undefined;
+            nightDifferentialEarnings?: number | undefined;
+            riceAllowanceEarnings?: number | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        statutoryDeductions: {
+            sss: number;
+            pagIbig: number;
+            philHealth: number;
+        };
+        exchangeRate: number;
+        baseSalaryPhp: number;
+        calculatedPayPhp: number;
+        netPayPhp: number;
+        earningsBreakdownPhp: {
+            regularEarnings: number;
+            overtimeEarnings: number;
+            sundayPremiumEarnings: number;
+            nightDifferentialEarnings: number;
+            riceAllowanceEarnings: number;
+        };
+    }, {
+        exchangeRate: number;
+        baseSalaryPhp: number;
+        calculatedPayPhp: number;
+        netPayPhp: number;
+        earningsBreakdownPhp: {
+            regularEarnings?: number | undefined;
+            overtimeEarnings?: number | undefined;
+            sundayPremiumEarnings?: number | undefined;
+            nightDifferentialEarnings?: number | undefined;
+            riceAllowanceEarnings?: number | undefined;
+        };
+        statutoryDeductions?: {
+            sss?: number | undefined;
+            pagIbig?: number | undefined;
+            philHealth?: number | undefined;
+        } | undefined;
+    }>>;
     eodIds: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     eodCount: z.ZodDefault<z.ZodNumber>;
     status: z.ZodDefault<z.ZodEnum<["draft", "calculated", "approved", "paid"]>>;
@@ -129,6 +202,7 @@ export declare const invoiceSchema: z.ZodObject<{
     status: "draft" | "calculated" | "approved" | "paid";
     staffId: string;
     businessId: string;
+    currency: string;
     periodStart: string;
     periodEnd: string;
     totalHoursWorked: number;
@@ -163,6 +237,24 @@ export declare const invoiceSchema: z.ZodObject<{
     eodCount: number;
     isActive: boolean;
     _id?: string | undefined;
+    phpConversion?: {
+        statutoryDeductions: {
+            sss: number;
+            pagIbig: number;
+            philHealth: number;
+        };
+        exchangeRate: number;
+        baseSalaryPhp: number;
+        calculatedPayPhp: number;
+        netPayPhp: number;
+        earningsBreakdownPhp: {
+            regularEarnings: number;
+            overtimeEarnings: number;
+            sundayPremiumEarnings: number;
+            nightDifferentialEarnings: number;
+            riceAllowanceEarnings: number;
+        };
+    } | undefined;
     approvedBy?: string | undefined;
     approvedAt?: string | undefined;
     paidAt?: string | undefined;
@@ -178,6 +270,7 @@ export declare const invoiceSchema: z.ZodObject<{
     baseSalary: number;
     status?: "draft" | "calculated" | "approved" | "paid" | undefined;
     _id?: string | undefined;
+    currency?: string | undefined;
     totalHoursWorked?: number | undefined;
     totalDaysWorked?: number | undefined;
     calculatedPay?: number | undefined;
@@ -204,6 +297,24 @@ export declare const invoiceSchema: z.ZodObject<{
         description?: string | undefined;
     }[] | undefined;
     netPay?: number | undefined;
+    phpConversion?: {
+        exchangeRate: number;
+        baseSalaryPhp: number;
+        calculatedPayPhp: number;
+        netPayPhp: number;
+        earningsBreakdownPhp: {
+            regularEarnings?: number | undefined;
+            overtimeEarnings?: number | undefined;
+            sundayPremiumEarnings?: number | undefined;
+            nightDifferentialEarnings?: number | undefined;
+            riceAllowanceEarnings?: number | undefined;
+        };
+        statutoryDeductions?: {
+            sss?: number | undefined;
+            pagIbig?: number | undefined;
+            philHealth?: number | undefined;
+        } | undefined;
+    } | undefined;
     eodIds?: string[] | undefined;
     eodCount?: number | undefined;
     approvedBy?: string | undefined;
@@ -334,6 +445,9 @@ export declare const invoiceJsonSchema: {
         readonly businessId: {
             readonly type: "string";
         };
+        readonly currency: {
+            readonly type: "string";
+        };
         readonly staffName: {
             readonly type: "string";
         };
@@ -447,6 +561,59 @@ export declare const invoiceJsonSchema: {
         };
         readonly netPay: {
             readonly type: "number";
+        };
+        readonly phpConversion: {
+            readonly type: "object";
+            readonly properties: {
+                readonly exchangeRate: {
+                    readonly type: "number";
+                };
+                readonly baseSalaryPhp: {
+                    readonly type: "number";
+                };
+                readonly calculatedPayPhp: {
+                    readonly type: "number";
+                };
+                readonly netPayPhp: {
+                    readonly type: "number";
+                };
+                readonly statutoryDeductions: {
+                    readonly type: "object";
+                    readonly properties: {
+                        readonly sss: {
+                            readonly type: "number";
+                        };
+                        readonly pagIbig: {
+                            readonly type: "number";
+                        };
+                        readonly philHealth: {
+                            readonly type: "number";
+                        };
+                    };
+                    readonly required: readonly ["sss", "pagIbig", "philHealth"];
+                };
+                readonly earningsBreakdownPhp: {
+                    readonly type: "object";
+                    readonly properties: {
+                        readonly regularEarnings: {
+                            readonly type: "number";
+                        };
+                        readonly overtimeEarnings: {
+                            readonly type: "number";
+                        };
+                        readonly sundayPremiumEarnings: {
+                            readonly type: "number";
+                        };
+                        readonly nightDifferentialEarnings: {
+                            readonly type: "number";
+                        };
+                        readonly riceAllowanceEarnings: {
+                            readonly type: "number";
+                        };
+                    };
+                    readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "riceAllowanceEarnings"];
+                };
+            };
         };
         readonly eodIds: {
             readonly type: "array";
