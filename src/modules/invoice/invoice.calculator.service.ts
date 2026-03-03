@@ -22,8 +22,8 @@ interface CompensationProfileDocument extends Document {
   overtimeRateMultiplier?: number;
   sundayRateMultiplier?: number;
   nightDifferentialRateMultiplier?: number;
-  isRiceAllowanceEligible?: boolean;
-  riceAllowanceFixedAmount?: number;
+  isTransportationAllowanceEnabled?: boolean;
+  transportationAllowanceMonthlyAmount?: number;
   isSssEnabled?: boolean;
   isPagIbigEnabled?: boolean;
   isPhilHealthEnabled?: boolean;
@@ -39,6 +39,7 @@ interface EodPayrollRecord extends Document {
   regularHoursWorked?: number;
   overtimeHoursWorked?: number;
   nightDifferentialHours?: number;
+  onSite?: boolean;
 }
 
 export interface ResolvedCompensationProfile {
@@ -49,8 +50,8 @@ export interface ResolvedCompensationProfile {
   overtimeRateMultiplier: number;
   sundayRateMultiplier: number;
   nightDifferentialRateMultiplier: number;
-  isRiceAllowanceEligible: boolean;
-  riceAllowanceFixedAmount: number;
+  isTransportationAllowanceEnabled: boolean;
+  transportationAllowanceMonthlyAmount: number;
   isSssEnabled: boolean;
   isPagIbigEnabled: boolean;
   isPhilHealthEnabled: boolean;
@@ -104,6 +105,24 @@ function getPayrollPeriodHalf(periodEnd: string): PayrollPeriodHalf {
 function isSunday(dateValue: string): boolean {
   const date = parseDateAsUtc(dateValue);
   return date ? date.getUTCDay() === 0 : false;
+}
+
+/**
+ * Count the number of weekdays (Mon-Fri) in the full calendar month
+ * that the given date belongs to.
+ */
+function getWeekdayCountInMonth(dateValue: string): number {
+  const date = parseDateAsUtc(dateValue);
+  if (!date) return 22; // safe fallback
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  let weekdays = 0;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dow = new Date(Date.UTC(year, month, day)).getUTCDay();
+    if (dow >= 1 && dow <= 5) weekdays++;
+  }
+  return weekdays;
 }
 
 function statutoryToAdjustments(
@@ -192,8 +211,8 @@ export async function resolveHourlyCompensationProfile(
       overtimeRateMultiplier: 1,
       sundayRateMultiplier: 1,
       nightDifferentialRateMultiplier: 1,
-      isRiceAllowanceEligible: false,
-      riceAllowanceFixedAmount: 0,
+      isTransportationAllowanceEnabled: false,
+      transportationAllowanceMonthlyAmount: 0,
       isSssEnabled: false,
       isPagIbigEnabled: false,
       isPhilHealthEnabled: false,
@@ -218,8 +237,8 @@ export async function resolveHourlyCompensationProfile(
     overtimeRateMultiplier: 1,
     sundayRateMultiplier: 1,
     nightDifferentialRateMultiplier: 1,
-    isRiceAllowanceEligible: false,
-    riceAllowanceFixedAmount: 0,
+    isTransportationAllowanceEnabled: false,
+    transportationAllowanceMonthlyAmount: 0,
     isSssEnabled: false,
     isPagIbigEnabled: false,
     isPhilHealthEnabled: false,
@@ -245,10 +264,11 @@ export async function resolveHourlyCompensationProfile(
       linkedProfile.nightDifferentialRateMultiplier,
       merged.nightDifferentialRateMultiplier,
     );
-    merged.isRiceAllowanceEligible = !!linkedProfile.isRiceAllowanceEligible;
-    merged.riceAllowanceFixedAmount = toNumeric(
-      linkedProfile.riceAllowanceFixedAmount,
-      merged.riceAllowanceFixedAmount,
+    merged.isTransportationAllowanceEnabled =
+      !!linkedProfile.isTransportationAllowanceEnabled;
+    merged.transportationAllowanceMonthlyAmount = toNumeric(
+      linkedProfile.transportationAllowanceMonthlyAmount,
+      merged.transportationAllowanceMonthlyAmount,
     );
     merged.isSssEnabled = !!linkedProfile.isSssEnabled;
     merged.isPagIbigEnabled = !!linkedProfile.isPagIbigEnabled;
@@ -283,6 +303,7 @@ export function calculateInvoiceFinancials(
   let overtimeHoursWorked = 0;
   let nightDifferentialHours = 0;
   let sundayRegularHoursWorked = 0;
+  let onSiteDays = 0;
   const uniqueDates = new Set<string>();
 
   for (const record of eodRecords) {
@@ -309,6 +330,9 @@ export function calculateInvoiceFinancials(
       if (isSunday(record.date)) {
         sundayRegularHoursWorked += safeRegular;
       }
+      if (record.onSite) {
+        onSiteDays++;
+      }
     }
   }
 
@@ -330,16 +354,29 @@ export function calculateInvoiceFinancials(
       compensation.hourlyRate *
       Math.max(0, compensation.nightDifferentialRateMultiplier - 1),
   );
-  const riceAllowanceEarnings = compensation.isRiceAllowanceEligible
-    ? roundMoney(compensation.riceAllowanceFixedAmount)
-    : 0;
+
+  // Transportation allowance: always PHP-denominated, per on-site day
+  // transpoPerDay = monthlyAmount / weekdaysInMonth
+  // transportationAllowanceEarnings = transpoPerDay * onSiteDays
+  let transportationAllowanceEarnings = 0;
+  if (
+    compensation.isTransportationAllowanceEnabled &&
+    compensation.transportationAllowanceMonthlyAmount > 0 &&
+    onSiteDays > 0 &&
+    periodEnd
+  ) {
+    const weekdaysInMonth = getWeekdayCountInMonth(periodEnd);
+    const transpoPerDay =
+      compensation.transportationAllowanceMonthlyAmount / weekdaysInMonth;
+    transportationAllowanceEarnings = roundMoney(transpoPerDay * onSiteDays);
+  }
 
   const earningsBreakdown: InvoiceEarningsBreakdownType = {
     regularEarnings,
     overtimeEarnings,
     sundayPremiumEarnings,
     nightDifferentialEarnings,
-    riceAllowanceEarnings,
+    transportationAllowanceEarnings,
   };
 
   const periodHalf = periodEnd ? getPayrollPeriodHalf(periodEnd) : "unknown";
@@ -365,7 +402,7 @@ export function calculateInvoiceFinancials(
 
   // For non-PHP currencies, statutory deductions are PHP-denominated and must
   // NOT be subtracted from the base-currency pay.  They will be applied in the
-  // phpConversion instead.
+  // phpConversion instead.  Transportation allowance is also always PHP.
   const isPhp = !currency || currency === "PHP";
   const statutoryAdjustments = isPhp
     ? statutoryToAdjustments(statutoryDeductions)
@@ -373,12 +410,17 @@ export function calculateInvoiceFinancials(
   const manualDeductions = manualDeductionsOnly(existingDeductions);
   const deductions = [...manualDeductions, ...statutoryAdjustments];
 
+  // For PHP invoices, include transpo in calculatedPay.
+  // For non-PHP invoices, exclude transpo from base-currency total
+  // (it will be added in phpConversion).
+  const baseCurrencyTranspo = isPhp ? transportationAllowanceEarnings : 0;
+
   const calculatedPay = roundMoney(
     regularEarnings +
       overtimeEarnings +
       sundayPremiumEarnings +
       nightDifferentialEarnings +
-      riceAllowanceEarnings,
+      baseCurrencyTranspo,
   );
 
   const additionsTotal = adjustmentTotal(additions);
@@ -438,9 +480,18 @@ export function computePhpConversion(
     statutoryDeductions.sss +
     statutoryDeductions.pagIbig +
     statutoryDeductions.philHealth;
+
+  // Transportation allowance is always PHP.  The earningsBreakdown already has
+  // the PHP value.  For non-PHP invoices it was excluded from calculatedPay /
+  // netPay, so we add it now in PHP space.
+  const transpoPhp = invoice.earningsBreakdown.transportationAllowanceEarnings;
+
   // netPay (base currency) already excludes statutory for non-PHP invoices,
-  // so convert it to PHP then subtract the PHP statutory deductions.
-  const netPayPhp = roundMoney(invoice.netPay * exchangeRate - totalStatutory);
+  // so convert it to PHP then subtract the PHP statutory deductions and add
+  // the PHP transportation allowance.
+  const netPayPhp = roundMoney(
+    invoice.netPay * exchangeRate + transpoPhp - totalStatutory,
+  );
   return {
     exchangeRate,
     baseSalaryPhp: roundMoney(invoice.baseSalary * exchangeRate),
@@ -460,9 +511,8 @@ export function computePhpConversion(
       nightDifferentialEarnings: roundMoney(
         invoice.earningsBreakdown.nightDifferentialEarnings * exchangeRate,
       ),
-      riceAllowanceEarnings: roundMoney(
-        invoice.earningsBreakdown.riceAllowanceEarnings * exchangeRate,
-      ),
+      // Transportation allowance is already PHP — no exchange rate conversion
+      transportationAllowanceEarnings: transpoPhp,
     },
   };
 }

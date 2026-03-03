@@ -8,8 +8,8 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
     nightDifferentialRateMultiplier: z.ZodDefault<z.ZodNumber>;
-    isRiceAllowanceEligible: z.ZodDefault<z.ZodBoolean>;
-    riceAllowanceFixedAmount: z.ZodDefault<z.ZodNumber>;
+    isTransportationAllowanceEnabled: z.ZodDefault<z.ZodBoolean>;
+    transportationAllowanceMonthlyAmount: z.ZodDefault<z.ZodNumber>;
     isSssEnabled: z.ZodDefault<z.ZodBoolean>;
     isPagIbigEnabled: z.ZodDefault<z.ZodBoolean>;
     isPhilHealthEnabled: z.ZodDefault<z.ZodBoolean>;
@@ -30,8 +30,8 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
-    isRiceAllowanceEligible: boolean;
-    riceAllowanceFixedAmount: number;
+    isTransportationAllowanceEnabled: boolean;
+    transportationAllowanceMonthlyAmount: number;
     isSssEnabled: boolean;
     isPagIbigEnabled: boolean;
     isPhilHealthEnabled: boolean;
@@ -56,8 +56,8 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -74,8 +74,8 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
-    isRiceAllowanceEligible: boolean;
-    riceAllowanceFixedAmount: number;
+    isTransportationAllowanceEnabled: boolean;
+    transportationAllowanceMonthlyAmount: number;
     isSssEnabled: boolean;
     isPagIbigEnabled: boolean;
     isPhilHealthEnabled: boolean;
@@ -100,8 +100,8 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -119,8 +119,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     overtimeRateMultiplier: z.ZodDefault<z.ZodNumber>;
     sundayRateMultiplier: z.ZodDefault<z.ZodNumber>;
     nightDifferentialRateMultiplier: z.ZodDefault<z.ZodNumber>;
-    isRiceAllowanceEligible: z.ZodDefault<z.ZodBoolean>;
-    riceAllowanceFixedAmount: z.ZodDefault<z.ZodNumber>;
+    isTransportationAllowanceEnabled: z.ZodDefault<z.ZodBoolean>;
+    transportationAllowanceMonthlyAmount: z.ZodDefault<z.ZodNumber>;
     isSssEnabled: z.ZodDefault<z.ZodBoolean>;
     isPagIbigEnabled: z.ZodDefault<z.ZodBoolean>;
     isPhilHealthEnabled: z.ZodDefault<z.ZodBoolean>;
@@ -141,8 +141,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
-    isRiceAllowanceEligible: boolean;
-    riceAllowanceFixedAmount: number;
+    isTransportationAllowanceEnabled: boolean;
+    transportationAllowanceMonthlyAmount: number;
     isSssEnabled: boolean;
     isPagIbigEnabled: boolean;
     isPhilHealthEnabled: boolean;
@@ -161,8 +161,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -179,8 +179,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
-    isRiceAllowanceEligible: boolean;
-    riceAllowanceFixedAmount: number;
+    isTransportationAllowanceEnabled: boolean;
+    transportationAllowanceMonthlyAmount: number;
     isSssEnabled: boolean;
     isPagIbigEnabled: boolean;
     isPhilHealthEnabled: boolean;
@@ -199,8 +199,8 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -218,8 +218,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     sundayRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     nightDifferentialRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
-    isRiceAllowanceEligible: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
-    riceAllowanceFixedAmount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+    isTransportationAllowanceEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
+    transportationAllowanceMonthlyAmount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     isSssEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     isPagIbigEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
     isPhilHealthEnabled: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
@@ -237,8 +237,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -256,8 +256,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -275,8 +275,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -294,8 +294,8 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
-    isRiceAllowanceEligible?: boolean | undefined;
-    riceAllowanceFixedAmount?: number | undefined;
+    isTransportationAllowanceEnabled?: boolean | undefined;
+    transportationAllowanceMonthlyAmount?: number | undefined;
     isSssEnabled?: boolean | undefined;
     isPagIbigEnabled?: boolean | undefined;
     isPhilHealthEnabled?: boolean | undefined;
@@ -366,10 +366,10 @@ export declare const compensationProfileJsonSchema: {
             readonly type: "number";
             readonly minimum: 1;
         };
-        readonly isRiceAllowanceEligible: {
+        readonly isTransportationAllowanceEnabled: {
             readonly type: "boolean";
         };
-        readonly riceAllowanceFixedAmount: {
+        readonly transportationAllowanceMonthlyAmount: {
             readonly type: "number";
             readonly minimum: 0;
         };
@@ -448,10 +448,10 @@ export declare const createCompensationProfileJsonSchema: {
             readonly type: "number";
             readonly minimum: 1;
         };
-        readonly isRiceAllowanceEligible: {
+        readonly isTransportationAllowanceEnabled: {
             readonly type: "boolean";
         };
-        readonly riceAllowanceFixedAmount: {
+        readonly transportationAllowanceMonthlyAmount: {
             readonly type: "number";
             readonly minimum: 0;
         };
@@ -522,10 +522,10 @@ export declare const updateCompensationProfileJsonSchema: {
             readonly type: "number";
             readonly minimum: 1;
         };
-        readonly isRiceAllowanceEligible: {
+        readonly isTransportationAllowanceEnabled: {
             readonly type: "boolean";
         };
-        readonly riceAllowanceFixedAmount: {
+        readonly transportationAllowanceMonthlyAmount: {
             readonly type: "number";
             readonly minimum: 0;
         };

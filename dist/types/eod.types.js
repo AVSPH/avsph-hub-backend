@@ -6,7 +6,8 @@ export const eodStatusEnum = z.enum([
     "needs_revision",
 ]);
 // EOD Report schema
-export const eodReportSchema = z.object({
+export const eodReportSchema = z
+    .object({
     _id: z.string().optional(),
     staffId: z.string().min(1, "Staff ID is required"),
     businessId: z.string().min(1, "Business ID is required"),
@@ -35,6 +36,7 @@ export const eodReportSchema = z.object({
         .optional(),
     tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
     // Optional Fields
+    onSite: z.boolean().optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
@@ -48,7 +50,8 @@ export const eodReportSchema = z.object({
     isActive: z.boolean().default(true),
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
-}).superRefine((value, ctx) => {
+})
+    .superRefine((value, ctx) => {
     const regular = value.regularHoursWorked ?? value.hoursWorked;
     const overtime = value.overtimeHoursWorked ?? 0;
     const night = value.nightDifferentialHours ?? 0;
@@ -81,6 +84,7 @@ export const submitEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
+    onSite: z.boolean().optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
@@ -112,6 +116,7 @@ export const editOwnEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
+    onSite: z.boolean().optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
@@ -152,6 +157,7 @@ export const adminEditEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
+    onSite: z.boolean().optional(),
     date: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
@@ -198,6 +204,7 @@ export const eodReportJsonSchema = {
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
         notes: { type: "string", maxLength: 1000 },
+        onSite: { type: "boolean" },
         status: {
             type: "string",
             enum: ["submitted", "reviewed", "needs_revision"],
@@ -224,6 +231,7 @@ export const submitEodJsonSchema = {
         overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
         nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
+        onSite: { type: "boolean" },
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
         notes: { type: "string", maxLength: 1000 },
@@ -238,6 +246,7 @@ export const editOwnEodJsonSchema = {
         overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
         nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
+        onSite: { type: "boolean" },
         challenges: { type: "string", maxLength: 2000 },
         nextDayPlan: { type: "string", maxLength: 2000 },
         notes: { type: "string", maxLength: 1000 },
@@ -260,6 +269,7 @@ export const adminEditEodJsonSchema = {
         overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
         nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
         tasksCompleted: { type: "string", maxLength: 5000 },
+        onSite: { type: "boolean" },
         date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
         adminNotes: { type: "string", maxLength: 1000 },
         status: {

@@ -302,8 +302,8 @@ export async function updateStaffStatutorySettings(
     overtimeRateMultiplier: 1,
     sundayRateMultiplier: 1,
     nightDifferentialRateMultiplier: 1,
-    isRiceAllowanceEligible: false,
-    riceAllowanceFixedAmount: 0,
+    isTransportationAllowanceEnabled: false,
+    transportationAllowanceMonthlyAmount: 0,
 
     isSssEnabled: settings.isSssEnabled ?? false,
     isPagIbigEnabled: settings.isPagIbigEnabled ?? false,

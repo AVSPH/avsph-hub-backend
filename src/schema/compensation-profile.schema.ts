@@ -28,8 +28,8 @@ export interface CompensationProfileDocumentType {
   overtimeRateMultiplier: number;
   sundayRateMultiplier: number;
   nightDifferentialRateMultiplier: number;
-  isRiceAllowanceEligible: boolean;
-  riceAllowanceFixedAmount: number;
+  isTransportationAllowanceEnabled: boolean;
+  transportationAllowanceMonthlyAmount: number;
 
   isSssEnabled: boolean;
   isPagIbigEnabled: boolean;

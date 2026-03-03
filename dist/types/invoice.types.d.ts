@@ -18,19 +18,19 @@ export declare const earningsBreakdownSchema: z.ZodObject<{
     overtimeEarnings: z.ZodDefault<z.ZodNumber>;
     sundayPremiumEarnings: z.ZodDefault<z.ZodNumber>;
     nightDifferentialEarnings: z.ZodDefault<z.ZodNumber>;
-    riceAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
+    transportationAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     regularEarnings: number;
     overtimeEarnings: number;
     sundayPremiumEarnings: number;
     nightDifferentialEarnings: number;
-    riceAllowanceEarnings: number;
+    transportationAllowanceEarnings: number;
 }, {
     regularEarnings?: number | undefined;
     overtimeEarnings?: number | undefined;
     sundayPremiumEarnings?: number | undefined;
     nightDifferentialEarnings?: number | undefined;
-    riceAllowanceEarnings?: number | undefined;
+    transportationAllowanceEarnings?: number | undefined;
 }>;
 export declare const statutoryDeductionsSchema: z.ZodObject<{
     sss: z.ZodDefault<z.ZodNumber>;
@@ -62,19 +62,19 @@ export declare const invoiceSchema: z.ZodObject<{
         overtimeEarnings: z.ZodDefault<z.ZodNumber>;
         sundayPremiumEarnings: z.ZodDefault<z.ZodNumber>;
         nightDifferentialEarnings: z.ZodDefault<z.ZodNumber>;
-        riceAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
+        transportationAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
         regularEarnings: number;
         overtimeEarnings: number;
         sundayPremiumEarnings: number;
         nightDifferentialEarnings: number;
-        riceAllowanceEarnings: number;
+        transportationAllowanceEarnings: number;
     }, {
         regularEarnings?: number | undefined;
         overtimeEarnings?: number | undefined;
         sundayPremiumEarnings?: number | undefined;
         nightDifferentialEarnings?: number | undefined;
-        riceAllowanceEarnings?: number | undefined;
+        transportationAllowanceEarnings?: number | undefined;
     }>>;
     statutoryDeductions: z.ZodDefault<z.ZodObject<{
         sss: z.ZodDefault<z.ZodNumber>;
@@ -139,19 +139,19 @@ export declare const invoiceSchema: z.ZodObject<{
             overtimeEarnings: z.ZodDefault<z.ZodNumber>;
             sundayPremiumEarnings: z.ZodDefault<z.ZodNumber>;
             nightDifferentialEarnings: z.ZodDefault<z.ZodNumber>;
-            riceAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
+            transportationAllowanceEarnings: z.ZodDefault<z.ZodNumber>;
         }, "strip", z.ZodTypeAny, {
             regularEarnings: number;
             overtimeEarnings: number;
             sundayPremiumEarnings: number;
             nightDifferentialEarnings: number;
-            riceAllowanceEarnings: number;
+            transportationAllowanceEarnings: number;
         }, {
             regularEarnings?: number | undefined;
             overtimeEarnings?: number | undefined;
             sundayPremiumEarnings?: number | undefined;
             nightDifferentialEarnings?: number | undefined;
-            riceAllowanceEarnings?: number | undefined;
+            transportationAllowanceEarnings?: number | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
         statutoryDeductions: {
@@ -168,7 +168,7 @@ export declare const invoiceSchema: z.ZodObject<{
             overtimeEarnings: number;
             sundayPremiumEarnings: number;
             nightDifferentialEarnings: number;
-            riceAllowanceEarnings: number;
+            transportationAllowanceEarnings: number;
         };
     }, {
         exchangeRate: number;
@@ -180,7 +180,7 @@ export declare const invoiceSchema: z.ZodObject<{
             overtimeEarnings?: number | undefined;
             sundayPremiumEarnings?: number | undefined;
             nightDifferentialEarnings?: number | undefined;
-            riceAllowanceEarnings?: number | undefined;
+            transportationAllowanceEarnings?: number | undefined;
         };
         statutoryDeductions?: {
             sss?: number | undefined;
@@ -215,7 +215,7 @@ export declare const invoiceSchema: z.ZodObject<{
         overtimeEarnings: number;
         sundayPremiumEarnings: number;
         nightDifferentialEarnings: number;
-        riceAllowanceEarnings: number;
+        transportationAllowanceEarnings: number;
     };
     statutoryDeductions: {
         sss: number;
@@ -252,7 +252,7 @@ export declare const invoiceSchema: z.ZodObject<{
             overtimeEarnings: number;
             sundayPremiumEarnings: number;
             nightDifferentialEarnings: number;
-            riceAllowanceEarnings: number;
+            transportationAllowanceEarnings: number;
         };
     } | undefined;
     approvedBy?: string | undefined;
@@ -279,7 +279,7 @@ export declare const invoiceSchema: z.ZodObject<{
         overtimeEarnings?: number | undefined;
         sundayPremiumEarnings?: number | undefined;
         nightDifferentialEarnings?: number | undefined;
-        riceAllowanceEarnings?: number | undefined;
+        transportationAllowanceEarnings?: number | undefined;
     } | undefined;
     statutoryDeductions?: {
         sss?: number | undefined;
@@ -307,7 +307,7 @@ export declare const invoiceSchema: z.ZodObject<{
             overtimeEarnings?: number | undefined;
             sundayPremiumEarnings?: number | undefined;
             nightDifferentialEarnings?: number | undefined;
-            riceAllowanceEarnings?: number | undefined;
+            transportationAllowanceEarnings?: number | undefined;
         };
         statutoryDeductions?: {
             sss?: number | undefined;
@@ -412,11 +412,11 @@ export declare const earningsBreakdownJsonSchema: {
         readonly nightDifferentialEarnings: {
             readonly type: "number";
         };
-        readonly riceAllowanceEarnings: {
+        readonly transportationAllowanceEarnings: {
             readonly type: "number";
         };
     };
-    readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "riceAllowanceEarnings"];
+    readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "transportationAllowanceEarnings"];
 };
 export declare const statutoryDeductionsJsonSchema: {
     readonly type: "object";
@@ -496,11 +496,11 @@ export declare const invoiceJsonSchema: {
                 readonly nightDifferentialEarnings: {
                     readonly type: "number";
                 };
-                readonly riceAllowanceEarnings: {
+                readonly transportationAllowanceEarnings: {
                     readonly type: "number";
                 };
             };
-            readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "riceAllowanceEarnings"];
+            readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "transportationAllowanceEarnings"];
         };
         readonly statutoryDeductions: {
             readonly type: "object";
@@ -607,11 +607,11 @@ export declare const invoiceJsonSchema: {
                         readonly nightDifferentialEarnings: {
                             readonly type: "number";
                         };
-                        readonly riceAllowanceEarnings: {
+                        readonly transportationAllowanceEarnings: {
                             readonly type: "number";
                         };
                     };
-                    readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "riceAllowanceEarnings"];
+                    readonly required: readonly ["regularEarnings", "overtimeEarnings", "sundayPremiumEarnings", "nightDifferentialEarnings", "transportationAllowanceEarnings"];
                 };
             };
         };

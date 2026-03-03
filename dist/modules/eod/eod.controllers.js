@@ -145,7 +145,7 @@ export async function submitEod(request, reply) {
             details: parseResult.error.errors,
         });
     }
-    const { date, hoursWorked, regularHoursWorked, overtimeHoursWorked, nightDifferentialHours, tasksCompleted, challenges, nextDayPlan, notes, } = parseResult.data;
+    const { date, hoursWorked, regularHoursWorked, overtimeHoursWorked, nightDifferentialHours, tasksCompleted, onSite, challenges, nextDayPlan, notes, } = parseResult.data;
     // Enforce one EOD per staff per day
     const existingEod = await eodReports.findOne({
         staffId,
@@ -170,6 +170,7 @@ export async function submitEod(request, reply) {
         overtimeHoursWorked,
         nightDifferentialHours,
         tasksCompleted,
+        onSite,
         challenges,
         nextDayPlan,
         notes,

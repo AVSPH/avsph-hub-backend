@@ -10,6 +10,7 @@ export declare const eodReportSchema: z.ZodEffects<z.ZodObject<{
     overtimeHoursWorked: z.ZodOptional<z.ZodNumber>;
     nightDifferentialHours: z.ZodOptional<z.ZodNumber>;
     tasksCompleted: z.ZodString;
+    onSite: z.ZodOptional<z.ZodBoolean>;
     challenges: z.ZodOptional<z.ZodString>;
     nextDayPlan: z.ZodOptional<z.ZodString>;
     notes: z.ZodOptional<z.ZodString>;
@@ -37,6 +38,7 @@ export declare const eodReportSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     adminNotes?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -57,6 +59,7 @@ export declare const eodReportSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     challenges?: string | undefined;
@@ -79,6 +82,7 @@ export declare const eodReportSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     adminNotes?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -99,6 +103,7 @@ export declare const eodReportSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     challenges?: string | undefined;
@@ -113,6 +118,7 @@ export declare const submitEodSchema: z.ZodEffects<z.ZodObject<{
     overtimeHoursWorked: z.ZodOptional<z.ZodNumber>;
     nightDifferentialHours: z.ZodOptional<z.ZodNumber>;
     tasksCompleted: z.ZodString;
+    onSite: z.ZodOptional<z.ZodBoolean>;
     challenges: z.ZodOptional<z.ZodString>;
     nextDayPlan: z.ZodOptional<z.ZodString>;
     notes: z.ZodOptional<z.ZodString>;
@@ -124,6 +130,7 @@ export declare const submitEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
 }, {
@@ -134,6 +141,7 @@ export declare const submitEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
 }>, {
@@ -144,6 +152,7 @@ export declare const submitEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
 }, {
@@ -154,6 +163,7 @@ export declare const submitEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
 }>;
@@ -163,6 +173,7 @@ export declare const editOwnEodSchema: z.ZodEffects<z.ZodObject<{
     overtimeHoursWorked: z.ZodOptional<z.ZodNumber>;
     nightDifferentialHours: z.ZodOptional<z.ZodNumber>;
     tasksCompleted: z.ZodOptional<z.ZodString>;
+    onSite: z.ZodOptional<z.ZodBoolean>;
     challenges: z.ZodOptional<z.ZodString>;
     nextDayPlan: z.ZodOptional<z.ZodString>;
     notes: z.ZodOptional<z.ZodString>;
@@ -172,6 +183,7 @@ export declare const editOwnEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -181,6 +193,7 @@ export declare const editOwnEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -190,6 +203,7 @@ export declare const editOwnEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -199,6 +213,7 @@ export declare const editOwnEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     tasksCompleted?: string | undefined;
     challenges?: string | undefined;
     nextDayPlan?: string | undefined;
@@ -222,6 +237,7 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     overtimeHoursWorked: z.ZodOptional<z.ZodNumber>;
     nightDifferentialHours: z.ZodOptional<z.ZodNumber>;
     tasksCompleted: z.ZodOptional<z.ZodString>;
+    onSite: z.ZodOptional<z.ZodBoolean>;
     date: z.ZodOptional<z.ZodString>;
     adminNotes: z.ZodOptional<z.ZodString>;
     status: z.ZodOptional<z.ZodEnum<["submitted", "reviewed", "needs_revision"]>>;
@@ -233,6 +249,7 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     tasksCompleted?: string | undefined;
@@ -243,6 +260,7 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     tasksCompleted?: string | undefined;
@@ -253,6 +271,7 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     tasksCompleted?: string | undefined;
@@ -263,6 +282,7 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     regularHoursWorked?: number | undefined;
     overtimeHoursWorked?: number | undefined;
     nightDifferentialHours?: number | undefined;
+    onSite?: boolean | undefined;
     isApproved?: boolean | undefined;
     adminNotes?: string | undefined;
     tasksCompleted?: string | undefined;
@@ -323,6 +343,9 @@ export declare const eodReportJsonSchema: {
         readonly notes: {
             readonly type: "string";
             readonly maxLength: 1000;
+        };
+        readonly onSite: {
+            readonly type: "boolean";
         };
         readonly status: {
             readonly type: "string";
@@ -393,6 +416,9 @@ export declare const submitEodJsonSchema: {
             readonly type: "string";
             readonly maxLength: 5000;
         };
+        readonly onSite: {
+            readonly type: "boolean";
+        };
         readonly challenges: {
             readonly type: "string";
             readonly maxLength: 2000;
@@ -434,6 +460,9 @@ export declare const editOwnEodJsonSchema: {
         readonly tasksCompleted: {
             readonly type: "string";
             readonly maxLength: 5000;
+        };
+        readonly onSite: {
+            readonly type: "boolean";
         };
         readonly challenges: {
             readonly type: "string";
@@ -492,6 +521,9 @@ export declare const adminEditEodJsonSchema: {
         readonly tasksCompleted: {
             readonly type: "string";
             readonly maxLength: 5000;
+        };
+        readonly onSite: {
+            readonly type: "boolean";
         };
         readonly date: {
             readonly type: "string";

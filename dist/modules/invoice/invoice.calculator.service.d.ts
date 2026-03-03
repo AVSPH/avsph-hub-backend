@@ -13,6 +13,7 @@ interface EodPayrollRecord extends Document {
     regularHoursWorked?: number;
     overtimeHoursWorked?: number;
     nightDifferentialHours?: number;
+    onSite?: boolean;
 }
 export interface ResolvedCompensationProfile {
     source: "linked_profile" | "legacy_staff_salary";
@@ -22,8 +23,8 @@ export interface ResolvedCompensationProfile {
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
-    isRiceAllowanceEligible: boolean;
-    riceAllowanceFixedAmount: number;
+    isTransportationAllowanceEnabled: boolean;
+    transportationAllowanceMonthlyAmount: number;
     isSssEnabled: boolean;
     isPagIbigEnabled: boolean;
     isPhilHealthEnabled: boolean;

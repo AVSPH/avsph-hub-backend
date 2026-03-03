@@ -17,7 +17,7 @@ export const earningsBreakdownSchema = z.object({
     overtimeEarnings: z.number().default(0),
     sundayPremiumEarnings: z.number().default(0),
     nightDifferentialEarnings: z.number().default(0),
-    riceAllowanceEarnings: z.number().default(0),
+    transportationAllowanceEarnings: z.number().default(0),
 });
 export const statutoryDeductionsSchema = z.object({
     sss: z.number().default(0),
@@ -50,7 +50,7 @@ export const invoiceSchema = z.object({
         overtimeEarnings: 0,
         sundayPremiumEarnings: 0,
         nightDifferentialEarnings: 0,
-        riceAllowanceEarnings: 0,
+        transportationAllowanceEarnings: 0,
     }),
     statutoryDeductions: statutoryDeductionsSchema.default({
         sss: 0,
@@ -136,14 +136,14 @@ export const earningsBreakdownJsonSchema = {
         overtimeEarnings: { type: "number" },
         sundayPremiumEarnings: { type: "number" },
         nightDifferentialEarnings: { type: "number" },
-        riceAllowanceEarnings: { type: "number" },
+        transportationAllowanceEarnings: { type: "number" },
     },
     required: [
         "regularEarnings",
         "overtimeEarnings",
         "sundayPremiumEarnings",
         "nightDifferentialEarnings",
-        "riceAllowanceEarnings",
+        "transportationAllowanceEarnings",
     ],
 };
 export const statutoryDeductionsJsonSchema = {

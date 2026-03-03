@@ -8,74 +8,77 @@ export const eodStatusEnum = z.enum([
 ]);
 
 // EOD Report schema
-export const eodReportSchema = z.object({
-  _id: z.string().optional(),
-  staffId: z.string().min(1, "Staff ID is required"),
-  businessId: z.string().min(1, "Business ID is required"),
+export const eodReportSchema = z
+  .object({
+    _id: z.string().optional(),
+    staffId: z.string().min(1, "Staff ID is required"),
+    businessId: z.string().min(1, "Business ID is required"),
 
-  // Core Report Data
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
-  hoursWorked: z
-    .number()
-    .min(0, "Hours worked must be 0 or greater")
-    .max(24, "Hours worked cannot exceed 24"),
-  regularHoursWorked: z
-    .number()
-    .min(0, "Regular hours worked must be 0 or greater")
-    .max(24, "Regular hours worked cannot exceed 24")
-    .optional(),
-  overtimeHoursWorked: z
-    .number()
-    .min(0, "Overtime hours worked must be 0 or greater")
-    .max(24, "Overtime hours worked cannot exceed 24")
-    .optional(),
-  nightDifferentialHours: z
-    .number()
-    .min(0, "Night differential hours must be 0 or greater")
-    .max(24, "Night differential hours cannot exceed 24")
-    .optional(),
-  tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
+    // Core Report Data
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)"),
+    hoursWorked: z
+      .number()
+      .min(0, "Hours worked must be 0 or greater")
+      .max(24, "Hours worked cannot exceed 24"),
+    regularHoursWorked: z
+      .number()
+      .min(0, "Regular hours worked must be 0 or greater")
+      .max(24, "Regular hours worked cannot exceed 24")
+      .optional(),
+    overtimeHoursWorked: z
+      .number()
+      .min(0, "Overtime hours worked must be 0 or greater")
+      .max(24, "Overtime hours worked cannot exceed 24")
+      .optional(),
+    nightDifferentialHours: z
+      .number()
+      .min(0, "Night differential hours must be 0 or greater")
+      .max(24, "Night differential hours cannot exceed 24")
+      .optional(),
+    tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
 
-  // Optional Fields
-  challenges: z.string().max(2000).optional(),
-  nextDayPlan: z.string().max(2000).optional(),
-  notes: z.string().max(1000).optional(),
+    // Optional Fields
+    onSite: z.boolean().optional(),
+    challenges: z.string().max(2000).optional(),
+    nextDayPlan: z.string().max(2000).optional(),
+    notes: z.string().max(1000).optional(),
 
-  // Meta & Review
-  status: eodStatusEnum.default("submitted"),
-  isApproved: z.boolean().default(false),
-  adminNotes: z.string().max(1000).optional(),
-  reviewedBy: z.string().optional(),
-  reviewedAt: z.string().datetime().optional(),
+    // Meta & Review
+    status: eodStatusEnum.default("submitted"),
+    isApproved: z.boolean().default(false),
+    adminNotes: z.string().max(1000).optional(),
+    reviewedBy: z.string().optional(),
+    reviewedAt: z.string().datetime().optional(),
 
-  // Native properties
-  isActive: z.boolean().default(true),
-  createdAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-}).superRefine((value, ctx) => {
-  const regular = value.regularHoursWorked ?? value.hoursWorked;
-  const overtime = value.overtimeHoursWorked ?? 0;
-  const night = value.nightDifferentialHours ?? 0;
+    // Native properties
+    isActive: z.boolean().default(true),
+    createdAt: z.string().datetime().optional(),
+    updatedAt: z.string().datetime().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const regular = value.regularHoursWorked ?? value.hoursWorked;
+    const overtime = value.overtimeHoursWorked ?? 0;
+    const night = value.nightDifferentialHours ?? 0;
 
-  if (regular + overtime > value.hoursWorked) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["overtimeHoursWorked"],
-      message:
-        "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
-    });
-  }
+    if (regular + overtime > value.hoursWorked) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["overtimeHoursWorked"],
+        message:
+          "regularHoursWorked + overtimeHoursWorked cannot exceed hoursWorked",
+      });
+    }
 
-  if (night > value.hoursWorked) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["nightDifferentialHours"],
-      message: "nightDifferentialHours cannot exceed hoursWorked",
-    });
-  }
-});
+    if (night > value.hoursWorked) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["nightDifferentialHours"],
+        message: "nightDifferentialHours cannot exceed hoursWorked",
+      });
+    }
+  });
 
 // Schema for staff submitting an EOD report
 export const submitEodSchema = z
@@ -91,6 +94,7 @@ export const submitEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1, "Tasks completed is required").max(5000),
+    onSite: z.boolean().optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
@@ -126,6 +130,7 @@ export const editOwnEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
+    onSite: z.boolean().optional(),
     challenges: z.string().max(2000).optional(),
     nextDayPlan: z.string().max(2000).optional(),
     notes: z.string().max(1000).optional(),
@@ -172,6 +177,7 @@ export const adminEditEodSchema = z
     overtimeHoursWorked: z.number().min(0).max(24).optional(),
     nightDifferentialHours: z.number().min(0).max(24).optional(),
     tasksCompleted: z.string().min(1).max(5000).optional(),
+    onSite: z.boolean().optional(),
     date: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
@@ -230,6 +236,7 @@ export const eodReportJsonSchema = {
     challenges: { type: "string", maxLength: 2000 },
     nextDayPlan: { type: "string", maxLength: 2000 },
     notes: { type: "string", maxLength: 1000 },
+    onSite: { type: "boolean" },
     status: {
       type: "string",
       enum: ["submitted", "reviewed", "needs_revision"],
@@ -257,6 +264,7 @@ export const submitEodJsonSchema = {
     overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
     nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
     tasksCompleted: { type: "string", maxLength: 5000 },
+    onSite: { type: "boolean" },
     challenges: { type: "string", maxLength: 2000 },
     nextDayPlan: { type: "string", maxLength: 2000 },
     notes: { type: "string", maxLength: 1000 },
@@ -272,6 +280,7 @@ export const editOwnEodJsonSchema = {
     overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
     nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
     tasksCompleted: { type: "string", maxLength: 5000 },
+    onSite: { type: "boolean" },
     challenges: { type: "string", maxLength: 2000 },
     nextDayPlan: { type: "string", maxLength: 2000 },
     notes: { type: "string", maxLength: 1000 },
@@ -296,6 +305,7 @@ export const adminEditEodJsonSchema = {
     overtimeHoursWorked: { type: "number", minimum: 0, maximum: 24 },
     nightDifferentialHours: { type: "number", minimum: 0, maximum: 24 },
     tasksCompleted: { type: "string", maxLength: 5000 },
+    onSite: { type: "boolean" },
     date: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
     adminNotes: { type: "string", maxLength: 1000 },
     status: {

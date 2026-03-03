@@ -32,7 +32,7 @@ export interface InvoiceEarningsBreakdownType {
   overtimeEarnings: number;
   sundayPremiumEarnings: number;
   nightDifferentialEarnings: number;
-  riceAllowanceEarnings: number;
+  transportationAllowanceEarnings: number;
 }
 
 export interface InvoiceStatutoryDeductionsType {

@@ -29,6 +29,7 @@ export interface EODReportDocument {
   tasksCompleted: string;
 
   // Optional Fields
+  onSite?: boolean;
   challenges?: string;
   nextDayPlan?: string;
   notes?: string;
