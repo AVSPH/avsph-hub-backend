@@ -11,20 +11,19 @@ export async function getMyInvoices(request, reply) {
     if (!staffId || !businessId) {
         return reply.status(400).send({ error: "Invalid staff token" });
     }
-    // Staff can only see approved or paid invoices
+    const allowedStatuses = ["draft", "calculated", "approved", "paid"];
     const query = {
         staffId,
         businessId,
         isActive: true,
-        status: { $in: ["approved", "paid"] },
+        status: { $in: allowedStatuses },
     };
-    // If a specific status filter is provided, only allow approved/paid
+    // If a specific status filter is provided, validate it
     if (request.query.status) {
-        if (request.query.status !== "approved" &&
-            request.query.status !== "paid") {
+        if (!allowedStatuses.includes(request.query.status)) {
             return reply.status(400).send({
                 error: "Invalid status filter",
-                message: "You can only view approved or paid invoices",
+                message: `Allowed statuses: ${allowedStatuses.join(", ")}`,
             });
         }
         query.status = request.query.status;
@@ -63,7 +62,7 @@ export async function getMyInvoiceById(request, reply) {
         staffId,
         businessId,
         isActive: true,
-        status: { $in: ["approved", "paid"] },
+        status: { $in: ["draft", "calculated", "approved", "paid"] },
     });
     if (!invoice) {
         return reply.status(404).send({ error: "Invoice not found" });
