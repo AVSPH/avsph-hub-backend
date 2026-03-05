@@ -1,19 +1,6 @@
 import { ObjectId } from "@fastify/mongodb";
 import { generateInvoiceSchema, generateBusinessInvoiceSchema, approveInvoiceSchema, addInvoiceAdjustmentSchema, } from "../../types/invoice.types.js";
-import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, getExchangeRateValue, computePhpConversion, } from "./invoice.calculator.service.js";
-// Helper: compute phpConversion for a non-PHP invoice (returns null for PHP invoices)
-async function buildPhpConversion(db, currency, invoice, statutoryDeductions = {
-    sss: 0,
-    pagIbig: 0,
-    philHealth: 0,
-}) {
-    if (!currency || currency === "PHP")
-        return null;
-    const rate = await getExchangeRateValue(db, currency, "PHP");
-    if (!rate)
-        return null;
-    return computePhpConversion(invoice, rate, statutoryDeductions);
-}
+import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, buildPhpConversion, } from "./invoice.calculator.service.js";
 // ==================== INVOICE GENERATION ====================
 // Generate invoice for a single staff member
 export async function generateInvoice(request, reply) {

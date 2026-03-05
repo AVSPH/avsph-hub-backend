@@ -10,6 +10,7 @@ import {
   calculateInvoiceFinancials,
   resolveHourlyCompensationProfile,
 } from "../invoice/invoice.calculator.service.js";
+import { invoiceOnEodApproval } from "../invoice/invoice.eod-hook.service.js";
 
 interface IdParams {
   id: string;
@@ -892,6 +893,30 @@ export async function reviewEod(
     { returnDocument: "after" },
   );
 
+  // Auto-invoice: trigger when approval status changes
+  const wasApproved = existingEod.isApproved === true;
+  const nowApproved = updateData.isApproved === true;
+  if (nowApproved || (wasApproved && !nowApproved)) {
+    try {
+      const db = request.server.mongo.db;
+      if (db) {
+        const staffCollection = db.collection("staff");
+        const staffMember = await staffCollection.findOne({
+          _id: new ObjectId(existingEod.staffId),
+          isActive: true,
+        });
+        if (staffMember) {
+          await invoiceOnEodApproval(db, result!, staffMember);
+        }
+      }
+    } catch (err) {
+      request.server.log.error(
+        err,
+        `[AUTO-INVOICE] Failed to update invoice after EOD review (eodId: ${id})`,
+      );
+    }
+  }
+
   const action = status === "reviewed" ? "reviewed" : "returned for revision";
   return {
     ...result,
@@ -978,6 +1003,30 @@ export async function adminEditEod(
     { $set: updateData },
     { returnDocument: "after" },
   );
+
+  // Auto-invoice: trigger when approval status changes via direct edit
+  const wasApproved = existingEod.isApproved === true;
+  const nowApproved = result?.isApproved === true;
+  if (wasApproved !== nowApproved) {
+    try {
+      const db = request.server.mongo.db;
+      if (db) {
+        const staffCollection = db.collection("staff");
+        const staffMember = await staffCollection.findOne({
+          _id: new ObjectId(existingEod.staffId),
+          isActive: true,
+        });
+        if (staffMember) {
+          await invoiceOnEodApproval(db, result!, staffMember);
+        }
+      }
+    } catch (err) {
+      request.server.log.error(
+        err,
+        `[AUTO-INVOICE] Failed to update invoice after EOD edit (eodId: ${id})`,
+      );
+    }
+  }
 
   return result;
 }

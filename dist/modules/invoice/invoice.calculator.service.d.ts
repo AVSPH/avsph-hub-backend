@@ -52,6 +52,12 @@ export interface PhpConversion {
     earningsBreakdownPhp: InvoiceEarningsBreakdownType;
 }
 export declare function getExchangeRateValue(db: Db, fromCurrency: string, toCurrency: string): Promise<number | null>;
+export declare function buildPhpConversion(db: Db, currency: string, invoice: {
+    baseSalary: number;
+    calculatedPay: number;
+    netPay: number;
+    earningsBreakdown: InvoiceEarningsBreakdownType;
+}, statutoryDeductions?: InvoiceStatutoryDeductionsType): Promise<PhpConversion | null>;
 export declare function computePhpConversion(invoice: {
     baseSalary: number;
     calculatedPay: number;

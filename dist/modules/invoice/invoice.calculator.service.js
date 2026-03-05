@@ -274,6 +274,18 @@ export async function getExchangeRateValue(db, fromCurrency, toCurrency) {
     });
     return record?.rate ?? null;
 }
+export async function buildPhpConversion(db, currency, invoice, statutoryDeductions = {
+    sss: 0,
+    pagIbig: 0,
+    philHealth: 0,
+}) {
+    if (!currency || currency === "PHP")
+        return null;
+    const rate = await getExchangeRateValue(db, currency, "PHP");
+    if (!rate)
+        return null;
+    return computePhpConversion(invoice, rate, statutoryDeductions);
+}
 export function computePhpConversion(invoice, exchangeRate, statutoryDeductions = {
     sss: 0,
     pagIbig: 0,

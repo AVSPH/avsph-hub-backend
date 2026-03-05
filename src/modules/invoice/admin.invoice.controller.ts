@@ -9,8 +9,7 @@ import {
 import {
   calculateInvoiceFinancials,
   resolveHourlyCompensationProfile,
-  getExchangeRateValue,
-  computePhpConversion,
+  buildPhpConversion,
 } from "./invoice.calculator.service.js";
 
 interface IdParams {
@@ -32,23 +31,6 @@ interface InvoiceQuery {
   search?: string;
   page?: string;
   limit?: string;
-}
-
-// Helper: compute phpConversion for a non-PHP invoice (returns null for PHP invoices)
-async function buildPhpConversion(
-  db: any,
-  currency: string,
-  invoice: any,
-  statutoryDeductions: { sss: number; pagIbig: number; philHealth: number } = {
-    sss: 0,
-    pagIbig: 0,
-    philHealth: 0,
-  },
-) {
-  if (!currency || currency === "PHP") return null;
-  const rate = await getExchangeRateValue(db, currency, "PHP");
-  if (!rate) return null;
-  return computePhpConversion(invoice, rate, statutoryDeductions);
 }
 
 // ==================== INVOICE GENERATION ====================

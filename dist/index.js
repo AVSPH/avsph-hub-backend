@@ -1,5 +1,7 @@
 import Fastify from "fastify";
-import { envPlugin, corsPlugin, securityPlugin, sensiblePlugin, mongodbPlugin, swaggerPlugin, authPlugin, cloudinaryPlugin, multipartPlugin, nodemailerPlugin, gmailPlugin, cronPlugin, } from "./plugins/index.js";
+import { envPlugin, corsPlugin, securityPlugin, sensiblePlugin, mongodbPlugin, swaggerPlugin, authPlugin, cloudinaryPlugin, multipartPlugin, nodemailerPlugin, gmailPlugin,
+// cronPlugin — kept available as fallback (see registration comment below)
+ } from "./plugins/index.js";
 import routes from "./routes/routes.js";
 async function buildApp() {
     const fastify = Fastify({
@@ -29,7 +31,9 @@ async function buildApp() {
     await fastify.register(swaggerPlugin);
     await fastify.register(corsPlugin);
     await fastify.register(securityPlugin);
-    await fastify.register(cronPlugin);
+    // Cron plugin disabled — invoice generation is now event-driven (triggered on EOD approval).
+    // Kept available as fallback: uncomment the line below to re-enable scheduled generation.
+    // await fastify.register(cronPlugin);
     // Register all API routes with /api prefix
     await fastify.register(routes, { prefix: "/api" });
     // Global error handler
