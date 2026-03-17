@@ -9,23 +9,33 @@ interface JobPostQuery {
 }
 export declare function getAllJobPosts(request: FastifyRequest<{
     Querystring: JobPostQuery;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>[] | {
-    applicantCount: number;
+}>, reply: FastifyReply): Promise<(import("bson").Document & {
     _id: ObjectId;
-}[]>;
+} & {
+    applicantCount: number;
+})[]>;
 export declare function getJobPostById(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<{
-    applicantCount: number;
+}>, reply: FastifyReply): Promise<import("bson").Document & {
     _id: ObjectId;
+} & {
+    applicantCount: number;
 }>;
 export declare function createJobPost(request: FastifyRequest, reply: FastifyReply): Promise<never>;
 export declare function updateJobPost(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
+}>, reply: FastifyReply): Promise<import("bson").Document & {
+    _id: ObjectId;
+} & {
+    applicantCount: number;
+}>;
 export declare function updateJobPostStatus(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
+}>, reply: FastifyReply): Promise<import("bson").Document & {
+    _id: ObjectId;
+} & {
+    applicantCount: number;
+}>;
 export declare function deleteJobPost(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<never>;
@@ -36,8 +46,7 @@ export declare function getPublicJobPosts(request: FastifyRequest<{
 }>, reply: FastifyReply): Promise<{
     _id: ObjectId;
     title: any;
-    description: any;
-    requirements: any;
+    overview: any;
     employmentType: any;
     businessId: any;
     businessName: any;
@@ -48,8 +57,7 @@ export declare function getPublicJobPostById(request: FastifyRequest<{
 }>, reply: FastifyReply): Promise<{
     _id: ObjectId;
     title: any;
-    description: any;
-    requirements: any;
+    overview: any;
     employmentType: any;
     businessId: any;
     businessName: any;

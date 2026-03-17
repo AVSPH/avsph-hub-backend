@@ -22,8 +22,7 @@ export declare const jobPostSchema: z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
     businessId: z.ZodString;
     title: z.ZodString;
-    description: z.ZodString;
-    requirements: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    overview: z.ZodString;
     employmentType: z.ZodDefault<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     status: z.ZodDefault<z.ZodEnum<["draft", "open", "closed"]>>;
     stages: z.ZodArray<z.ZodObject<{
@@ -42,13 +41,13 @@ export declare const jobPostSchema: z.ZodObject<{
         order: number;
         type?: "active" | "hired" | "rejected" | undefined;
     }>, "many">;
+    applicantCount: z.ZodDefault<z.ZodNumber>;
     isActive: z.ZodDefault<z.ZodBoolean>;
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "draft" | "open" | "closed";
     title: string;
-    description: string;
     businessId: string;
     isActive: boolean;
     stages: {
@@ -58,13 +57,13 @@ export declare const jobPostSchema: z.ZodObject<{
         order: number;
     }[];
     employmentType: "full-time" | "part-time" | "contract";
-    requirements: string[];
+    overview: string;
+    applicantCount: number;
     _id?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
 }, {
     title: string;
-    description: string;
     businessId: string;
     stages: {
         name: string;
@@ -72,20 +71,20 @@ export declare const jobPostSchema: z.ZodObject<{
         order: number;
         type?: "active" | "hired" | "rejected" | undefined;
     }[];
+    overview: string;
     status?: "draft" | "open" | "closed" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
-    requirements?: string[] | undefined;
+    applicantCount?: number | undefined;
 }>;
 export declare const createJobPostSchema: z.ZodObject<Omit<{
     _id: z.ZodOptional<z.ZodString>;
     businessId: z.ZodString;
     title: z.ZodString;
-    description: z.ZodString;
-    requirements: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    overview: z.ZodString;
     employmentType: z.ZodDefault<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     status: z.ZodDefault<z.ZodEnum<["draft", "open", "closed"]>>;
     stages: z.ZodArray<z.ZodObject<{
@@ -104,13 +103,13 @@ export declare const createJobPostSchema: z.ZodObject<Omit<{
         order: number;
         type?: "active" | "hired" | "rejected" | undefined;
     }>, "many">;
+    applicantCount: z.ZodDefault<z.ZodNumber>;
     isActive: z.ZodDefault<z.ZodBoolean>;
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
-}, "_id" | "isActive" | "createdAt" | "updatedAt">, "strip", z.ZodTypeAny, {
+}, "_id" | "isActive" | "createdAt" | "updatedAt" | "applicantCount">, "strip", z.ZodTypeAny, {
     status: "draft" | "open" | "closed";
     title: string;
-    description: string;
     businessId: string;
     stages: {
         type: "active" | "hired" | "rejected";
@@ -119,10 +118,9 @@ export declare const createJobPostSchema: z.ZodObject<Omit<{
         order: number;
     }[];
     employmentType: "full-time" | "part-time" | "contract";
-    requirements: string[];
+    overview: string;
 }, {
     title: string;
-    description: string;
     businessId: string;
     stages: {
         name: string;
@@ -130,14 +128,13 @@ export declare const createJobPostSchema: z.ZodObject<Omit<{
         order: number;
         type?: "active" | "hired" | "rejected" | undefined;
     }[];
+    overview: string;
     status?: "draft" | "open" | "closed" | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
-    requirements?: string[] | undefined;
 }>;
 export declare const updateJobPostSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
-    description: z.ZodOptional<z.ZodString>;
-    requirements: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    overview: z.ZodOptional<z.ZodString>;
     employmentType: z.ZodOptional<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     status: z.ZodOptional<z.ZodEnum<["draft", "open", "closed"]>>;
     stages: z.ZodOptional<z.ZodArray<z.ZodObject<{
@@ -160,7 +157,6 @@ export declare const updateJobPostSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status?: "draft" | "open" | "closed" | undefined;
     title?: string | undefined;
-    description?: string | undefined;
     isActive?: boolean | undefined;
     stages?: {
         type: "active" | "hired" | "rejected";
@@ -169,11 +165,10 @@ export declare const updateJobPostSchema: z.ZodObject<{
         order: number;
     }[] | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
-    requirements?: string[] | undefined;
+    overview?: string | undefined;
 }, {
     status?: "draft" | "open" | "closed" | undefined;
     title?: string | undefined;
-    description?: string | undefined;
     isActive?: boolean | undefined;
     stages?: {
         name: string;
@@ -182,7 +177,7 @@ export declare const updateJobPostSchema: z.ZodObject<{
         type?: "active" | "hired" | "rejected" | undefined;
     }[] | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
-    requirements?: string[] | undefined;
+    overview?: string | undefined;
 }>;
 export declare const updateJobPostStatusSchema: z.ZodObject<{
     status: z.ZodEnum<["draft", "open", "closed"]>;
@@ -231,14 +226,8 @@ export declare const jobPostJsonSchema: {
             readonly minLength: 1;
             readonly maxLength: 200;
         };
-        readonly description: {
+        readonly overview: {
             readonly type: "string";
-        };
-        readonly requirements: {
-            readonly type: "array";
-            readonly items: {
-                readonly type: "string";
-            };
         };
         readonly employmentType: {
             readonly type: "string";
@@ -274,6 +263,10 @@ export declare const jobPostJsonSchema: {
                 readonly required: readonly ["id", "name", "order", "type"];
             };
         };
+        readonly applicantCount: {
+            readonly type: "integer";
+            readonly minimum: 0;
+        };
         readonly isActive: {
             readonly type: "boolean";
         };
@@ -286,7 +279,7 @@ export declare const jobPostJsonSchema: {
             readonly format: "date-time";
         };
     };
-    readonly required: readonly ["businessId", "title", "description", "stages"];
+    readonly required: readonly ["businessId", "title", "overview", "stages", "applicantCount"];
 };
 export declare const createJobPostJsonSchema: {
     readonly type: "object";
@@ -299,15 +292,9 @@ export declare const createJobPostJsonSchema: {
             readonly minLength: 1;
             readonly maxLength: 200;
         };
-        readonly description: {
+        readonly overview: {
             readonly type: "string";
             readonly minLength: 1;
-        };
-        readonly requirements: {
-            readonly type: "array";
-            readonly items: {
-                readonly type: "string";
-            };
         };
         readonly employmentType: {
             readonly type: "string";
@@ -345,7 +332,7 @@ export declare const createJobPostJsonSchema: {
             readonly minItems: 1;
         };
     };
-    readonly required: readonly ["businessId", "title", "description", "stages"];
+    readonly required: readonly ["businessId", "title", "overview", "stages"];
 };
 export declare const updateJobPostJsonSchema: {
     readonly type: "object";
@@ -355,15 +342,9 @@ export declare const updateJobPostJsonSchema: {
             readonly minLength: 1;
             readonly maxLength: 200;
         };
-        readonly description: {
+        readonly overview: {
             readonly type: "string";
             readonly minLength: 1;
-        };
-        readonly requirements: {
-            readonly type: "array";
-            readonly items: {
-                readonly type: "string";
-            };
         };
         readonly employmentType: {
             readonly type: "string";

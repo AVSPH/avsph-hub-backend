@@ -198,11 +198,7 @@ const jobPostRoutes = async (fastify) => {
                         properties: {
                             _id: { type: "string" },
                             title: { type: "string" },
-                            description: { type: "string" },
-                            requirements: {
-                                type: "array",
-                                items: { type: "string" },
-                            },
+                            overview: { type: "string" },
                             employmentType: { type: "string" },
                             businessId: { type: "string" },
                             businessName: { type: "string" },
@@ -234,11 +230,7 @@ const jobPostRoutes = async (fastify) => {
                     properties: {
                         _id: { type: "string" },
                         title: { type: "string" },
-                        description: { type: "string" },
-                        requirements: {
-                            type: "array",
-                            items: { type: "string" },
-                        },
+                        overview: { type: "string" },
                         employmentType: { type: "string" },
                         businessId: { type: "string" },
                         businessName: { type: "string" },

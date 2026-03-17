@@ -1,5 +1,21 @@
 import { ObjectId } from "@fastify/mongodb";
 import { createJobPostSchema, updateJobPostSchema, updateJobPostStatusSchema, } from "../../types/jobPost.types.js";
+async function countApplicantsForJob(request, jobId) {
+    const applicants = request.server.mongo.db?.collection("applicants");
+    if (!applicants) {
+        return 0;
+    }
+    return applicants.countDocuments({
+        jobId,
+        isActive: true,
+    });
+}
+async function withApplicantCount(request, jobPost) {
+    return {
+        ...jobPost,
+        applicantCount: await countApplicantsForJob(request, String(jobPost._id)),
+    };
+}
 // ─── Admin Endpoints ────────────────────────────────────────────────────
 // Get all job posts (protected - filtered by business access)
 export async function getAllJobPosts(request, reply) {
@@ -36,19 +52,7 @@ export async function getAllJobPosts(request, reply) {
         }
     }
     const result = await jobPosts.find(query).sort({ createdAt: -1 }).toArray();
-    // Add applicant count for each job post
-    const applicants = request.server.mongo.db?.collection("applicants");
-    if (applicants) {
-        const jobPostsWithCounts = await Promise.all(result.map(async (jp) => {
-            const count = await applicants.countDocuments({
-                jobId: jp._id.toString(),
-                isActive: true,
-            });
-            return { ...jp, applicantCount: count };
-        }));
-        return jobPostsWithCounts;
-    }
-    return result;
+    return Promise.all(result.map((jobPost) => withApplicantCount(request, jobPost)));
 }
 // Get job post by ID (protected)
 export async function getJobPostById(request, reply) {
@@ -78,16 +82,7 @@ export async function getJobPostById(request, reply) {
             });
         }
     }
-    // Add applicant count
-    const applicants = request.server.mongo.db?.collection("applicants");
-    let applicantCount = 0;
-    if (applicants) {
-        applicantCount = await applicants.countDocuments({
-            jobId: id,
-            isActive: true,
-        });
-    }
-    return { ...jobPost, applicantCount };
+    return withApplicantCount(request, jobPost);
 }
 // Create job post (protected)
 export async function createJobPost(request, reply) {
@@ -103,7 +98,7 @@ export async function createJobPost(request, reply) {
             details: parseResult.error.errors,
         });
     }
-    const { businessId, title, description, requirements, employmentType, status, stages } = parseResult.data;
+    const { businessId, title, overview, employmentType, status, stages } = parseResult.data;
     // Validate business exists
     if (!ObjectId.isValid(businessId)) {
         return reply.status(400).send({ error: "Invalid business ID format" });
@@ -128,8 +123,7 @@ export async function createJobPost(request, reply) {
     const newJobPost = {
         businessId,
         title,
-        description,
-        requirements: requirements || [],
+        overview,
         employmentType: employmentType || "full-time",
         status: status || "draft",
         stages,
@@ -141,6 +135,7 @@ export async function createJobPost(request, reply) {
     return reply.status(201).send({
         _id: result.insertedId,
         ...newJobPost,
+        applicantCount: 0,
     });
 }
 // Update job post (protected)
@@ -186,7 +181,7 @@ export async function updateJobPost(request, reply) {
     if (!result) {
         return reply.status(404).send({ error: "Job post not found" });
     }
-    return result;
+    return withApplicantCount(request, result);
 }
 // Change job post status (protected)
 export async function updateJobPostStatus(request, reply) {
@@ -223,11 +218,16 @@ export async function updateJobPostStatus(request, reply) {
             details: parseResult.error.errors,
         });
     }
-    const result = await jobPosts.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { status: parseResult.data.status, updatedAt: new Date().toISOString() } }, { returnDocument: "after" });
+    const result = await jobPosts.findOneAndUpdate({ _id: new ObjectId(id) }, {
+        $set: {
+            status: parseResult.data.status,
+            updatedAt: new Date().toISOString(),
+        },
+    }, { returnDocument: "after" });
     if (!result) {
         return reply.status(404).send({ error: "Job post not found" });
     }
-    return result;
+    return withApplicantCount(request, result);
 }
 // Delete job post (soft delete - protected)
 export async function deleteJobPost(request, reply) {
@@ -257,7 +257,13 @@ export async function deleteJobPost(request, reply) {
             });
         }
     }
-    const result = await jobPosts.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { isActive: false, status: "closed", updatedAt: new Date().toISOString() } }, { returnDocument: "after" });
+    const result = await jobPosts.findOneAndUpdate({ _id: new ObjectId(id) }, {
+        $set: {
+            isActive: false,
+            status: "closed",
+            updatedAt: new Date().toISOString(),
+        },
+    }, { returnDocument: "after" });
     if (!result) {
         return reply.status(404).send({ error: "Job post not found" });
     }
@@ -298,8 +304,7 @@ export async function getPublicJobPosts(request, reply) {
     return result.map((jp) => ({
         _id: jp._id,
         title: jp.title,
-        description: jp.description,
-        requirements: jp.requirements,
+        overview: jp.overview,
         employmentType: jp.employmentType,
         businessId: jp.businessId,
         businessName: business.name,
@@ -331,8 +336,7 @@ export async function getPublicJobPostById(request, reply) {
     return {
         _id: jobPost._id,
         title: jobPost.title,
-        description: jobPost.description,
-        requirements: jobPost.requirements,
+        overview: jobPost.overview,
         employmentType: jobPost.employmentType,
         businessId: jobPost.businessId,
         businessName: business?.name || "Unknown",
@@ -359,7 +363,9 @@ export async function submitPublicApplication(request, reply) {
     if (!jobPost) {
         return reply
             .status(404)
-            .send({ error: "Job post not found or no longer accepting applications" });
+            .send({
+            error: "Job post not found or no longer accepting applications",
+        });
     }
     // Validate the application body
     const { createApplicantSchema } = await import("../../types/applicant.types.js");

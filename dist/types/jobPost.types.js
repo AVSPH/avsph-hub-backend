@@ -21,11 +21,11 @@ export const jobPostSchema = z.object({
     _id: z.string().optional(),
     businessId: z.string().min(1, "Business ID is required"),
     title: z.string().min(1, "Job title is required").max(200),
-    description: z.string().min(1, "Description is required"),
-    requirements: z.array(z.string()).default([]),
+    overview: z.string().min(1, "Overview is required"),
     employmentType: jobEmploymentTypeEnum.default("full-time"),
     status: jobPostStatusEnum.default("draft"),
     stages: z.array(jobPostStageSchema).min(1, "At least one stage is required"),
+    applicantCount: z.number().int().min(0).default(0),
     isActive: z.boolean().default(true),
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
@@ -33,6 +33,7 @@ export const jobPostSchema = z.object({
 // Schema for creating a new job post
 export const createJobPostSchema = jobPostSchema.omit({
     _id: true,
+    applicantCount: true,
     isActive: true,
     createdAt: true,
     updatedAt: true,
@@ -40,8 +41,7 @@ export const createJobPostSchema = jobPostSchema.omit({
 // Schema for updating a job post
 export const updateJobPostSchema = z.object({
     title: z.string().min(1).max(200).optional(),
-    description: z.string().min(1).optional(),
-    requirements: z.array(z.string()).optional(),
+    overview: z.string().min(1).optional(),
     employmentType: jobEmploymentTypeEnum.optional(),
     status: jobPostStatusEnum.optional(),
     stages: z.array(jobPostStageSchema).min(1).optional(),
@@ -68,27 +68,26 @@ export const jobPostJsonSchema = {
         _id: { type: "string" },
         businessId: { type: "string" },
         title: { type: "string", minLength: 1, maxLength: 200 },
-        description: { type: "string" },
-        requirements: { type: "array", items: { type: "string" } },
+        overview: { type: "string" },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],
         },
         status: { type: "string", enum: ["draft", "open", "closed"] },
         stages: { type: "array", items: jobPostStageJsonSchema },
+        applicantCount: { type: "integer", minimum: 0 },
         isActive: { type: "boolean" },
         createdAt: { type: "string", format: "date-time" },
         updatedAt: { type: "string", format: "date-time" },
     },
-    required: ["businessId", "title", "description", "stages"],
+    required: ["businessId", "title", "overview", "stages", "applicantCount"],
 };
 export const createJobPostJsonSchema = {
     type: "object",
     properties: {
         businessId: { type: "string" },
         title: { type: "string", minLength: 1, maxLength: 200 },
-        description: { type: "string", minLength: 1 },
-        requirements: { type: "array", items: { type: "string" } },
+        overview: { type: "string", minLength: 1 },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],
@@ -100,14 +99,13 @@ export const createJobPostJsonSchema = {
             minItems: 1,
         },
     },
-    required: ["businessId", "title", "description", "stages"],
+    required: ["businessId", "title", "overview", "stages"],
 };
 export const updateJobPostJsonSchema = {
     type: "object",
     properties: {
         title: { type: "string", minLength: 1, maxLength: 200 },
-        description: { type: "string", minLength: 1 },
-        requirements: { type: "array", items: { type: "string" } },
+        overview: { type: "string", minLength: 1 },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],

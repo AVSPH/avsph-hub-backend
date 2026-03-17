@@ -8,8 +8,7 @@ export interface JobPostDocumentType {
     _id?: string;
     businessId: string;
     title: string;
-    description: string;
-    requirements: string[];
+    overview: string;
     employmentType: "full-time" | "part-time" | "contract";
     status: "draft" | "open" | "closed";
     stages: {
@@ -18,6 +17,7 @@ export interface JobPostDocumentType {
         order: number;
         type: "active" | "hired" | "rejected";
     }[];
+    applicantCount?: number;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
