@@ -157,7 +157,7 @@ export async function submitEod(request, reply) {
     if (existingEod) {
         return reply.status(409).send({
             error: "Duplicate EOD report",
-            message: `An EOD report already exists for ${date}. You can only submit one EOD per day.`,
+            message: `An EOD report already submitted for ${date}. You can only submit one EOD per day.`,
             existingId: existingEod._id,
         });
     }
