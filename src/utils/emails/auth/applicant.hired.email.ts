@@ -8,7 +8,7 @@ export function getApplicantHiredEmail(
     temporaryPassword: string,
     position: string,
     businessName: string,
-    loginUrl: string = "https://dashboard.advancedvirtualstaff.com/login",
+    loginUrl: string = "https://www.avs-ph.com/login",
 ): string {
     return `
 <!DOCTYPE html>

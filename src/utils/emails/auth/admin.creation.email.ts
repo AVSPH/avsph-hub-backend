@@ -3,7 +3,7 @@ export function getAdminCreationEmail(
     email: string,
     temporaryPassword: string,
     role: string,
-    loginUrl: string = "http://avsph-hub.vercel.app/login",
+    loginUrl: string = "https://www.avs-ph.com/login",
 ): string {
     return `
 <!DOCTYPE html>

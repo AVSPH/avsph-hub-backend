@@ -4,7 +4,7 @@ export function getStaffCreationEmail(
     temporaryPassword: string,
     position: string,
     businessName: string,
-    loginUrl: string = "http://avsph-hub.vercel.app/login",
+    loginUrl: string = "https://www.avs-ph.com/login",
 ): string {
     return `
 <!DOCTYPE html>

@@ -2,7 +2,7 @@
  * Welcome email sent to a newly hired applicant who has been
  * converted to a staff member in the AVS Dashboard.
  */
-export function getApplicantHiredEmail(firstName, email, temporaryPassword, position, businessName, loginUrl = "https://dashboard.advancedvirtualstaff.com/login") {
+export function getApplicantHiredEmail(firstName, email, temporaryPassword, position, businessName, loginUrl = "https://www.avs-ph.com/login") {
     return `
 <!DOCTYPE html>
 <html lang="en">

@@ -1,4 +1,4 @@
-export function getAdminCreationEmail(firstName, email, temporaryPassword, role, loginUrl = "http://avsph-hub.vercel.app/login") {
+export function getAdminCreationEmail(firstName, email, temporaryPassword, role, loginUrl = "https://www.avs-ph.com/login") {
     return `
 <!DOCTYPE html>
 <html lang="en">
