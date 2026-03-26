@@ -46,7 +46,7 @@ export declare const jobPostSchema: z.ZodObject<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    status: "draft" | "open" | "closed";
+    status: "draft" | "closed" | "open";
     title: string;
     businessId: string;
     isActive: boolean;
@@ -72,7 +72,7 @@ export declare const jobPostSchema: z.ZodObject<{
         type?: "active" | "hired" | "rejected" | undefined;
     }[];
     overview: string;
-    status?: "draft" | "open" | "closed" | undefined;
+    status?: "draft" | "closed" | "open" | undefined;
     _id?: string | undefined;
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
@@ -108,7 +108,7 @@ export declare const createJobPostSchema: z.ZodObject<Omit<{
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "_id" | "isActive" | "createdAt" | "updatedAt" | "applicantCount">, "strip", z.ZodTypeAny, {
-    status: "draft" | "open" | "closed";
+    status: "draft" | "closed" | "open";
     title: string;
     businessId: string;
     stages: {
@@ -129,7 +129,7 @@ export declare const createJobPostSchema: z.ZodObject<Omit<{
         type?: "active" | "hired" | "rejected" | undefined;
     }[];
     overview: string;
-    status?: "draft" | "open" | "closed" | undefined;
+    status?: "draft" | "closed" | "open" | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
 }>;
 export declare const updateJobPostSchema: z.ZodObject<{
@@ -155,7 +155,7 @@ export declare const updateJobPostSchema: z.ZodObject<{
     }>, "many">>;
     isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
-    status?: "draft" | "open" | "closed" | undefined;
+    status?: "draft" | "closed" | "open" | undefined;
     title?: string | undefined;
     isActive?: boolean | undefined;
     stages?: {
@@ -167,7 +167,7 @@ export declare const updateJobPostSchema: z.ZodObject<{
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     overview?: string | undefined;
 }, {
-    status?: "draft" | "open" | "closed" | undefined;
+    status?: "draft" | "closed" | "open" | undefined;
     title?: string | undefined;
     isActive?: boolean | undefined;
     stages?: {
@@ -182,9 +182,9 @@ export declare const updateJobPostSchema: z.ZodObject<{
 export declare const updateJobPostStatusSchema: z.ZodObject<{
     status: z.ZodEnum<["draft", "open", "closed"]>;
 }, "strip", z.ZodTypeAny, {
-    status: "draft" | "open" | "closed";
+    status: "draft" | "closed" | "open";
 }, {
-    status: "draft" | "open" | "closed";
+    status: "draft" | "closed" | "open";
 }>;
 export type JobPostStage = z.infer<typeof jobPostStageSchema>;
 export type CreateJobPostInput = z.infer<typeof createJobPostSchema>;

@@ -1,4 +1,5 @@
 import Fastify, { type FastifyError } from "fastify";
+import dns from "node:dns";
 import {
   envPlugin,
   corsPlugin,
@@ -14,6 +15,11 @@ import {
   // cronPlugin — kept available as fallback (see registration comment below)
 } from "./plugins/index.js";
 import routes from "./routes/routes.js";
+
+if (process.env.NODE_ENV !== "production") {
+  // Work around local DNS resolvers that refuse MongoDB Atlas SRV lookups.
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+}
 
 async function buildApp() {
   const fastify = Fastify({
