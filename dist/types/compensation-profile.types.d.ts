@@ -26,7 +26,6 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId: string;
     currency: string;
     isActive: boolean;
-    hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
@@ -38,6 +37,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount: number;
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
+    hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
@@ -70,7 +70,6 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId: string;
     currency: string;
     isActive: boolean;
-    hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
@@ -82,6 +81,7 @@ export declare const compensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount: number;
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
+    hourlyRate: number;
     effectiveFrom: string;
     _id?: string | undefined;
     createdAt?: string | undefined;
@@ -137,7 +137,6 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     businessId: string;
     currency: string;
     isActive: boolean;
-    hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
@@ -149,6 +148,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     sssDeductionFixedAmount: number;
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
+    hourlyRate: number;
     effectiveFrom: string;
     effectiveTo?: string | undefined;
 }, {
@@ -175,7 +175,6 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     businessId: string;
     currency: string;
     isActive: boolean;
-    hourlyRate: number;
     overtimeRateMultiplier: number;
     sundayRateMultiplier: number;
     nightDifferentialRateMultiplier: number;
@@ -187,6 +186,7 @@ export declare const createCompensationProfileSchema: z.ZodEffects<z.ZodObject<O
     sssDeductionFixedAmount: number;
     pagIbigDeductionFixedAmount: number;
     philHealthDeductionFixedAmount: number;
+    hourlyRate: number;
     effectiveFrom: string;
     effectiveTo?: string | undefined;
 }, {
@@ -214,7 +214,6 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId: z.ZodOptional<z.ZodString>;
     currency: z.ZodOptional<z.ZodDefault<z.ZodString>>;
     isActive: z.ZodOptional<z.ZodDefault<z.ZodBoolean>>;
-    hourlyRate: z.ZodOptional<z.ZodNumber>;
     overtimeRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     sundayRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     nightDifferentialRateMultiplier: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
@@ -226,6 +225,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     pagIbigDeductionFixedAmount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
     philHealthDeductionFixedAmount: z.ZodOptional<z.ZodDefault<z.ZodNumber>>;
+    hourlyRate: z.ZodOptional<z.ZodNumber>;
     effectiveFrom: z.ZodOptional<z.ZodString>;
     effectiveTo: z.ZodOptional<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
@@ -233,7 +233,6 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId?: string | undefined;
     currency?: string | undefined;
     isActive?: boolean | undefined;
-    hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
@@ -245,6 +244,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount?: number | undefined;
     pagIbigDeductionFixedAmount?: number | undefined;
     philHealthDeductionFixedAmount?: number | undefined;
+    hourlyRate?: number | undefined;
     effectiveFrom?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
@@ -252,7 +252,6 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId?: string | undefined;
     currency?: string | undefined;
     isActive?: boolean | undefined;
-    hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
@@ -264,6 +263,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount?: number | undefined;
     pagIbigDeductionFixedAmount?: number | undefined;
     philHealthDeductionFixedAmount?: number | undefined;
+    hourlyRate?: number | undefined;
     effectiveFrom?: string | undefined;
     effectiveTo?: string | undefined;
 }>, {
@@ -271,7 +271,6 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId?: string | undefined;
     currency?: string | undefined;
     isActive?: boolean | undefined;
-    hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
@@ -283,6 +282,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount?: number | undefined;
     pagIbigDeductionFixedAmount?: number | undefined;
     philHealthDeductionFixedAmount?: number | undefined;
+    hourlyRate?: number | undefined;
     effectiveFrom?: string | undefined;
     effectiveTo?: string | undefined;
 }, {
@@ -290,7 +290,6 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     businessId?: string | undefined;
     currency?: string | undefined;
     isActive?: boolean | undefined;
-    hourlyRate?: number | undefined;
     overtimeRateMultiplier?: number | undefined;
     sundayRateMultiplier?: number | undefined;
     nightDifferentialRateMultiplier?: number | undefined;
@@ -302,6 +301,7 @@ export declare const updateCompensationProfileSchema: z.ZodEffects<z.ZodObject<{
     sssDeductionFixedAmount?: number | undefined;
     pagIbigDeductionFixedAmount?: number | undefined;
     philHealthDeductionFixedAmount?: number | undefined;
+    hourlyRate?: number | undefined;
     effectiveFrom?: string | undefined;
     effectiveTo?: string | undefined;
 }>;

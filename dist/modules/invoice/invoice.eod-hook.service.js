@@ -33,12 +33,13 @@ export async function invoiceOnEodApproval(db, eodRecord, staffMember) {
     const invoices = db.collection("invoices");
     const eodReports = db.collection("eod_reports");
     const staffId = String(staffMember._id);
-    const businessId = staffMember.businessId || eodRecord.businessId;
+    const eodBusinessId = typeof eodRecord.businessId === "string" ? eodRecord.businessId : "";
+    const businessId = staffMember.businessId || eodBusinessId;
     if (!businessId)
         return;
     if (!staffMember.salary && !staffMember.compensationProfileId)
         return;
-    const eodDate = eodRecord.date;
+    const eodDate = typeof eodRecord.date === "string" ? eodRecord.date : "";
     if (!eodDate)
         return;
     const { periodStart, periodEnd } = getPayrollPeriodForDate(eodDate);
@@ -69,7 +70,7 @@ export async function invoiceOnEodApproval(db, eodRecord, staffMember) {
     const existingAdditions = existingInvoice?.additions || [];
     const existingDeductions = existingInvoice?.deductions || [];
     const financials = calculateInvoiceFinancials(eodRecords, compensation, existingAdditions, existingDeductions, periodEnd, compensation.currency);
-    const eodIds = eodRecords.map((r) => r._id.toString());
+    const eodIds = eodRecords.map((r) => String(r._id));
     const now = new Date().toISOString();
     const phpConversion = await buildPhpConversion(db, compensation.currency, {
         baseSalary: compensation.hourlyRate,

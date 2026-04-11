@@ -1,9 +1,12 @@
-import type { Db, Document } from "mongodb";
 import {
   calculateInvoiceFinancials,
   resolveHourlyCompensationProfile,
   buildPhpConversion,
 } from "./invoice.calculator.service.js";
+
+type MongoDbLike = {
+  collection: (name: string) => any;
+};
 
 /**
  * Determine the payroll period (periodStart, periodEnd) for a given EOD date.
@@ -32,7 +35,7 @@ function getPayrollPeriodForDate(dateStr: string): {
   return { periodStart: startStr, periodEnd: endStr };
 }
 
-interface MinimalStaff extends Document {
+interface MinimalStaff {
   _id: unknown;
   firstName?: string;
   lastName?: string;
@@ -53,20 +56,22 @@ interface MinimalStaff extends Document {
  * - If staff has no salary → skips silently (not payroll-ready)
  */
 export async function invoiceOnEodApproval(
-  db: Db,
-  eodRecord: Document,
+  db: MongoDbLike,
+  eodRecord: Record<string, unknown>,
   staffMember: MinimalStaff,
 ): Promise<void> {
   const invoices = db.collection("invoices");
   const eodReports = db.collection("eod_reports");
 
   const staffId = String(staffMember._id);
-  const businessId = staffMember.businessId || eodRecord.businessId;
+  const eodBusinessId =
+    typeof eodRecord.businessId === "string" ? eodRecord.businessId : "";
+  const businessId = staffMember.businessId || eodBusinessId;
 
   if (!businessId) return;
   if (!staffMember.salary && !staffMember.compensationProfileId) return;
 
-  const eodDate = eodRecord.date as string;
+  const eodDate = typeof eodRecord.date === "string" ? eodRecord.date : "";
   if (!eodDate) return;
 
   const { periodStart, periodEnd } = getPayrollPeriodForDate(eodDate);
@@ -117,7 +122,7 @@ export async function invoiceOnEodApproval(
     compensation.currency,
   );
 
-  const eodIds = eodRecords.map((r) => r._id.toString());
+  const eodIds = eodRecords.map((r: { _id: unknown }) => String(r._id));
   const now = new Date().toISOString();
 
   const phpConversion = await buildPhpConversion(

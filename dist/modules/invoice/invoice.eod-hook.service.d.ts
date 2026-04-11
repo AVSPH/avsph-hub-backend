@@ -1,5 +1,7 @@
-import type { Db, Document } from "mongodb";
-interface MinimalStaff extends Document {
+type MongoDbLike = {
+    collection: (name: string) => any;
+};
+interface MinimalStaff {
     _id: unknown;
     firstName?: string;
     lastName?: string;
@@ -18,6 +20,6 @@ interface MinimalStaff extends Document {
  * - If invoice is approved/paid → skips silently (locked)
  * - If staff has no salary → skips silently (not payroll-ready)
  */
-export declare function invoiceOnEodApproval(db: Db, eodRecord: Document, staffMember: MinimalStaff): Promise<void>;
+export declare function invoiceOnEodApproval(db: MongoDbLike, eodRecord: Record<string, unknown>, staffMember: MinimalStaff): Promise<void>;
 export {};
 //# sourceMappingURL=invoice.eod-hook.service.d.ts.map

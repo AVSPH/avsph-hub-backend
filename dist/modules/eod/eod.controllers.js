@@ -33,6 +33,56 @@ function getCurrentPayCycle() {
         };
     }
 }
+export function resolveDatePeriod(periodType, referenceDate, startDate, endDate) {
+    if (startDate && endDate) {
+        return { periodStart: startDate, periodEnd: endDate };
+    }
+    const dateStr = referenceDate || new Date().toISOString().split("T")[0];
+    const [yearStr, monthStr, dayStr] = dateStr.split("T")[0].split("-");
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1;
+    const day = parseInt(dayStr, 10);
+    const date = new Date(year, month, day);
+    switch (periodType) {
+        case "weekly": {
+            // Monday to Sunday enclosing the date
+            const dayOfWeek = date.getDay(); // 0 is Sunday, 1 is Monday...
+            const diffToMonday = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const start = new Date(year, month, diffToMonday);
+            const end = new Date(year, month, diffToMonday + 6);
+            const pad = (n) => n.toString().padStart(2, "0");
+            const format = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            return {
+                periodStart: format(start),
+                periodEnd: format(end),
+            };
+        }
+        case "bimonthly-1": {
+            const pad = (n) => n.toString().padStart(2, "0");
+            return {
+                periodStart: `${year}-${pad(month + 1)}-01`,
+                periodEnd: `${year}-${pad(month + 1)}-15`,
+            };
+        }
+        case "bimonthly-2": {
+            const pad = (n) => n.toString().padStart(2, "0");
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            return {
+                periodStart: `${year}-${pad(month + 1)}-16`,
+                periodEnd: `${year}-${pad(month + 1)}-${pad(lastDay)}`,
+            };
+        }
+        case "monthly":
+        default: {
+            const pad = (n) => n.toString().padStart(2, "0");
+            const lastDay = new Date(year, month + 1, 0).getDate();
+            return {
+                periodStart: `${year}-${pad(month + 1)}-01`,
+                periodEnd: `${year}-${pad(month + 1)}-${pad(lastDay)}`,
+            };
+        }
+    }
+}
 // Get expected earnings for current pay cycle (staff only — real-time aggregation)
 export async function getMyExpectedEarnings(request, reply) {
     const db = request.server.mongo.db;
@@ -785,5 +835,163 @@ export async function deleteEod(request, reply) {
     }
     await eodReports.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { isActive: false, updatedAt: new Date().toISOString() } });
     return { message: "EOD report deleted successfully" };
+}
+// Get EOD summary by business (admin only)
+export async function getEodSummaryByBusiness(request, reply) {
+    const eodReports = request.server.mongo.db?.collection("eod_reports");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    const staffCollection = request.server.mongo.db?.collection("staff");
+    if (!eodReports || !businesses || !staffCollection) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this business",
+            });
+        }
+    }
+    const { periodStart, periodEnd } = resolveDatePeriod(request.query.periodType, request.query.referenceDate, request.query.startDate, request.query.endDate);
+    const query = { businessId, isActive: true };
+    // Skip needs_revision by default as requested by user
+    if (request.query.status) {
+        query.status = request.query.status;
+    }
+    else {
+        query.status = { $ne: "needs_revision" };
+    }
+    if (request.query.isApproved !== undefined) {
+        query.isApproved = request.query.isApproved === "true";
+    }
+    query.date = { $gte: periodStart, $lte: periodEnd };
+    // Search by staff name or email
+    let matchingStaffIds = null;
+    if (request.query.search) {
+        const searchRegex = new RegExp(request.query.search, "i");
+        const matchingStaff = await staffCollection
+            .find({
+            businessId,
+            isActive: true,
+            $or: [
+                { firstName: searchRegex },
+                { lastName: searchRegex },
+                { email: searchRegex },
+            ],
+        })
+            .project({ _id: 1 })
+            .toArray();
+        matchingStaffIds = matchingStaff.map((s) => s._id.toString());
+        query.staffId = { $in: matchingStaffIds };
+    }
+    // Pagination
+    const page = Math.max(1, parseInt(request.query.page || "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(request.query.limit || "20", 10)));
+    const skip = (page - 1) * limit;
+    // Aggregation Pipeline
+    const pipeline = [
+        { $match: query },
+        {
+            $group: {
+                _id: "$staffId",
+                totalHoursWorked: { $sum: "$hoursWorked" },
+                totalRegularHours: { $sum: { $ifNull: ["$regularHoursWorked", "$hoursWorked"] } },
+                totalOvertimeHours: { $sum: { $ifNull: ["$overtimeHoursWorked", 0] } },
+                totalNightDifferentialHours: { $sum: { $ifNull: ["$nightDifferentialHours", 0] } },
+                eodCount: { $sum: 1 },
+                approvedCount: {
+                    $sum: { $cond: [{ $eq: ["$isApproved", true] }, 1, 0] }
+                }
+            }
+        },
+        {
+            $addFields: {
+                staffObjectId: {
+                    $cond: {
+                        if: { $ne: [{ $type: "$_id" }, "missing"] },
+                        then: { $toObjectId: "$_id" },
+                        else: null,
+                    },
+                },
+            },
+        },
+        {
+            $lookup: {
+                from: "staff",
+                localField: "staffObjectId",
+                foreignField: "_id",
+                as: "staffInfo",
+            },
+        },
+        {
+            $addFields: {
+                staffName: {
+                    $cond: {
+                        if: { $gt: [{ $size: "$staffInfo" }, 0] },
+                        then: {
+                            $concat: [
+                                { $arrayElemAt: ["$staffInfo.firstName", 0] },
+                                " ",
+                                { $arrayElemAt: ["$staffInfo.lastName", 0] },
+                            ],
+                        },
+                        else: "Unknown",
+                    },
+                },
+                staffEmail: {
+                    $ifNull: [{ $arrayElemAt: ["$staffInfo.email", 0] }, null],
+                },
+            },
+        },
+        { $sort: { staffName: 1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+            $project: {
+                _id: 0,
+                staffId: "$_id",
+                staffName: 1,
+                staffEmail: 1,
+                totalHoursWorked: { $round: ["$totalHoursWorked", 2] },
+                totalRegularHours: { $round: ["$totalRegularHours", 2] },
+                totalOvertimeHours: { $round: ["$totalOvertimeHours", 2] },
+                totalNightDifferentialHours: { $round: ["$totalNightDifferentialHours", 2] },
+                eodCount: 1,
+                approvedCount: 1,
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+            }
+        }
+    ];
+    const result = await eodReports.aggregate(pipeline).toArray();
+    // Total count for distinct staff
+    const countPipeline = [
+        { $match: query },
+        { $group: { _id: "$staffId" } },
+        { $count: "total" }
+    ];
+    const countResult = await eodReports.aggregate(countPipeline).toArray();
+    const totalCount = countResult.length > 0 ? countResult[0].total : 0;
+    const totalPages = Math.ceil(totalCount / limit);
+    return {
+        data: result,
+        pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        },
+    };
 }
 //# sourceMappingURL=eod.controllers.js.map

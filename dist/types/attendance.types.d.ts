@@ -29,9 +29,9 @@ export declare const attendanceSchema: z.ZodObject<{
     notes?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
     clockOut?: string | undefined;
+    hoursWorked?: number | undefined;
 }, {
     staffId: string;
     businessId: string;
@@ -45,9 +45,9 @@ export declare const attendanceSchema: z.ZodObject<{
     isActive?: boolean | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
-    hoursWorked?: number | undefined;
     adminNotes?: string | undefined;
     clockOut?: string | undefined;
+    hoursWorked?: number | undefined;
 }>;
 export declare const clockInSchema: z.ZodObject<{
     notes: z.ZodOptional<z.ZodString>;

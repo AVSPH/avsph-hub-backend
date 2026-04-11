@@ -5,6 +5,8 @@ import {
   editOwnEodJsonSchema,
   reviewEodJsonSchema,
   adminEditEodJsonSchema,
+  eodSummaryQueryJsonSchema,
+  eodSummaryItemJsonSchema,
 } from "../../types/eod.types.js";
 import {
   submitEod,
@@ -14,6 +16,7 @@ import {
   getMyExpectedEarnings,
   getAllEodReports,
   getEodByBusiness,
+  getEodSummaryByBusiness,
   getEodByStaff,
   getEodById,
   reviewEod,
@@ -379,6 +382,70 @@ const eodRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     getEodByBusiness,
+  );
+
+  // GET /businesses/:businessId/eod/summary - Admin views EOD summary reports by business
+  fastify.get<{
+    Params: { businessId: string };
+    Querystring: {
+      periodType?: string;
+      referenceDate?: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+      status?: string;
+      isApproved?: string;
+      page?: string;
+      limit?: string;
+    };
+  }>(
+    "/businesses/:businessId/eod/summary",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description: "Get EOD summary reports for a specific business with pagination, filters, and search",
+        tags: ["EOD Reports"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string" },
+          },
+          required: ["businessId"],
+        },
+        querystring: eodSummaryQueryJsonSchema,
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: eodSummaryItemJsonSchema,
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "number" },
+                  limit: { type: "number" },
+                  totalCount: { type: "number" },
+                  totalPages: { type: "number" },
+                  hasNextPage: { type: "boolean" },
+                  hasPrevPage: { type: "boolean" },
+                },
+              },
+            },
+          },
+          403: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    getEodSummaryByBusiness,
   );
 
   // GET /staff/:staffId/eod - Admin views EOD reports by staff

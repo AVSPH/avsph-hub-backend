@@ -279,4 +279,46 @@ export const adminEditEodJsonSchema = {
         isApproved: { type: "boolean" },
     },
 };
+export const eodSummaryQueryJsonSchema = {
+    type: "object",
+    properties: {
+        startDate: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        endDate: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        periodType: { type: "string", enum: ["weekly", "monthly", "bimonthly-1", "bimonthly-2"] },
+        referenceDate: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+        search: { type: "string", description: "Search by staff name or email" },
+        status: { type: "string", enum: ["submitted", "reviewed", "needs_revision"] },
+        isApproved: { type: "string", enum: ["true", "false"] },
+        page: { type: "string", default: "1" },
+        limit: { type: "string", default: "20" },
+    },
+};
+export const eodSummaryItemJsonSchema = {
+    type: "object",
+    properties: {
+        staffId: { type: "string" },
+        staffName: { type: "string" },
+        staffEmail: { type: "string" },
+        totalHoursWorked: { type: "number" },
+        totalRegularHours: { type: "number" },
+        totalOvertimeHours: { type: "number" },
+        totalNightDifferentialHours: { type: "number" },
+        eodCount: { type: "number" },
+        approvedCount: { type: "number" },
+        periodStart: { type: "string" },
+        periodEnd: { type: "string" },
+    },
+    required: [
+        "staffId",
+        "staffName",
+        "totalHoursWorked",
+        "totalRegularHours",
+        "totalOvertimeHours",
+        "totalNightDifferentialHours",
+        "eodCount",
+        "approvedCount",
+        "periodStart",
+        "periodEnd",
+    ],
+};
 //# sourceMappingURL=eod.types.js.map

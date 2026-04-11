@@ -1,12 +1,14 @@
-import { type Db, type Document } from "mongodb";
 import type { InvoiceAdjustmentType, InvoiceEarningsBreakdownType, InvoiceStatutoryDeductionsType } from "../../schema/invoice.schema.js";
-interface MinimalStaffDocument extends Document {
+type MongoDbLike = {
+    collection: (name: string) => any;
+};
+interface MinimalStaffDocument {
     _id: unknown;
     businessId?: string;
     salary?: number;
     compensationProfileId?: string;
 }
-interface EodPayrollRecord extends Document {
+interface EodPayrollRecord {
     _id: unknown;
     date?: string;
     hoursWorked?: number;
@@ -41,7 +43,7 @@ export interface InvoiceFinancialComputation {
     calculatedPay: number;
     netPay: number;
 }
-export declare function resolveHourlyCompensationProfile(db: Db, staffMember: MinimalStaffDocument, periodEnd: string): Promise<ResolvedCompensationProfile>;
+export declare function resolveHourlyCompensationProfile(db: MongoDbLike, staffMember: MinimalStaffDocument, periodEnd: string): Promise<ResolvedCompensationProfile>;
 export declare function calculateInvoiceFinancials(eodRecords: EodPayrollRecord[], compensation: ResolvedCompensationProfile, additions?: InvoiceAdjustmentType[], existingDeductions?: InvoiceAdjustmentType[], periodEnd?: string, currency?: string): InvoiceFinancialComputation;
 export interface PhpConversion {
     exchangeRate: number;
@@ -51,8 +53,8 @@ export interface PhpConversion {
     statutoryDeductions: InvoiceStatutoryDeductionsType;
     earningsBreakdownPhp: InvoiceEarningsBreakdownType;
 }
-export declare function getExchangeRateValue(db: Db, fromCurrency: string, toCurrency: string): Promise<number | null>;
-export declare function buildPhpConversion(db: Db, currency: string, invoice: {
+export declare function getExchangeRateValue(db: MongoDbLike, fromCurrency: string, toCurrency: string): Promise<number | null>;
+export declare function buildPhpConversion(db: MongoDbLike, currency: string, invoice: {
     baseSalary: number;
     calculatedPay: number;
     netPay: number;

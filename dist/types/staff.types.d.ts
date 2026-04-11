@@ -72,9 +72,9 @@ export declare const staffSchema: z.ZodObject<{
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     phone?: string | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -98,10 +98,10 @@ export declare const staffSchema: z.ZodObject<{
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     phone?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -158,9 +158,9 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     dateHired: string;
     employmentType: "full-time" | "part-time" | "contract";
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     phone?: string | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
 }, {
     businessId: string;
     firstName: string;
@@ -171,10 +171,10 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     dateHired: string;
     salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     phone?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
 }>;
 export declare const updateStaffSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
@@ -197,7 +197,6 @@ export declare const updateStaffSchema: z.ZodObject<{
     notes?: string | undefined;
     isActive?: boolean | undefined;
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
@@ -206,13 +205,13 @@ export declare const updateStaffSchema: z.ZodObject<{
     phone?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
 }, {
     status?: "active" | "on_leave" | "terminated" | undefined;
     salaryType?: "hourly" | "daily" | "monthly" | "annual" | undefined;
     notes?: string | undefined;
     isActive?: boolean | undefined;
     salary?: number | undefined;
-    compensationProfileId?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
@@ -221,6 +220,7 @@ export declare const updateStaffSchema: z.ZodObject<{
     phone?: string | undefined;
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
+    compensationProfileId?: string | undefined;
 }>;
 export declare const staffLoginSchema: z.ZodObject<{
     email: z.ZodString;

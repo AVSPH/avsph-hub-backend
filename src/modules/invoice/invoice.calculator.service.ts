@@ -1,4 +1,4 @@
-import { ObjectId, type Db, type Document } from "mongodb";
+import { ObjectId } from "mongodb";
 import type {
   InvoiceAdjustmentType,
   InvoiceEarningsBreakdownType,
@@ -7,14 +7,18 @@ import type {
 
 const STATUTORY_ADJUSTMENT_TYPES = new Set(["SSS", "Pag-IBIG", "PhilHealth"]);
 
-interface MinimalStaffDocument extends Document {
+type MongoDbLike = {
+  collection: (name: string) => any;
+};
+
+interface MinimalStaffDocument {
   _id: unknown;
   businessId?: string;
   salary?: number;
   compensationProfileId?: string;
 }
 
-interface CompensationProfileDocument extends Document {
+interface CompensationProfileDocument {
   _id?: unknown;
   businessId: string;
   currency?: string;
@@ -32,7 +36,7 @@ interface CompensationProfileDocument extends Document {
   philHealthDeductionFixedAmount?: number;
 }
 
-interface EodPayrollRecord extends Document {
+interface EodPayrollRecord {
   _id: unknown;
   date?: string;
   hoursWorked?: number;
@@ -166,7 +170,7 @@ function toNumeric(value: unknown, fallback: number): number {
 }
 
 async function findActiveProfileById(
-  db: Db,
+  db: MongoDbLike,
   profileId: string,
   businessId: string,
   periodEnd: string,
@@ -196,7 +200,7 @@ async function findActiveProfileById(
 }
 
 export async function resolveHourlyCompensationProfile(
-  db: Db,
+  db: MongoDbLike,
   staffMember: MinimalStaffDocument,
   periodEnd: string,
 ): Promise<ResolvedCompensationProfile> {
@@ -450,7 +454,7 @@ export interface PhpConversion {
 }
 
 export async function getExchangeRateValue(
-  db: Db,
+  db: MongoDbLike,
   fromCurrency: string,
   toCurrency: string,
 ): Promise<number | null> {
@@ -463,7 +467,7 @@ export async function getExchangeRateValue(
 }
 
 export async function buildPhpConversion(
-  db: Db,
+  db: MongoDbLike,
   currency: string,
   invoice: {
     baseSalary: number;
