@@ -163,10 +163,10 @@ export async function createAdmin(
       adminRole,
     );
 
-    await request.server.gmail.sendEmail({
+    await request.server.resend.sendEmail({
       to: email,
       subject: `Welcome to Advanced Virtual Staff! Your Admin Account is Ready!`,
-      body: emailHtml,
+      html: emailHtml,
     });
 
     request.server.log.info(

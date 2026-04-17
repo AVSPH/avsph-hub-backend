@@ -68,12 +68,11 @@ const gmailRoutes: FastifyPluginAsync = async (fastify) => {
       } = request.body;
 
       try {
-        const result = await fastify.gmail.sendEmail({ to, subject, body });
+        const result = await fastify.resend.sendEmail({ to, subject, html: body });
 
         return {
           message: "Test email sent successfully",
           messageId: result.id || "",
-          threadId: result.threadId || "",
         };
       } catch (err) {
         fastify.log.error(err, "Gmail API test email failed");

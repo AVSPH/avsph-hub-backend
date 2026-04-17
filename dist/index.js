@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import dns from "node:dns";
-import { envPlugin, corsPlugin, securityPlugin, sensiblePlugin, mongodbPlugin, swaggerPlugin, authPlugin, cloudinaryPlugin, multipartPlugin, nodemailerPlugin, gmailPlugin,
+import { envPlugin, corsPlugin, securityPlugin, sensiblePlugin, mongodbPlugin, swaggerPlugin, authPlugin, cloudinaryPlugin, multipartPlugin, nodemailerPlugin, gmailPlugin, resendPlugin,
 // cronPlugin — kept available as fallback (see registration comment below)
  } from "./plugins/index.js";
 import routes from "./routes/routes.js";
@@ -32,6 +32,7 @@ async function buildApp() {
     await fastify.register(cloudinaryPlugin);
     await fastify.register(nodemailerPlugin);
     await fastify.register(gmailPlugin);
+    await fastify.register(resendPlugin);
     await fastify.register(authPlugin);
     await fastify.register(swaggerPlugin);
     await fastify.register(corsPlugin);

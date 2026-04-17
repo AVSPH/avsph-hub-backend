@@ -338,10 +338,10 @@ export async function hireApplicant(request, reply) {
     // Send welcome email via Gmail API
     try {
         const emailHtml = getApplicantHiredEmail(applicant.firstName, applicant.email, tempPassword, jobPost.title, business?.name || "Advanced Virtual Staff");
-        await request.server.gmail.sendEmail({
+        await request.server.resend.sendEmail({
             to: applicant.email,
             subject: `🎉 Welcome to ${business?.name || "the Team"} — Your Account is Ready!`,
-            body: emailHtml,
+            html: emailHtml,
         });
         request.server.log.info(`Welcome email sent to ${applicant.email} for staff conversion`);
     }

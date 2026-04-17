@@ -107,10 +107,10 @@ export async function createAdmin(request, reply) {
         const adminRole = isFirstAdmin ? "Super Admin" : (parseResult.data.role || "Admin");
         const emailHtml = getAdminCreationEmail(firstName, email, password, // original plain-text password before hashing
         adminRole);
-        await request.server.gmail.sendEmail({
+        await request.server.resend.sendEmail({
             to: email,
             subject: `Welcome to Advanced Virtual Staff! Your Admin Account is Ready!`,
-            body: emailHtml,
+            html: emailHtml,
         });
         request.server.log.info(`Admin creation welcome email sent to ${email}`);
     }

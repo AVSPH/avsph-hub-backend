@@ -240,10 +240,10 @@ export async function forgotStaffPassword(
   );
 
   try {
-    await request.server.gmail.sendEmail({
+    await request.server.resend.sendEmail({
       to: email,
       subject: "Password Reset Code",
-      body: getForgotPasswordEmail(
+      html: getForgotPasswordEmail(
         staffMember.firstName as string,
         resetCode,
         "Staff",

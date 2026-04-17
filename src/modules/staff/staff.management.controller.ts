@@ -361,10 +361,10 @@ export async function createStaff(
       businessName,
     );
 
-    await request.server.gmail.sendEmail({
+    await request.server.resend.sendEmail({
       to: email,
       subject: `Welcome to ${businessName}! Your Account is Ready!`,
-      body: emailHtml,
+      html: emailHtml,
     });
 
     request.server.log.info(

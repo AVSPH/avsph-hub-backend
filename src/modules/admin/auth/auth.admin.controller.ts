@@ -81,10 +81,10 @@ export async function forgotPassword(
   );
 
   try {
-    await request.server.gmail.sendEmail({
+    await request.server.resend.sendEmail({
       to: email,
       subject: "Password Reset Code",
-      body: getForgotPasswordEmail(admin.firstName as string, resetCode),
+      html: getForgotPasswordEmail(admin.firstName as string, resetCode),
     });
   } catch (err) {
     request.server.log.error({ err }, "Failed to send forgot-password email");

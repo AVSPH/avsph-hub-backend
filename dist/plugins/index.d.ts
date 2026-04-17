@@ -9,5 +9,6 @@ export { default as cloudinaryPlugin } from "./cloudinary.js";
 export { default as multipartPlugin } from "./multipart.js";
 export { default as nodemailerPlugin } from "./nodemailer.js";
 export { default as gmailPlugin } from "./gmail.js";
+export { default as resendPlugin } from "./resend.js";
 export { default as cronPlugin } from "./cron.js";
 //# sourceMappingURL=index.d.ts.map

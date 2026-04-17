@@ -476,10 +476,10 @@ export async function hireApplicant(
             business?.name || "Advanced Virtual Staff",
         );
 
-        await request.server.gmail.sendEmail({
+        await request.server.resend.sendEmail({
             to: applicant.email,
             subject: `🎉 Welcome to ${business?.name || "the Team"} — Your Account is Ready!`,
-            body: emailHtml,
+            html: emailHtml,
         });
 
         request.server.log.info(

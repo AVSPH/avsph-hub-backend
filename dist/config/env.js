@@ -29,6 +29,9 @@ export const envSchema = z.object({
     SMTP_USER: z.string().min(1, "SMTP_USER is required"),
     SMTP_PASS: z.string().min(1, "SMTP_PASS is required"),
     SMTP_FROM: z.string().email().optional(),
+    // Resend Configuration
+    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+    RESEND_FROM: z.string().default("noreply@avs-ph.com"),
     // Gmail OAuth2 Configuration
     GMAIL_CLIENT_ID: z.string().min(1, "GMAIL_CLIENT_ID is required"),
     GMAIL_CLIENT_SECRET: z.string().min(1, "GMAIL_CLIENT_SECRET is required"),
