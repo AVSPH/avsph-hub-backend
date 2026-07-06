@@ -15,10 +15,13 @@ export type UpdateLeadStatusInput = z.infer<typeof updateLeadStatusSchema>;
 // MongoDB document type (with ObjectId)
 export interface LeadDocument {
   _id?: string;
-  name: string;
+  businessId: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
-  source: "blog_comment" | "contact_form" | "other";
+  phone?: string;
+  company?: string;
+  source: "contact_form" | "newsletter" | "other";
   status: "new" | "contacted" | "qualified" | "converted";
   notes?: string;
   isActive: boolean;

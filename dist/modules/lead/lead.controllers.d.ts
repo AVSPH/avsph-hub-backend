@@ -2,55 +2,39 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 interface IdParams {
     id: string;
 }
-interface EmailParams {
-    email: string;
+interface BusinessIdParams {
+    businessId: string;
 }
-interface LeadQuery {
-    status?: "new" | "contacted" | "qualified" | "converted";
-    source?: "blog_comment" | "contact_form" | "other";
+interface LeadsByBusinessQuery {
     search?: string;
-    page?: number;
-    limit?: number;
+    page?: string;
+    limit?: string;
+    status?: string;
 }
-export declare function getAllLeads(request: FastifyRequest<{
-    Querystring: LeadQuery;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>[] | {
+export declare function createLead(request: FastifyRequest<{
+    Body: unknown;
+}>, reply: FastifyReply): Promise<never>;
+export declare function getLeadsByBusiness(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Querystring: LeadsByBusinessQuery;
+}>, reply: FastifyReply): Promise<{
     data: import("mongodb").WithId<import("bson").Document>[];
     pagination: {
         page: number;
         limit: number;
         total: number;
         totalPages: number;
+        hasMore: boolean;
     };
 }>;
 export declare function getLeadById(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
-export declare function getLeadByEmail(request: FastifyRequest<{
-    Params: EmailParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
-export declare function createLead(request: FastifyRequest, reply: FastifyReply): Promise<{
-    _id: string;
-    email: string;
-    createdAt: string;
-    updatedAt: string;
-    status: "contacted" | "new" | "qualified" | "converted";
-    name: string;
-    isActive: boolean;
-    phone: string;
-    source: "blog_comment" | "contact_form" | "other";
-    notes?: string | undefined;
-}>;
 export declare function updateLead(request: FastifyRequest<{
-    Params: IdParams;
-}>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
-export declare function updateLeadStatus(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<import("mongodb").WithId<import("bson").Document>>;
 export declare function deleteLead(request: FastifyRequest<{
     Params: IdParams;
-}>, reply: FastifyReply): Promise<{
-    message: string;
-}>;
+}>, reply: FastifyReply): Promise<never>;
 export {};
 //# sourceMappingURL=lead.controllers.d.ts.map

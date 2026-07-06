@@ -11,6 +11,7 @@ import staffSelfRoutes from "../modules/staff/staff.route.js";
 import attendanceRoutes from "../modules/attendance/attendance.routes.js";
 import payrollRoutes from "../modules/payroll/payroll.routes.js";
 import bookingRoutes from "../modules/booking/booking.routes.js";
+import leadRoutes from "../modules/lead/lead.routes.js";
 import commentRoutes from "../modules/comment/comment.routes.js";
 import eodRoutes from "../modules/eod/eod.routes.js";
 import adminInvoiceRoutes from "../modules/invoice/admin.invoice.route.js";
@@ -48,6 +49,8 @@ const routes = async (fastify) => {
     await fastify.register(payrollRoutes);
     // Booking routes (public route for consultation requests)
     await fastify.register(bookingRoutes);
+    // Lead routes (public submission from AVSPH contact form + admin CRUD)
+    await fastify.register(leadRoutes);
     // Comment routes (includes public comment submission)
     await fastify.register(commentRoutes);
     // EOD Report routes

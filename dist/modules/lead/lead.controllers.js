@@ -1,56 +1,147 @@
 import { ObjectId } from "@fastify/mongodb";
-import { createLeadSchema, updateLeadSchema, updateLeadStatusSchema, } from "../../types/lead.types.js";
-// Get all leads with optional pagination, filtering, and search
-export async function getAllLeads(request, reply) {
+import { createLeadSchema, updateLeadSchema, } from "../../types/lead.types.js";
+// Check whether the current user (unless super-admin) has access to a business
+async function hasBusinessAccess(request, businessId) {
+    if (request.user.role === "super-admin") {
+        return true;
+    }
+    const businesses = request.server.mongo.db?.collection("businesses");
+    if (!businesses)
+        return false;
+    const business = await businesses.findOne({
+        _id: new ObjectId(businessId),
+        adminIds: request.user.id,
+    });
+    return !!business;
+}
+// Create a lead (public - from AVSPH contact form, no auth)
+export async function createLead(request, reply) {
     const leads = request.server.mongo.db?.collection("leads");
-    if (!leads) {
+    const businesses = request.server.mongo.db?.collection("businesses");
+    if (!leads || !businesses) {
         return reply.status(500).send({ error: "Database not available" });
     }
-    const query = { isActive: true };
-    // Filter by status if provided
-    if (request.query.status) {
-        query.status = request.query.status;
+    const parseResult = createLeadSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
     }
-    // Filter by source if provided
-    if (request.query.source) {
-        query.source = request.query.source;
+    const { businessId, firstName, lastName, email, phone, company, source, hp } = parseResult.data;
+    // Honeypot: bots that fill this hidden field get a fake success, no DB write
+    if (hp) {
+        return reply.status(201).send({
+            message: "Lead submitted successfully",
+        });
     }
-    // Search by name or email
-    if (request.query.search) {
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    const business = await businesses.findOne({
+        _id: new ObjectId(businessId),
+        isActive: true,
+    });
+    if (!business) {
+        return reply.status(400).send({ error: "Business not found" });
+    }
+    const now = new Date().toISOString();
+    // Dedupe on {businessId, email} - resubmission updates the existing lead
+    const existingLead = await leads.findOne({
+        businessId,
+        email,
+        isActive: true,
+    });
+    if (existingLead) {
+        const updated = await leads.findOneAndUpdate({ _id: existingLead._id }, {
+            $set: {
+                firstName,
+                lastName,
+                phone,
+                company,
+                source,
+                updatedAt: now,
+            },
+        }, { returnDocument: "after" });
+        return reply.status(200).send({
+            message: "Lead updated successfully",
+            lead: updated,
+        });
+    }
+    const newLead = {
+        businessId,
+        firstName,
+        lastName,
+        email,
+        phone,
+        company,
+        source,
+        status: "new",
+        notes: undefined,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+    };
+    const result = await leads.insertOne(newLead);
+    return reply.status(201).send({
+        message: "Lead submitted successfully",
+        lead: { _id: result.insertedId, ...newLead },
+    });
+}
+// Get leads by business (protected)
+export async function getLeadsByBusiness(request, reply) {
+    const leads = request.server.mongo.db?.collection("leads");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    if (!leads || !businesses) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    const { search, page: pageStr, limit: limitStr, status } = request.query;
+    const page = Math.max(1, parseInt(pageStr || "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(limitStr || "10", 10)));
+    const skip = (page - 1) * limit;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    if (!(await hasBusinessAccess(request, businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const query = { businessId, isActive: true };
+    if (search && search.trim()) {
+        const searchRegex = new RegExp(search.trim(), "i");
         query.$or = [
-            { name: { $regex: request.query.search, $options: "i" } },
-            { email: { $regex: request.query.search, $options: "i" } },
+            { firstName: searchRegex },
+            { lastName: searchRegex },
+            { email: searchRegex },
+            { company: searchRegex },
         ];
     }
-    // Check if pagination is requested
-    if (request.query.page || request.query.limit) {
-        const page = request.query.page || 1;
-        const limit = request.query.limit || 10;
-        const skip = (page - 1) * limit;
-        const [result, total] = await Promise.all([
-            leads
-                .find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .toArray(),
-            leads.countDocuments(query),
-        ]);
-        return {
-            data: result,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+    if (status) {
+        query.status = status;
     }
-    // Return all results without pagination
-    const result = await leads.find(query).sort({ createdAt: -1 }).toArray();
-    return result;
+    const total = await leads.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+    const result = await leads
+        .find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+    return {
+        data: result,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasMore: page < totalPages,
+        },
+    };
 }
-// Get lead by ID
+// Get lead by ID (protected)
 export async function getLeadById(request, reply) {
     const leads = request.server.mongo.db?.collection("leads");
     if (!leads) {
@@ -60,67 +151,19 @@ export async function getLeadById(request, reply) {
     if (!ObjectId.isValid(id)) {
         return reply.status(400).send({ error: "Invalid lead ID format" });
     }
-    const lead = await leads.findOne({ _id: new ObjectId(id), isActive: true });
+    const lead = await leads.findOne({ _id: new ObjectId(id) });
     if (!lead) {
         return reply.status(404).send({ error: "Lead not found" });
     }
-    return lead;
-}
-// Get lead by email
-export async function getLeadByEmail(request, reply) {
-    const leads = request.server.mongo.db?.collection("leads");
-    if (!leads) {
-        return reply.status(500).send({ error: "Database not available" });
-    }
-    const { email } = request.params;
-    const lead = await leads.findOne({
-        email: email.toLowerCase(),
-        isActive: true,
-    });
-    if (!lead) {
-        return reply.status(404).send({ error: "Lead not found" });
-    }
-    return lead;
-}
-// Create new lead
-export async function createLead(request, reply) {
-    const leads = request.server.mongo.db?.collection("leads");
-    if (!leads) {
-        return reply.status(500).send({ error: "Database not available" });
-    }
-    // Validate request body
-    const validationResult = createLeadSchema.safeParse(request.body);
-    if (!validationResult.success) {
-        return reply.status(400).send({
-            error: "Validation failed",
-            details: validationResult.error.errors,
+    if (!(await hasBusinessAccess(request, lead.businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this lead's business",
         });
     }
-    const leadData = validationResult.data;
-    // Check if lead with email already exists
-    const existingLead = await leads.findOne({
-        email: leadData.email.toLowerCase(),
-        isActive: true,
-    });
-    if (existingLead) {
-        return reply
-            .status(409)
-            .send({ error: "Lead with this email already exists" });
-    }
-    const now = new Date().toISOString();
-    const newLead = {
-        ...leadData,
-        email: leadData.email.toLowerCase(),
-        createdAt: now,
-        updatedAt: now,
-    };
-    const result = await leads.insertOne(newLead);
-    return {
-        ...newLead,
-        _id: result.insertedId.toString(),
-    };
+    return lead;
 }
-// Update lead
+// Update lead (protected - status/notes/details)
 export async function updateLead(request, reply) {
     const leads = request.server.mongo.db?.collection("leads");
     if (!leads) {
@@ -130,71 +173,34 @@ export async function updateLead(request, reply) {
     if (!ObjectId.isValid(id)) {
         return reply.status(400).send({ error: "Invalid lead ID format" });
     }
-    // Validate request body
-    const validationResult = updateLeadSchema.safeParse(request.body);
-    if (!validationResult.success) {
+    const existingLead = await leads.findOne({ _id: new ObjectId(id) });
+    if (!existingLead) {
+        return reply.status(404).send({ error: "Lead not found" });
+    }
+    if (!(await hasBusinessAccess(request, existingLead.businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this lead's business",
+        });
+    }
+    const parseResult = updateLeadSchema.safeParse(request.body);
+    if (!parseResult.success) {
         return reply.status(400).send({
             error: "Validation failed",
-            details: validationResult.error.errors,
+            details: parseResult.error.errors,
         });
     }
-    const updateData = validationResult.data;
-    // If email is being updated, check for duplicates
-    if (updateData.email) {
-        const existingLead = await leads.findOne({
-            email: updateData.email.toLowerCase(),
-            _id: { $ne: new ObjectId(id) },
-            isActive: true,
-        });
-        if (existingLead) {
-            return reply
-                .status(409)
-                .send({ error: "Lead with this email already exists" });
-        }
-        updateData.email = updateData.email.toLowerCase();
-    }
-    const result = await leads.findOneAndUpdate({ _id: new ObjectId(id), isActive: true }, {
-        $set: {
-            ...updateData,
-            updatedAt: new Date().toISOString(),
-        },
-    }, { returnDocument: "after" });
+    const updateData = {
+        ...parseResult.data,
+        updatedAt: new Date().toISOString(),
+    };
+    const result = await leads.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: updateData }, { returnDocument: "after" });
     if (!result) {
         return reply.status(404).send({ error: "Lead not found" });
     }
     return result;
 }
-// Update lead status
-export async function updateLeadStatus(request, reply) {
-    const leads = request.server.mongo.db?.collection("leads");
-    if (!leads) {
-        return reply.status(500).send({ error: "Database not available" });
-    }
-    const { id } = request.params;
-    if (!ObjectId.isValid(id)) {
-        return reply.status(400).send({ error: "Invalid lead ID format" });
-    }
-    // Validate request body
-    const validationResult = updateLeadStatusSchema.safeParse(request.body);
-    if (!validationResult.success) {
-        return reply.status(400).send({
-            error: "Validation failed",
-            details: validationResult.error.errors,
-        });
-    }
-    const { status } = validationResult.data;
-    const result = await leads.findOneAndUpdate({ _id: new ObjectId(id), isActive: true }, {
-        $set: {
-            status,
-            updatedAt: new Date().toISOString(),
-        },
-    }, { returnDocument: "after" });
-    if (!result) {
-        return reply.status(404).send({ error: "Lead not found" });
-    }
-    return result;
-}
-// Delete lead (soft delete)
+// Delete lead (soft delete - protected)
 export async function deleteLead(request, reply) {
     const leads = request.server.mongo.db?.collection("leads");
     if (!leads) {
@@ -204,15 +210,20 @@ export async function deleteLead(request, reply) {
     if (!ObjectId.isValid(id)) {
         return reply.status(400).send({ error: "Invalid lead ID format" });
     }
-    const result = await leads.findOneAndUpdate({ _id: new ObjectId(id), isActive: true }, {
-        $set: {
-            isActive: false,
-            updatedAt: new Date().toISOString(),
-        },
-    }, { returnDocument: "after" });
+    const existingLead = await leads.findOne({ _id: new ObjectId(id) });
+    if (!existingLead) {
+        return reply.status(404).send({ error: "Lead not found" });
+    }
+    if (!(await hasBusinessAccess(request, existingLead.businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this lead's business",
+        });
+    }
+    const result = await leads.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { isActive: false, updatedAt: new Date().toISOString() } }, { returnDocument: "after" });
     if (!result) {
         return reply.status(404).send({ error: "Lead not found" });
     }
-    return { message: "Lead deleted successfully" };
+    return reply.status(200).send({ message: "Lead deleted successfully" });
 }
 //# sourceMappingURL=lead.controllers.js.map
