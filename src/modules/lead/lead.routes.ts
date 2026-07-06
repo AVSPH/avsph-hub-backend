@@ -4,6 +4,7 @@ import {
   leadJsonSchema,
   createLeadJsonSchema,
   updateLeadJsonSchema,
+  bulkLeadActionJsonSchema,
 } from "../../types/lead.types.js";
 import {
   createLead,
@@ -11,6 +12,9 @@ import {
   getLeadById,
   updateLead,
   deleteLead,
+  getLeadTags,
+  exportLeads,
+  bulkLeads,
 } from "./lead.controllers.js";
 
 const leadRoutes: FastifyPluginAsync = async (fastify) => {
@@ -63,7 +67,16 @@ const leadRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /businesses/:businessId/leads - Get leads for a business (protected)
   fastify.get<{
     Params: { businessId: string };
-    Querystring: { search?: string; page?: string; limit?: string; status?: string };
+    Querystring: {
+      search?: string;
+      page?: string;
+      limit?: string;
+      status?: string;
+      source?: string;
+      tags?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    };
   }>(
     "/businesses/:businessId/leads",
     {
@@ -100,6 +113,23 @@ const leadRoutes: FastifyPluginAsync = async (fastify) => {
               enum: ["new", "contacted", "qualified", "converted"],
               description: "Filter by status",
             },
+            source: {
+              type: "string",
+              enum: ["contact_form", "newsletter", "other"],
+              description: "Filter by source",
+            },
+            tags: {
+              type: "string",
+              description: "Comma-separated tags; matches leads having ANY",
+            },
+            dateFrom: {
+              type: "string",
+              description: "ISO date-time lower bound on createdAt",
+            },
+            dateTo: {
+              type: "string",
+              description: "ISO date-time upper bound on createdAt",
+            },
           },
         },
         response: {
@@ -133,6 +163,137 @@ const leadRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     getLeadsByBusiness,
+  );
+
+  // GET /businesses/:businessId/lead-tags - Distinct tags for a business (protected)
+  fastify.get<{ Params: { businessId: string } }>(
+    "/businesses/:businessId/lead-tags",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description: "Get the distinct set of tags used across a business's leads",
+        tags: ["Leads"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string", description: "Business ID (MongoDB ObjectId)" },
+          },
+          required: ["businessId"],
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              tags: { type: "array", items: { type: "string" } },
+            },
+          },
+        },
+      },
+    },
+    getLeadTags,
+  );
+
+  // GET /businesses/:businessId/leads/export - All matching leads for CSV (protected)
+  fastify.get<{
+    Params: { businessId: string };
+    Querystring: {
+      search?: string;
+      status?: string;
+      source?: string;
+      tags?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    };
+  }>(
+    "/businesses/:businessId/leads/export",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "Export all matching leads (no pagination, capped at 5000) for CSV download",
+        tags: ["Leads"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string", description: "Business ID (MongoDB ObjectId)" },
+          },
+          required: ["businessId"],
+        },
+        querystring: {
+          type: "object",
+          properties: {
+            search: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["new", "contacted", "qualified", "converted"],
+            },
+            source: {
+              type: "string",
+              enum: ["contact_form", "newsletter", "other"],
+            },
+            tags: { type: "string" },
+            dateFrom: { type: "string" },
+            dateTo: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              data: { type: "array", items: leadJsonSchema },
+              truncated: { type: "boolean" },
+              total: { type: "number" },
+            },
+          },
+        },
+      },
+    },
+    exportLeads,
+  );
+
+  // POST /businesses/:businessId/leads/bulk - Bulk status/tags/delete (protected)
+  fastify.post<{ Params: { businessId: string }; Body: unknown }>(
+    "/businesses/:businessId/leads/bulk",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "Bulk action on leads: set status, add/remove tags, or soft delete",
+        tags: ["Leads"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string", description: "Business ID (MongoDB ObjectId)" },
+          },
+          required: ["businessId"],
+        },
+        body: bulkLeadActionJsonSchema,
+        response: {
+          200: {
+            type: "object",
+            properties: { modified: { type: "number" } },
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              details: { type: "array" },
+            },
+          },
+          403: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    bulkLeads,
   );
 
   // GET /leads/:id - Get lead by ID (protected)

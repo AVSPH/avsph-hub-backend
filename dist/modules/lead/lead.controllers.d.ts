@@ -10,6 +10,10 @@ interface LeadsByBusinessQuery {
     page?: string;
     limit?: string;
     status?: string;
+    source?: string;
+    tags?: string;
+    dateFrom?: string;
+    dateTo?: string;
 }
 export declare function createLead(request: FastifyRequest<{
     Body: unknown;
@@ -36,5 +40,24 @@ export declare function updateLead(request: FastifyRequest<{
 export declare function deleteLead(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<never>;
+export declare function getLeadTags(request: FastifyRequest<{
+    Params: BusinessIdParams;
+}>, reply: FastifyReply): Promise<{
+    tags: string[];
+}>;
+export declare function exportLeads(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Querystring: LeadsByBusinessQuery;
+}>, reply: FastifyReply): Promise<{
+    data: import("mongodb").WithId<import("bson").Document>[];
+    truncated: boolean;
+    total: number;
+}>;
+export declare function bulkLeads(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Body: unknown;
+}>, reply: FastifyReply): Promise<{
+    modified: number;
+}>;
 export {};
 //# sourceMappingURL=lead.controllers.d.ts.map

@@ -12,11 +12,13 @@ export declare const leadSchema: z.ZodObject<{
     source: z.ZodDefault<z.ZodEnum<["contact_form", "newsletter", "other"]>>;
     status: z.ZodDefault<z.ZodEnum<["new", "contacted", "qualified", "converted"]>>;
     notes: z.ZodOptional<z.ZodString>;
+    tags: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
     isActive: z.ZodDefault<z.ZodBoolean>;
     createdAt: z.ZodOptional<z.ZodString>;
     updatedAt: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     status: "contacted" | "new" | "qualified" | "converted";
+    tags: string[];
     businessId: string;
     isActive: boolean;
     source: "contact_form" | "newsletter" | "other";
@@ -34,6 +36,7 @@ export declare const leadSchema: z.ZodObject<{
     firstName: string;
     email: string;
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
     _id?: string | undefined;
     notes?: string | undefined;
     isActive?: boolean | undefined;
@@ -84,8 +87,10 @@ export declare const updateLeadSchema: z.ZodObject<{
     source: z.ZodOptional<z.ZodEnum<["contact_form", "newsletter", "other"]>>;
     status: z.ZodOptional<z.ZodEnum<["new", "contacted", "qualified", "converted"]>>;
     notes: z.ZodOptional<z.ZodString>;
+    tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
     notes?: string | undefined;
     source?: "contact_form" | "newsletter" | "other" | undefined;
     firstName?: string | undefined;
@@ -95,6 +100,7 @@ export declare const updateLeadSchema: z.ZodObject<{
     company?: string | undefined;
 }, {
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
     notes?: string | undefined;
     source?: "contact_form" | "newsletter" | "other" | undefined;
     firstName?: string | undefined;
@@ -110,6 +116,43 @@ export declare const updateLeadStatusSchema: z.ZodObject<{
 }, {
     status: "contacted" | "new" | "qualified" | "converted";
 }>;
+export declare const bulkLeadActionSchema: z.ZodEffects<z.ZodEffects<z.ZodObject<{
+    ids: z.ZodArray<z.ZodString, "many">;
+    action: z.ZodEnum<["status", "addTags", "removeTags", "delete"]>;
+    value: z.ZodOptional<z.ZodEnum<["new", "contacted", "qualified", "converted"]>>;
+    tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}>, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}>, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}, {
+    ids: string[];
+    action: "status" | "delete" | "addTags" | "removeTags";
+    value?: "contacted" | "new" | "qualified" | "converted" | undefined;
+    tags?: string[] | undefined;
+}>;
+export type BulkLeadActionInput = z.infer<typeof bulkLeadActionSchema>;
 export declare const leadJsonSchema: {
     readonly type: "object";
     readonly properties: {
@@ -152,6 +195,12 @@ export declare const leadJsonSchema: {
         readonly notes: {
             readonly type: "string";
             readonly maxLength: 1000;
+        };
+        readonly tags: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+            };
         };
         readonly isActive: {
             readonly type: "boolean";
@@ -249,7 +298,42 @@ export declare const updateLeadJsonSchema: {
             readonly type: "string";
             readonly maxLength: 1000;
         };
+        readonly tags: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+                readonly maxLength: 50;
+            };
+        };
     };
+};
+export declare const bulkLeadActionJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly ids: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+            };
+            readonly minItems: 1;
+        };
+        readonly action: {
+            readonly type: "string";
+            readonly enum: readonly ["status", "addTags", "removeTags", "delete"];
+        };
+        readonly value: {
+            readonly type: "string";
+            readonly enum: readonly ["new", "contacted", "qualified", "converted"];
+        };
+        readonly tags: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+                readonly maxLength: 50;
+            };
+        };
+    };
+    readonly required: readonly ["ids", "action"];
 };
 export declare const updateLeadStatusJsonSchema: {
     readonly type: "object";

@@ -20,6 +20,7 @@ export const leadSchema = z.object({
     source: leadSourceEnum.default("contact_form"),
     status: leadStatusEnum.default("new"),
     notes: z.string().max(1000).optional(),
+    tags: z.array(z.string().min(1).max(50)).max(50).default([]),
     isActive: z.boolean().default(true),
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
@@ -46,11 +47,26 @@ export const updateLeadSchema = z
     source: leadSourceEnum,
     status: leadStatusEnum,
     notes: z.string().max(1000),
+    tags: z.array(z.string().min(1).max(50)).max(50),
 })
     .partial();
 export const updateLeadStatusSchema = z.object({
     status: leadStatusEnum,
 });
+// Bulk action on multiple leads (protected)
+export const bulkLeadActionSchema = z
+    .object({
+    ids: z.array(z.string().min(1)).min(1).max(500),
+    action: z.enum(["status", "addTags", "removeTags", "delete"]),
+    value: leadStatusEnum.optional(),
+    tags: z.array(z.string().min(1).max(50)).max(50).optional(),
+})
+    .refine((d) => d.action !== "status" || !!d.value, {
+    message: "value (status) is required for action 'status'",
+    path: ["value"],
+})
+    .refine((d) => (d.action !== "addTags" && d.action !== "removeTags") ||
+    (d.tags?.length ?? 0) > 0, { message: "tags are required for tag actions", path: ["tags"] });
 // JSON Schemas
 export const leadJsonSchema = {
     type: "object",
@@ -68,6 +84,7 @@ export const leadJsonSchema = {
             enum: ["new", "contacted", "qualified", "converted"],
         },
         notes: { type: "string", maxLength: 1000 },
+        tags: { type: "array", items: { type: "string" } },
         isActive: { type: "boolean" },
         createdAt: { type: "string", format: "date-time" },
         updatedAt: { type: "string", format: "date-time" },
@@ -107,7 +124,24 @@ export const updateLeadJsonSchema = {
             enum: ["new", "contacted", "qualified", "converted"],
         },
         notes: { type: "string", maxLength: 1000 },
+        tags: { type: "array", items: { type: "string", maxLength: 50 } },
     },
+};
+export const bulkLeadActionJsonSchema = {
+    type: "object",
+    properties: {
+        ids: { type: "array", items: { type: "string" }, minItems: 1 },
+        action: {
+            type: "string",
+            enum: ["status", "addTags", "removeTags", "delete"],
+        },
+        value: {
+            type: "string",
+            enum: ["new", "contacted", "qualified", "converted"],
+        },
+        tags: { type: "array", items: { type: "string", maxLength: 50 } },
+    },
+    required: ["ids", "action"],
 };
 export const updateLeadStatusJsonSchema = {
     type: "object",

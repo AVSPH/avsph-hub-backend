@@ -1,5 +1,41 @@
 import { ObjectId } from "@fastify/mongodb";
-import { createLeadSchema, updateLeadSchema, } from "../../types/lead.types.js";
+import { createLeadSchema, updateLeadSchema, bulkLeadActionSchema, } from "../../types/lead.types.js";
+// Max rows a single CSV export request will return
+const EXPORT_CAP = 5000;
+// Build the Mongo filter shared by the list + export endpoints
+function buildLeadQuery(businessId, q) {
+    const query = { businessId, isActive: true };
+    if (q.search && q.search.trim()) {
+        const searchRegex = new RegExp(q.search.trim(), "i");
+        query.$or = [
+            { firstName: searchRegex },
+            { lastName: searchRegex },
+            { email: searchRegex },
+            { company: searchRegex },
+        ];
+    }
+    if (q.status)
+        query.status = q.status;
+    if (q.source)
+        query.source = q.source;
+    if (q.tags && q.tags.trim()) {
+        const tags = q.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean);
+        if (tags.length)
+            query.tags = { $in: tags };
+    }
+    if (q.dateFrom || q.dateTo) {
+        const createdAt = {};
+        if (q.dateFrom)
+            createdAt.$gte = q.dateFrom;
+        if (q.dateTo)
+            createdAt.$lte = q.dateTo;
+        query.createdAt = createdAt;
+    }
+    return query;
+}
 // Check whether the current user (unless super-admin) has access to a business
 async function hasBusinessAccess(request, businessId) {
     if (request.user.role === "super-admin") {
@@ -79,6 +115,7 @@ export async function createLead(request, reply) {
         source,
         status: "new",
         notes,
+        tags: [],
         isActive: true,
         createdAt: now,
         updatedAt: now,
@@ -97,7 +134,7 @@ export async function getLeadsByBusiness(request, reply) {
         return reply.status(500).send({ error: "Database not available" });
     }
     const { businessId } = request.params;
-    const { search, page: pageStr, limit: limitStr, status } = request.query;
+    const { page: pageStr, limit: limitStr, ...filters } = request.query;
     const page = Math.max(1, parseInt(pageStr || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(limitStr || "10", 10)));
     const skip = (page - 1) * limit;
@@ -110,19 +147,7 @@ export async function getLeadsByBusiness(request, reply) {
             message: "You do not have access to this business",
         });
     }
-    const query = { businessId, isActive: true };
-    if (search && search.trim()) {
-        const searchRegex = new RegExp(search.trim(), "i");
-        query.$or = [
-            { firstName: searchRegex },
-            { lastName: searchRegex },
-            { email: searchRegex },
-            { company: searchRegex },
-        ];
-    }
-    if (status) {
-        query.status = status;
-    }
+    const query = buildLeadQuery(businessId, filters);
     const total = await leads.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
     const result = await leads
@@ -226,5 +251,106 @@ export async function deleteLead(request, reply) {
         return reply.status(404).send({ error: "Lead not found" });
     }
     return reply.status(200).send({ message: "Lead deleted successfully" });
+}
+// Get distinct tags used across a business's leads (protected)
+export async function getLeadTags(request, reply) {
+    const leads = request.server.mongo.db?.collection("leads");
+    if (!leads) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    if (!(await hasBusinessAccess(request, businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const tags = (await leads.distinct("tags", {
+        businessId,
+        isActive: true,
+    }));
+    return { tags: tags.filter(Boolean).sort((a, b) => a.localeCompare(b)) };
+}
+// Export all matching leads (protected) - JSON, capped, frontend builds CSV
+export async function exportLeads(request, reply) {
+    const leads = request.server.mongo.db?.collection("leads");
+    if (!leads) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    if (!(await hasBusinessAccess(request, businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const query = buildLeadQuery(businessId, request.query);
+    const total = await leads.countDocuments(query);
+    const data = await leads
+        .find(query)
+        .sort({ createdAt: -1 })
+        .limit(EXPORT_CAP)
+        .toArray();
+    return { data, truncated: total > EXPORT_CAP, total };
+}
+// Bulk action on leads within a business (protected)
+export async function bulkLeads(request, reply) {
+    const leads = request.server.mongo.db?.collection("leads");
+    if (!leads) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    if (!(await hasBusinessAccess(request, businessId))) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const parseResult = bulkLeadActionSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { ids, action, value, tags } = parseResult.data;
+    const objectIds = ids.filter((id) => ObjectId.isValid(id)).map((id) => new ObjectId(id));
+    if (!objectIds.length) {
+        return reply.status(400).send({ error: "No valid lead IDs provided" });
+    }
+    // Scope every write to this business so ids from another business are ignored
+    const filter = { _id: { $in: objectIds }, businessId, isActive: true };
+    const now = new Date().toISOString();
+    let update;
+    switch (action) {
+        case "status":
+            update = { $set: { status: value, updatedAt: now } };
+            break;
+        case "addTags":
+            update = {
+                $addToSet: { tags: { $each: tags } },
+                $set: { updatedAt: now },
+            };
+            break;
+        case "removeTags":
+            update = { $pull: { tags: { $in: tags } }, $set: { updatedAt: now } };
+            break;
+        case "delete":
+            update = { $set: { isActive: false, updatedAt: now } };
+            break;
+        default:
+            return reply.status(400).send({ error: "Unknown action" });
+    }
+    const result = await leads.updateMany(filter, update);
+    return { modified: result.modifiedCount };
 }
 //# sourceMappingURL=lead.controllers.js.map
