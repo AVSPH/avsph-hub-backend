@@ -13,7 +13,7 @@ export const leadSchema = z.object({
     _id: z.string().optional(),
     businessId: z.string().min(1, "Business ID is required"),
     firstName: z.string().min(1, "First name is required").max(100),
-    lastName: z.string().min(1, "Last name is required").max(100),
+    lastName: z.string().max(100).optional(),
     email: z.string().email("Invalid email address").max(100),
     phone: z.string().max(20).optional(),
     company: z.string().max(200).optional(),
@@ -24,15 +24,16 @@ export const leadSchema = z.object({
     createdAt: z.string().datetime().optional(),
     updatedAt: z.string().datetime().optional(),
 });
-// Public lead submission schema (from AVSPH contact form)
+// Public lead submission schema (from site contact forms across businesses)
 export const createLeadSchema = z.object({
     businessId: z.string().min(1, "Business ID is required"),
     firstName: z.string().min(1, "First name is required").max(100),
-    lastName: z.string().min(1, "Last name is required").max(100),
+    lastName: z.string().max(100).optional(),
     email: z.string().email("Invalid email address").max(100),
     phone: z.string().max(20).optional(),
     company: z.string().max(200).optional(),
     source: leadSourceEnum.default("contact_form"),
+    notes: z.string().max(1000).optional(),
     hp: z.string().max(200).optional(), // honeypot - should always be empty
 });
 export const updateLeadSchema = z
@@ -57,7 +58,7 @@ export const leadJsonSchema = {
         _id: { type: "string" },
         businessId: { type: "string" },
         firstName: { type: "string", minLength: 1, maxLength: 100 },
-        lastName: { type: "string", minLength: 1, maxLength: 100 },
+        lastName: { type: "string", maxLength: 100 },
         email: { type: "string", format: "email", maxLength: 100 },
         phone: { type: "string", maxLength: 20 },
         company: { type: "string", maxLength: 200 },
@@ -71,14 +72,14 @@ export const leadJsonSchema = {
         createdAt: { type: "string", format: "date-time" },
         updatedAt: { type: "string", format: "date-time" },
     },
-    required: ["businessId", "firstName", "lastName", "email"],
+    required: ["businessId", "firstName", "email"],
 };
 export const createLeadJsonSchema = {
     type: "object",
     properties: {
         businessId: { type: "string" },
         firstName: { type: "string", minLength: 1, maxLength: 100 },
-        lastName: { type: "string", minLength: 1, maxLength: 100 },
+        lastName: { type: "string", maxLength: 100 },
         email: { type: "string", format: "email", maxLength: 100 },
         phone: { type: "string", maxLength: 20 },
         company: { type: "string", maxLength: 200 },
@@ -87,9 +88,10 @@ export const createLeadJsonSchema = {
             enum: ["contact_form", "newsletter", "other"],
             default: "contact_form",
         },
+        notes: { type: "string", maxLength: 1000 },
         hp: { type: "string", maxLength: 200 },
     },
-    required: ["businessId", "firstName", "lastName", "email"],
+    required: ["businessId", "firstName", "email"],
 };
 export const updateLeadJsonSchema = {
     type: "object",

@@ -61,7 +61,7 @@ export async function createLead(
     });
   }
 
-  const { businessId, firstName, lastName, email, phone, company, source, hp } =
+  const { businessId, firstName, lastName, email, phone, company, source, notes, hp } =
     parseResult.data;
 
   // Honeypot: bots that fill this hidden field get a fake success, no DB write
@@ -103,6 +103,7 @@ export async function createLead(
           phone,
           company,
           source,
+          ...(notes !== undefined && { notes }),
           updatedAt: now,
         },
       },
@@ -124,7 +125,7 @@ export async function createLead(
     company,
     source,
     status: "new" as const,
-    notes: undefined,
+    notes,
     isActive: true,
     createdAt: now,
     updatedAt: now,

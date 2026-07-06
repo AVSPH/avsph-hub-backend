@@ -5,7 +5,7 @@ export declare const leadSchema: z.ZodObject<{
     _id: z.ZodOptional<z.ZodString>;
     businessId: z.ZodString;
     firstName: z.ZodString;
-    lastName: z.ZodString;
+    lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodString;
     phone: z.ZodOptional<z.ZodString>;
     company: z.ZodOptional<z.ZodString>;
@@ -21,18 +21,17 @@ export declare const leadSchema: z.ZodObject<{
     isActive: boolean;
     source: "contact_form" | "newsletter" | "other";
     firstName: string;
-    lastName: string;
     email: string;
     _id?: string | undefined;
     notes?: string | undefined;
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
+    lastName?: string | undefined;
     phone?: string | undefined;
     company?: string | undefined;
 }, {
     businessId: string;
     firstName: string;
-    lastName: string;
     email: string;
     status?: "contacted" | "new" | "qualified" | "converted" | undefined;
     _id?: string | undefined;
@@ -41,33 +40,37 @@ export declare const leadSchema: z.ZodObject<{
     createdAt?: string | undefined;
     updatedAt?: string | undefined;
     source?: "contact_form" | "newsletter" | "other" | undefined;
+    lastName?: string | undefined;
     phone?: string | undefined;
     company?: string | undefined;
 }>;
 export declare const createLeadSchema: z.ZodObject<{
     businessId: z.ZodString;
     firstName: z.ZodString;
-    lastName: z.ZodString;
+    lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodString;
     phone: z.ZodOptional<z.ZodString>;
     company: z.ZodOptional<z.ZodString>;
     source: z.ZodDefault<z.ZodEnum<["contact_form", "newsletter", "other"]>>;
+    notes: z.ZodOptional<z.ZodString>;
     hp: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     businessId: string;
     source: "contact_form" | "newsletter" | "other";
     firstName: string;
-    lastName: string;
     email: string;
+    notes?: string | undefined;
+    lastName?: string | undefined;
     phone?: string | undefined;
     company?: string | undefined;
     hp?: string | undefined;
 }, {
     businessId: string;
     firstName: string;
-    lastName: string;
     email: string;
+    notes?: string | undefined;
     source?: "contact_form" | "newsletter" | "other" | undefined;
+    lastName?: string | undefined;
     phone?: string | undefined;
     company?: string | undefined;
     hp?: string | undefined;
@@ -123,7 +126,6 @@ export declare const leadJsonSchema: {
         };
         readonly lastName: {
             readonly type: "string";
-            readonly minLength: 1;
             readonly maxLength: 100;
         };
         readonly email: {
@@ -163,7 +165,7 @@ export declare const leadJsonSchema: {
             readonly format: "date-time";
         };
     };
-    readonly required: readonly ["businessId", "firstName", "lastName", "email"];
+    readonly required: readonly ["businessId", "firstName", "email"];
 };
 export declare const createLeadJsonSchema: {
     readonly type: "object";
@@ -178,7 +180,6 @@ export declare const createLeadJsonSchema: {
         };
         readonly lastName: {
             readonly type: "string";
-            readonly minLength: 1;
             readonly maxLength: 100;
         };
         readonly email: {
@@ -199,12 +200,16 @@ export declare const createLeadJsonSchema: {
             readonly enum: readonly ["contact_form", "newsletter", "other"];
             readonly default: "contact_form";
         };
+        readonly notes: {
+            readonly type: "string";
+            readonly maxLength: 1000;
+        };
         readonly hp: {
             readonly type: "string";
             readonly maxLength: 200;
         };
     };
-    readonly required: readonly ["businessId", "firstName", "lastName", "email"];
+    readonly required: readonly ["businessId", "firstName", "email"];
 };
 export declare const updateLeadJsonSchema: {
     readonly type: "object";
