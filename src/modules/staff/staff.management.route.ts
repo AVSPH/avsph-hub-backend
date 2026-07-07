@@ -3,6 +3,7 @@ import {
   staffJsonSchema,
   createStaffJsonSchema,
   updateStaffJsonSchema,
+  bulkStaffActionJsonSchema,
 } from "../../types/staff.types.js";
 import {
   getAllStaff,
@@ -13,6 +14,7 @@ import {
   deleteStaff,
   uploadStaffPhoto,
   uploadStaffDocument,
+  bulkStaff,
 } from "./staff.management.controller.js";
 
 const staffRoutes: FastifyPluginAsync = async (fastify) => {
@@ -433,6 +435,49 @@ const staffRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     uploadStaffDocument,
+  );
+
+  // POST /businesses/:businessId/staff/bulk - Bulk set status / delete (protected)
+  fastify.post<{ Params: { businessId: string }; Body: unknown }>(
+    "/businesses/:businessId/staff/bulk",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "Bulk action on staff: set status (active/on_leave/terminated) or soft delete",
+        tags: ["Staff"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string" },
+          },
+          required: ["businessId"],
+        },
+        body: bulkStaffActionJsonSchema,
+        response: {
+          200: {
+            type: "object",
+            properties: { modified: { type: "number" } },
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              details: { type: "array" },
+            },
+          },
+          403: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    bulkStaff,
   );
 };
 

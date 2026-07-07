@@ -62,5 +62,11 @@ export declare function uploadStaffPhoto(request: FastifyRequest<{
 export declare function uploadStaffDocument(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<never>;
+export declare function bulkStaff(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Body: unknown;
+}>, reply: FastifyReply): Promise<{
+    modified: number;
+}>;
 export {};
 //# sourceMappingURL=staff.management.controller.d.ts.map

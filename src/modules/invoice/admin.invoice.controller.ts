@@ -5,6 +5,7 @@ import {
   generateBusinessInvoiceSchema,
   approveInvoiceSchema,
   addInvoiceAdjustmentSchema,
+  bulkInvoiceActionSchema,
 } from "../../types/invoice.types.js";
 import {
   calculateInvoiceFinancials,
@@ -1325,4 +1326,96 @@ export async function deleteInvoice(
   );
 
   return { message: "Invoice deleted successfully" };
+}
+
+// Bulk action on invoices within a business (protected)
+// approve: draft|calculated -> approved   markPaid: approved -> paid   delete: soft delete (not paid)
+export async function bulkInvoices(
+  request: FastifyRequest<{ Params: BusinessIdParams; Body: unknown }>,
+  reply: FastifyReply,
+) {
+  const invoices = request.server.mongo.db?.collection("invoices");
+  const businesses = request.server.mongo.db?.collection("businesses");
+
+  if (!invoices || !businesses) {
+    return reply.status(500).send({ error: "Database not available" });
+  }
+
+  const { businessId } = request.params;
+
+  if (!ObjectId.isValid(businessId)) {
+    return reply.status(400).send({ error: "Invalid business ID format" });
+  }
+
+  // Check business access (unless super-admin)
+  if (request.user.role !== "super-admin") {
+    const business = await businesses.findOne({
+      _id: new ObjectId(businessId),
+      adminIds: request.user.id,
+    });
+
+    if (!business) {
+      return reply.status(403).send({
+        error: "Forbidden",
+        message: "You do not have access to this business",
+      });
+    }
+  }
+
+  const parseResult = bulkInvoiceActionSchema.safeParse(request.body);
+  if (!parseResult.success) {
+    return reply.status(400).send({
+      error: "Validation failed",
+      details: parseResult.error.errors,
+    });
+  }
+
+  const { ids, action } = parseResult.data;
+
+  const objectIds = ids
+    .filter((id) => ObjectId.isValid(id))
+    .map((id) => new ObjectId(id));
+  if (!objectIds.length) {
+    return reply.status(400).send({ error: "No valid invoice IDs provided" });
+  }
+
+  const now = new Date().toISOString();
+  // Scope every write to this business so ids from another business are ignored
+  const filter: Record<string, unknown> = {
+    _id: { $in: objectIds },
+    businessId,
+    isActive: true,
+  };
+
+  let update: Record<string, unknown>;
+  switch (action) {
+    case "approve":
+      // Only draft/calculated invoices can be approved
+      filter.status = { $in: ["draft", "calculated"] };
+      update = {
+        $set: {
+          status: "approved",
+          approvedBy: request.user.id,
+          approvedAt: now,
+          updatedAt: now,
+        },
+      };
+      break;
+    case "markPaid":
+      // Only approved invoices can be marked paid
+      filter.status = "approved";
+      update = { $set: { status: "paid", paidAt: now, updatedAt: now } };
+      break;
+    case "delete":
+      // Paid invoices cannot be deleted
+      filter.status = { $ne: "paid" };
+      update = { $set: { isActive: false, updatedAt: now } };
+      break;
+    default:
+      return reply.status(400).send({ error: "Unknown action" });
+  }
+
+  const result = await invoices.updateMany(filter, update);
+
+  return { modified: result.modifiedCount };
 }

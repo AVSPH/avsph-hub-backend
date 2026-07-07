@@ -1,6 +1,6 @@
 import { ObjectId } from "@fastify/mongodb";
 import bcrypt from "bcrypt";
-import { createStaffSchema, updateStaffSchema, } from "../../types/staff.types.js";
+import { createStaffSchema, updateStaffSchema, bulkStaffActionSchema, } from "../../types/staff.types.js";
 import { getStaffCreationEmail } from "../../utils/emails/auth/staff.creation.email.js";
 // Get all staff (protected - filtered by business access)
 export async function getAllStaff(request, reply) {
@@ -540,5 +540,53 @@ export async function uploadStaffDocument(request, reply) {
             message: error instanceof Error ? error.message : "Unknown error",
         });
     }
+}
+// Bulk action on staff within a business (protected)
+// status: set active|on_leave|terminated   delete: soft delete
+export async function bulkStaff(request, reply) {
+    const staff = request.server.mongo.db?.collection("staff");
+    const businesses = request.server.mongo.db?.collection("businesses");
+    if (!staff || !businesses) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this business",
+            });
+        }
+    }
+    const parseResult = bulkStaffActionSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { ids, action, value } = parseResult.data;
+    const objectIds = ids
+        .filter((id) => ObjectId.isValid(id))
+        .map((id) => new ObjectId(id));
+    if (!objectIds.length) {
+        return reply.status(400).send({ error: "No valid staff IDs provided" });
+    }
+    const now = new Date().toISOString();
+    // Scope every write to this business so ids from another business are ignored
+    const filter = { _id: { $in: objectIds }, businessId, isActive: true };
+    const update = action === "status"
+        ? { $set: { status: value, updatedAt: now } }
+        : { $set: { isActive: false, updatedAt: now } };
+    const result = await staff.updateMany(filter, update);
+    return { modified: result.modifiedCount };
 }
 //# sourceMappingURL=staff.management.controller.js.map

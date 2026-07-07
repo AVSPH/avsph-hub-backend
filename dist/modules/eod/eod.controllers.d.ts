@@ -68,6 +68,10 @@ export declare function adminEditEod(request: FastifyRequest<{
 export declare function deleteEod(request: FastifyRequest<{
     Params: IdParams;
 }>, reply: FastifyReply): Promise<any>;
+export declare function bulkEod(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Body: unknown;
+}>, reply: FastifyReply): Promise<any>;
 export declare function getEodSummaryByBusiness(request: FastifyRequest<{
     Params: BusinessIdParams;
     Querystring: {

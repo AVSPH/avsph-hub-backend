@@ -1,5 +1,5 @@
 import { ObjectId } from "@fastify/mongodb";
-import { submitEodSchema, editOwnEodSchema, reviewEodSchema, adminEditEodSchema, } from "../../types/eod.types.js";
+import { submitEodSchema, editOwnEodSchema, reviewEodSchema, adminEditEodSchema, bulkEodActionSchema, } from "../../types/eod.types.js";
 import { calculateInvoiceFinancials, resolveHourlyCompensationProfile, } from "../invoice/invoice.calculator.service.js";
 import { invoiceOnEodApproval } from "../invoice/invoice.eod-hook.service.js";
 // ==================== STAFF ACTIONS ====================
@@ -835,6 +835,105 @@ export async function deleteEod(request, reply) {
     }
     await eodReports.findOneAndUpdate({ _id: new ObjectId(id) }, { $set: { isActive: false, updatedAt: new Date().toISOString() } });
     return { message: "EOD report deleted successfully" };
+}
+// Bulk action on EOD reports within a business (protected)
+// approve: submitted -> reviewed + approved   revise: submitted -> needs_revision   delete: soft delete
+export async function bulkEod(request, reply) {
+    const db = request.server.mongo.db;
+    const eodReports = db?.collection("eod_reports");
+    const businesses = db?.collection("businesses");
+    if (!db || !eodReports || !businesses) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    // Check business access (unless super-admin)
+    if (request.user.role !== "super-admin") {
+        const business = await businesses.findOne({
+            _id: new ObjectId(businessId),
+            adminIds: request.user.id,
+        });
+        if (!business) {
+            return reply.status(403).send({
+                error: "Forbidden",
+                message: "You do not have access to this business",
+            });
+        }
+    }
+    const parseResult = bulkEodActionSchema.safeParse(request.body);
+    if (!parseResult.success) {
+        return reply.status(400).send({
+            error: "Validation failed",
+            details: parseResult.error.errors,
+        });
+    }
+    const { ids, action } = parseResult.data;
+    const objectIds = ids
+        .filter((id) => ObjectId.isValid(id))
+        .map((id) => new ObjectId(id));
+    if (!objectIds.length) {
+        return reply.status(400).send({ error: "No valid EOD report IDs provided" });
+    }
+    const now = new Date().toISOString();
+    // Scope every write to this business so ids from another business are ignored
+    const filter = {
+        _id: { $in: objectIds },
+        businessId,
+        isActive: true,
+    };
+    if (action === "delete") {
+        const result = await eodReports.updateMany(filter, {
+            $set: { isActive: false, updatedAt: now },
+        });
+        return { modified: result.modifiedCount };
+    }
+    // approve / revise only apply to reports still awaiting review
+    filter.status = "submitted";
+    const update = action === "approve"
+        ? {
+            $set: {
+                status: "reviewed",
+                isApproved: true,
+                reviewedBy: request.user.id,
+                reviewedAt: now,
+                updatedAt: now,
+            },
+        }
+        : {
+            $set: {
+                status: "needs_revision",
+                isApproved: false,
+                reviewedBy: request.user.id,
+                reviewedAt: now,
+                updatedAt: now,
+            },
+        };
+    // Capture which reports will change before the write (needed for invoice sync)
+    const affected = action === "approve"
+        ? await eodReports.find(filter).toArray()
+        : [];
+    const result = await eodReports.updateMany(filter, update);
+    // Auto-invoice: mirror single-review behaviour for each newly approved report
+    if (action === "approve" && affected.length) {
+        const staffCollection = db.collection("staff");
+        for (const report of affected) {
+            try {
+                const staffMember = await staffCollection.findOne({
+                    _id: new ObjectId(report.staffId),
+                    isActive: true,
+                });
+                if (staffMember) {
+                    await invoiceOnEodApproval(db, { ...report, status: "reviewed", isApproved: true }, staffMember);
+                }
+            }
+            catch (err) {
+                request.server.log.error(err, `[AUTO-INVOICE] Failed to update invoice after bulk EOD approve (eodId: ${report._id})`);
+            }
+        }
+    }
+    return { modified: result.modifiedCount };
 }
 // Get EOD summary by business (admin only)
 export async function getEodSummaryByBusiness(request, reply) {

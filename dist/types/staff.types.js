@@ -78,6 +78,17 @@ export const staffChangePasswordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
     newPassword: z.string().min(8, "New password must be at least 8 characters"),
 });
+// Schema for bulk action on multiple staff members (protected)
+export const bulkStaffActionSchema = z
+    .object({
+    ids: z.array(z.string().min(1)).min(1).max(500),
+    action: z.enum(["status", "delete"]),
+    value: staffStatusEnum.optional(),
+})
+    .refine((d) => d.action !== "status" || !!d.value, {
+    message: "value (status) is required for action 'status'",
+    path: ["value"],
+});
 // JSON Schemas for Fastify route validation
 export const staffDocumentJsonSchema = {
     type: "object",
@@ -240,5 +251,14 @@ export const addStaffDocumentJsonSchema = {
     },
     required: ["name", "url", "type"],
     additionalProperties: false,
+};
+export const bulkStaffActionJsonSchema = {
+    type: "object",
+    properties: {
+        ids: { type: "array", items: { type: "string" }, minItems: 1 },
+        action: { type: "string", enum: ["status", "delete"] },
+        value: { type: "string", enum: ["active", "on_leave", "terminated"] },
+    },
+    required: ["ids", "action"],
 };
 //# sourceMappingURL=staff.types.js.map

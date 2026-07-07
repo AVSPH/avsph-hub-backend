@@ -1,1 +1,1 @@
-{"version":3,"file":"staff.management.route.d.ts","sourceRoot":"","sources":["../../../src/modules/staff/staff.management.route.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAiBlD,QAAA,MAAM,WAAW,EAAE,kBAmalB,CAAC;AAEF,eAAe,WAAW,CAAC"}
+{"version":3,"file":"staff.management.route.d.ts","sourceRoot":"","sources":["../../../src/modules/staff/staff.management.route.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAmBlD,QAAA,MAAM,WAAW,EAAE,kBA8clB,CAAC;AAEF,eAAe,WAAW,CAAC"}

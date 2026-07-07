@@ -287,11 +287,22 @@ export declare const adminEditEodSchema: z.ZodEffects<z.ZodObject<{
     tasksCompleted?: string | undefined;
     onSite?: boolean | undefined;
 }>;
+export declare const bulkEodActionSchema: z.ZodObject<{
+    ids: z.ZodArray<z.ZodString, "many">;
+    action: z.ZodEnum<["approve", "revise", "delete"]>;
+}, "strip", z.ZodTypeAny, {
+    ids: string[];
+    action: "delete" | "approve" | "revise";
+}, {
+    ids: string[];
+    action: "delete" | "approve" | "revise";
+}>;
 export type EodReport = z.infer<typeof eodReportSchema>;
 export type SubmitEod = z.infer<typeof submitEodSchema>;
 export type EditOwnEod = z.infer<typeof editOwnEodSchema>;
 export type ReviewEod = z.infer<typeof reviewEodSchema>;
 export type AdminEditEod = z.infer<typeof adminEditEodSchema>;
+export type BulkEodAction = z.infer<typeof bulkEodActionSchema>;
 export declare const eodReportJsonSchema: {
     readonly type: "object";
     readonly properties: {
@@ -621,5 +632,22 @@ export declare const eodSummaryItemJsonSchema: {
         };
     };
     readonly required: readonly ["staffId", "staffName", "totalHoursWorked", "totalRegularHours", "totalOvertimeHours", "totalNightDifferentialHours", "eodCount", "approvedCount", "periodStart", "periodEnd"];
+};
+export declare const bulkEodActionJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly ids: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+            };
+            readonly minItems: 1;
+        };
+        readonly action: {
+            readonly type: "string";
+            readonly enum: readonly ["approve", "revise", "delete"];
+        };
+    };
+    readonly required: readonly ["ids", "action"];
 };
 //# sourceMappingURL=eod.types.d.ts.map

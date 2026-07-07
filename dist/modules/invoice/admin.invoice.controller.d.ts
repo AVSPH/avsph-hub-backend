@@ -120,5 +120,11 @@ export declare function deleteInvoice(request: FastifyRequest<{
 }>, reply: FastifyReply): Promise<{
     message: string;
 }>;
+export declare function bulkInvoices(request: FastifyRequest<{
+    Params: BusinessIdParams;
+    Body: unknown;
+}>, reply: FastifyReply): Promise<{
+    modified: number;
+}>;
 export {};
 //# sourceMappingURL=admin.invoice.controller.d.ts.map

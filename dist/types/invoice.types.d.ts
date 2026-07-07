@@ -371,6 +371,16 @@ export declare const addInvoiceAdjustmentSchema: z.ZodObject<{
     adjustmentType: string;
     description?: string | undefined;
 }>;
+export declare const bulkInvoiceActionSchema: z.ZodObject<{
+    ids: z.ZodArray<z.ZodString, "many">;
+    action: z.ZodEnum<["approve", "markPaid", "delete"]>;
+}, "strip", z.ZodTypeAny, {
+    ids: string[];
+    action: "delete" | "approve" | "markPaid";
+}, {
+    ids: string[];
+    action: "delete" | "approve" | "markPaid";
+}>;
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceAdjustment = z.infer<typeof invoiceAdjustmentSchema>;
 export type EarningsBreakdown = z.infer<typeof earningsBreakdownSchema>;
@@ -379,6 +389,7 @@ export type GenerateInvoice = z.infer<typeof generateInvoiceSchema>;
 export type GenerateBusinessInvoice = z.infer<typeof generateBusinessInvoiceSchema>;
 export type ApproveInvoice = z.infer<typeof approveInvoiceSchema>;
 export type AddInvoiceAdjustment = z.infer<typeof addInvoiceAdjustmentSchema>;
+export type BulkInvoiceAction = z.infer<typeof bulkInvoiceActionSchema>;
 export declare const invoiceAdjustmentJsonSchema: {
     readonly type: "object";
     readonly properties: {
@@ -718,5 +729,22 @@ export declare const addInvoiceAdjustmentJsonSchema: {
         };
     };
     readonly required: readonly ["type", "adjustmentType", "amount"];
+};
+export declare const bulkInvoiceActionJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly ids: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+            };
+            readonly minItems: 1;
+        };
+        readonly action: {
+            readonly type: "string";
+            readonly enum: readonly ["approve", "markPaid", "delete"];
+        };
+    };
+    readonly required: readonly ["ids", "action"];
 };
 //# sourceMappingURL=invoice.types.d.ts.map

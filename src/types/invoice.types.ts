@@ -137,6 +137,12 @@ export const addInvoiceAdjustmentSchema = z.object({
   amount: z.number().positive(),
 });
 
+// Schema for bulk action on multiple invoices (protected)
+export const bulkInvoiceActionSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(500),
+  action: z.enum(["approve", "markPaid", "delete"]),
+});
+
 // Type exports
 export type Invoice = z.infer<typeof invoiceSchema>;
 export type InvoiceAdjustment = z.infer<typeof invoiceAdjustmentSchema>;
@@ -148,6 +154,7 @@ export type GenerateBusinessInvoice = z.infer<
 >;
 export type ApproveInvoice = z.infer<typeof approveInvoiceSchema>;
 export type AddInvoiceAdjustment = z.infer<typeof addInvoiceAdjustmentSchema>;
+export type BulkInvoiceAction = z.infer<typeof bulkInvoiceActionSchema>;
 
 // ==================== JSON Schemas for Fastify route validation ====================
 
@@ -284,4 +291,13 @@ export const addInvoiceAdjustmentJsonSchema = {
     amount: { type: "number" },
   },
   required: ["type", "adjustmentType", "amount"],
+} as const;
+
+export const bulkInvoiceActionJsonSchema = {
+  type: "object",
+  properties: {
+    ids: { type: "array", items: { type: "string" }, minItems: 1 },
+    action: { type: "string", enum: ["approve", "markPaid", "delete"] },
+  },
+  required: ["ids", "action"],
 } as const;

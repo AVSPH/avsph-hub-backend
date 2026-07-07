@@ -213,12 +213,19 @@ export const adminEditEodSchema = z
     }
   });
 
+// Schema for bulk action on multiple EOD reports (protected)
+export const bulkEodActionSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(500),
+  action: z.enum(["approve", "revise", "delete"]),
+});
+
 // Type exports
 export type EodReport = z.infer<typeof eodReportSchema>;
 export type SubmitEod = z.infer<typeof submitEodSchema>;
 export type EditOwnEod = z.infer<typeof editOwnEodSchema>;
 export type ReviewEod = z.infer<typeof reviewEodSchema>;
 export type AdminEditEod = z.infer<typeof adminEditEodSchema>;
+export type BulkEodAction = z.infer<typeof bulkEodActionSchema>;
 
 // JSON Schemas for Fastify route validation
 export const eodReportJsonSchema = {
@@ -358,4 +365,13 @@ export const eodSummaryItemJsonSchema = {
     "periodStart",
     "periodEnd",
   ],
+} as const;
+
+export const bulkEodActionJsonSchema = {
+  type: "object",
+  properties: {
+    ids: { type: "array", items: { type: "string" }, minItems: 1 },
+    action: { type: "string", enum: ["approve", "revise", "delete"] },
+  },
+  required: ["ids", "action"],
 } as const;

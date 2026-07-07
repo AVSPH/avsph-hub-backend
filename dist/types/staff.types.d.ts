@@ -242,8 +242,30 @@ export declare const staffChangePasswordSchema: z.ZodObject<{
     currentPassword: string;
     newPassword: string;
 }>;
+export declare const bulkStaffActionSchema: z.ZodEffects<z.ZodObject<{
+    ids: z.ZodArray<z.ZodString, "many">;
+    action: z.ZodEnum<["status", "delete"]>;
+    value: z.ZodOptional<z.ZodEnum<["active", "on_leave", "terminated"]>>;
+}, "strip", z.ZodTypeAny, {
+    ids: string[];
+    action: "status" | "delete";
+    value?: "active" | "on_leave" | "terminated" | undefined;
+}, {
+    ids: string[];
+    action: "status" | "delete";
+    value?: "active" | "on_leave" | "terminated" | undefined;
+}>, {
+    ids: string[];
+    action: "status" | "delete";
+    value?: "active" | "on_leave" | "terminated" | undefined;
+}, {
+    ids: string[];
+    action: "status" | "delete";
+    value?: "active" | "on_leave" | "terminated" | undefined;
+}>;
 export type StaffLogin = z.infer<typeof staffLoginSchema>;
 export type StaffChangePassword = z.infer<typeof staffChangePasswordSchema>;
+export type BulkStaffAction = z.infer<typeof bulkStaffActionSchema>;
 export declare const staffDocumentJsonSchema: {
     readonly type: "object";
     readonly properties: {
@@ -706,5 +728,26 @@ export declare const addStaffDocumentJsonSchema: {
     };
     readonly required: readonly ["name", "url", "type"];
     readonly additionalProperties: false;
+};
+export declare const bulkStaffActionJsonSchema: {
+    readonly type: "object";
+    readonly properties: {
+        readonly ids: {
+            readonly type: "array";
+            readonly items: {
+                readonly type: "string";
+            };
+            readonly minItems: 1;
+        };
+        readonly action: {
+            readonly type: "string";
+            readonly enum: readonly ["status", "delete"];
+        };
+        readonly value: {
+            readonly type: "string";
+            readonly enum: readonly ["active", "on_leave", "terminated"];
+        };
+    };
+    readonly required: readonly ["ids", "action"];
 };
 //# sourceMappingURL=staff.types.d.ts.map

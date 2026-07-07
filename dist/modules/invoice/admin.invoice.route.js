@@ -1,5 +1,5 @@
-import { invoiceJsonSchema, generateInvoiceJsonSchema, generateBusinessInvoiceJsonSchema, approveInvoiceJsonSchema, addInvoiceAdjustmentJsonSchema, } from "../../types/invoice.types.js";
-import { generateInvoice, generateBusinessInvoices, getAllInvoices, getInvoiceById, getInvoicesByBusiness, getInvoicesByStaff, recalculateInvoice, approveInvoice, markInvoicePaid, addInvoiceAdjustment, removeInvoiceAdjustment, deleteInvoice, } from "./admin.invoice.controller.js";
+import { invoiceJsonSchema, generateInvoiceJsonSchema, generateBusinessInvoiceJsonSchema, approveInvoiceJsonSchema, addInvoiceAdjustmentJsonSchema, bulkInvoiceActionJsonSchema, } from "../../types/invoice.types.js";
+import { generateInvoice, generateBusinessInvoices, getAllInvoices, getInvoiceById, getInvoicesByBusiness, getInvoicesByStaff, recalculateInvoice, approveInvoice, markInvoicePaid, addInvoiceAdjustment, removeInvoiceAdjustment, deleteInvoice, bulkInvoices, } from "./admin.invoice.controller.js";
 const adminInvoiceRoutes = async (fastify) => {
     // ==================== INVOICE GENERATION ====================
     // POST /invoices/generate - Generate invoice for a single staff member
@@ -603,6 +603,43 @@ const adminInvoiceRoutes = async (fastify) => {
             },
         },
     }, deleteInvoice);
+    // POST /businesses/:businessId/invoices/bulk - Bulk approve / mark paid / delete (protected)
+    fastify.post("/businesses/:businessId/invoices/bulk", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "Bulk action on invoices: approve, mark as paid, or soft delete",
+            tags: ["Invoices"],
+            security: [{ bearerAuth: [] }],
+            params: {
+                type: "object",
+                properties: {
+                    businessId: { type: "string" },
+                },
+                required: ["businessId"],
+            },
+            body: bulkInvoiceActionJsonSchema,
+            response: {
+                200: {
+                    type: "object",
+                    properties: { modified: { type: "number" } },
+                },
+                400: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        details: { type: "array" },
+                    },
+                },
+                403: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        message: { type: "string" },
+                    },
+                },
+            },
+        },
+    }, bulkInvoices);
 };
 export default adminInvoiceRoutes;
 //# sourceMappingURL=admin.invoice.route.js.map

@@ -5,6 +5,7 @@ import {
   generateBusinessInvoiceJsonSchema,
   approveInvoiceJsonSchema,
   addInvoiceAdjustmentJsonSchema,
+  bulkInvoiceActionJsonSchema,
 } from "../../types/invoice.types.js";
 import {
   generateInvoice,
@@ -19,6 +20,7 @@ import {
   addInvoiceAdjustment,
   removeInvoiceAdjustment,
   deleteInvoice,
+  bulkInvoices,
 } from "./admin.invoice.controller.js";
 
 const adminInvoiceRoutes: FastifyPluginAsync = async (fastify) => {
@@ -721,6 +723,49 @@ const adminInvoiceRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     deleteInvoice,
+  );
+
+  // POST /businesses/:businessId/invoices/bulk - Bulk approve / mark paid / delete (protected)
+  fastify.post<{ Params: { businessId: string }; Body: unknown }>(
+    "/businesses/:businessId/invoices/bulk",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "Bulk action on invoices: approve, mark as paid, or soft delete",
+        tags: ["Invoices"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: {
+            businessId: { type: "string" },
+          },
+          required: ["businessId"],
+        },
+        body: bulkInvoiceActionJsonSchema,
+        response: {
+          200: {
+            type: "object",
+            properties: { modified: { type: "number" } },
+          },
+          400: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              details: { type: "array" },
+            },
+          },
+          403: {
+            type: "object",
+            properties: {
+              error: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    bulkInvoices,
   );
 };
 

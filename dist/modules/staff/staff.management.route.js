@@ -1,5 +1,5 @@
-import { staffJsonSchema, createStaffJsonSchema, updateStaffJsonSchema, } from "../../types/staff.types.js";
-import { getAllStaff, getStaffById, getStaffByBusiness, createStaff, updateStaff, deleteStaff, uploadStaffPhoto, uploadStaffDocument, } from "./staff.management.controller.js";
+import { staffJsonSchema, createStaffJsonSchema, updateStaffJsonSchema, bulkStaffActionJsonSchema, } from "../../types/staff.types.js";
+import { getAllStaff, getStaffById, getStaffByBusiness, createStaff, updateStaff, deleteStaff, uploadStaffPhoto, uploadStaffDocument, bulkStaff, } from "./staff.management.controller.js";
 const staffRoutes = async (fastify) => {
     // GET /staff - Get all staff (protected, filtered by access)
     fastify.get("/staff", {
@@ -361,6 +361,43 @@ const staffRoutes = async (fastify) => {
             },
         },
     }, uploadStaffDocument);
+    // POST /businesses/:businessId/staff/bulk - Bulk set status / delete (protected)
+    fastify.post("/businesses/:businessId/staff/bulk", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "Bulk action on staff: set status (active/on_leave/terminated) or soft delete",
+            tags: ["Staff"],
+            security: [{ bearerAuth: [] }],
+            params: {
+                type: "object",
+                properties: {
+                    businessId: { type: "string" },
+                },
+                required: ["businessId"],
+            },
+            body: bulkStaffActionJsonSchema,
+            response: {
+                200: {
+                    type: "object",
+                    properties: { modified: { type: "number" } },
+                },
+                400: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        details: { type: "array" },
+                    },
+                },
+                403: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        message: { type: "string" },
+                    },
+                },
+            },
+        },
+    }, bulkStaff);
 };
 export default staffRoutes;
 //# sourceMappingURL=staff.management.route.js.map

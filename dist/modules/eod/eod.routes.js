@@ -1,5 +1,5 @@
-import { eodReportJsonSchema, submitEodJsonSchema, editOwnEodJsonSchema, reviewEodJsonSchema, adminEditEodJsonSchema, eodSummaryQueryJsonSchema, eodSummaryItemJsonSchema, } from "../../types/eod.types.js";
-import { submitEod, editOwnEod, getMyEodReports, getMyEodById, getMyExpectedEarnings, getAllEodReports, getEodByBusiness, getEodSummaryByBusiness, getEodByStaff, getEodById, reviewEod, adminEditEod, deleteEod, } from "./eod.controllers.js";
+import { eodReportJsonSchema, submitEodJsonSchema, editOwnEodJsonSchema, reviewEodJsonSchema, adminEditEodJsonSchema, eodSummaryQueryJsonSchema, eodSummaryItemJsonSchema, bulkEodActionJsonSchema, } from "../../types/eod.types.js";
+import { submitEod, editOwnEod, getMyEodReports, getMyEodById, getMyExpectedEarnings, getAllEodReports, getEodByBusiness, getEodSummaryByBusiness, getEodByStaff, getEodById, reviewEod, adminEditEod, deleteEod, bulkEod, } from "./eod.controllers.js";
 const eodRoutes = async (fastify) => {
     // ==================== STAFF ROUTES ====================
     // GET /eod/my-earnings - Staff views expected earnings for current pay cycle
@@ -525,6 +525,43 @@ const eodRoutes = async (fastify) => {
             },
         },
     }, deleteEod);
+    // POST /businesses/:businessId/eod/bulk - Bulk approve / revise / delete (protected)
+    fastify.post("/businesses/:businessId/eod/bulk", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "Bulk action on EOD reports: approve, return for revision, or soft delete",
+            tags: ["EOD Reports"],
+            security: [{ bearerAuth: [] }],
+            params: {
+                type: "object",
+                properties: {
+                    businessId: { type: "string" },
+                },
+                required: ["businessId"],
+            },
+            body: bulkEodActionJsonSchema,
+            response: {
+                200: {
+                    type: "object",
+                    properties: { modified: { type: "number" } },
+                },
+                400: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        details: { type: "array" },
+                    },
+                },
+                403: {
+                    type: "object",
+                    properties: {
+                        error: { type: "string" },
+                        message: { type: "string" },
+                    },
+                },
+            },
+        },
+    }, bulkEod);
 };
 export default eodRoutes;
 //# sourceMappingURL=eod.routes.js.map

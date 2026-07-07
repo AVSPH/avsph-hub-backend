@@ -188,6 +188,11 @@ export const adminEditEodSchema = z
         });
     }
 });
+// Schema for bulk action on multiple EOD reports (protected)
+export const bulkEodActionSchema = z.object({
+    ids: z.array(z.string().min(1)).min(1).max(500),
+    action: z.enum(["approve", "revise", "delete"]),
+});
 // JSON Schemas for Fastify route validation
 export const eodReportJsonSchema = {
     type: "object",
@@ -320,5 +325,13 @@ export const eodSummaryItemJsonSchema = {
         "periodStart",
         "periodEnd",
     ],
+};
+export const bulkEodActionJsonSchema = {
+    type: "object",
+    properties: {
+        ids: { type: "array", items: { type: "string" }, minItems: 1 },
+        action: { type: "string", enum: ["approve", "revise", "delete"] },
+    },
+    required: ["ids", "action"],
 };
 //# sourceMappingURL=eod.types.js.map
