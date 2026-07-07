@@ -22,7 +22,7 @@ function parseLimit(rawLimit?: string): number {
   return Math.min(MAX_RECENT_LIMIT, Math.max(1, parsed));
 }
 
-async function ensureBusinessAccess(
+export async function ensureBusinessAccess(
   request: FastifyRequest,
   reply: FastifyReply,
   businessId: string,

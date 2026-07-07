@@ -8,7 +8,7 @@ function parseLimit(rawLimit) {
     }
     return Math.min(MAX_RECENT_LIMIT, Math.max(1, parsed));
 }
-async function ensureBusinessAccess(request, reply, businessId) {
+export async function ensureBusinessAccess(request, reply, businessId) {
     const businesses = request.server.mongo.db?.collection("businesses");
     if (!businesses) {
         reply.status(500).send({ error: "Database not available" });

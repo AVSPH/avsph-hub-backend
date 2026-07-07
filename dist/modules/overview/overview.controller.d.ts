@@ -5,6 +5,7 @@ interface BusinessIdParams {
 interface RecentQuery {
     limit?: string;
 }
+export declare function ensureBusinessAccess(request: FastifyRequest, reply: FastifyReply, businessId: string): Promise<boolean>;
 export declare function getBusinessOverviewStats(request: FastifyRequest<{
     Params: BusinessIdParams;
 }>, reply: FastifyReply): Promise<{

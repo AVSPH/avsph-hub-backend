@@ -21,6 +21,7 @@ import adminSettingsRoutes from "../modules/admin/admin-settings/admin.settings.
 import compensationRoutes from "../modules/compensation/compensation.routes.js";
 import exchangeRateRoutes from "../modules/exchange-rate/exchange-rate.routes.js";
 import overviewRoutes from "../modules/overview/overview.routes.js";
+import overviewAnalyticsRoutes from "../modules/overview/overview.analytics.routes.js";
 // Central routes aggregator - register all module routes here
 const routes = async (fastify) => {
     // Admin auth routes
@@ -64,6 +65,7 @@ const routes = async (fastify) => {
     await fastify.register(exchangeRateRoutes);
     // Business overview routes
     await fastify.register(overviewRoutes);
+    await fastify.register(overviewAnalyticsRoutes);
     // Admin settings routes (profile, email, password)
     await fastify.register(adminSettingsRoutes);
     // Gmail routes (test)
