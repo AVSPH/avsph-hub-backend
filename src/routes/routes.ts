@@ -20,6 +20,7 @@ import staffInvoiceRoutes from "../modules/invoice/staff.invoice.route.js";
 import gmailRoutes from "../modules/gmail/gmail.routes.js";
 import adminSettingsRoutes from "../modules/admin/admin-settings/admin.settings.route.js";
 import compensationRoutes from "../modules/compensation/compensation.routes.js";
+import clientRoutes from "../modules/client/client.routes.js";
 import exchangeRateRoutes from "../modules/exchange-rate/exchange-rate.routes.js";
 import overviewRoutes from "../modules/overview/overview.routes.js";
 import overviewAnalyticsRoutes from "../modules/overview/overview.analytics.routes.js";
@@ -80,6 +81,9 @@ const routes: FastifyPluginAsync = async (fastify) => {
 
   // Compensation profile routes
   await fastify.register(compensationRoutes);
+
+  // Client routes (client profiles + weekly staff report)
+  await fastify.register(clientRoutes);
 
   // Exchange rate routes
   await fastify.register(exchangeRateRoutes);

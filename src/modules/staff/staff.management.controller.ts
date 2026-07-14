@@ -396,8 +396,9 @@ export async function updateStaff(
   const staff = request.server.mongo.db?.collection("staff");
   const businesses = request.server.mongo.db?.collection("businesses");
   const compensationProfiles = request.server.mongo.db?.collection("compensation_profiles");
+  const clients = request.server.mongo.db?.collection("clients");
 
-  if (!staff || !businesses || !compensationProfiles) {
+  if (!staff || !businesses || !compensationProfiles || !clients) {
     return reply.status(500).send({ error: "Database not available" });
   }
 
@@ -458,6 +459,25 @@ export async function updateStaff(
     }
   }
 
+  // Validate client assignment. An empty clientId means "unassign".
+  const clientIdProvided = parseResult.data.clientId !== undefined;
+  const clientIdValue = (parseResult.data.clientId ?? "").trim();
+  if (clientIdProvided && clientIdValue) {
+    if (!ObjectId.isValid(clientIdValue)) {
+      return reply.status(400).send({ error: "Invalid client ID format" });
+    }
+    const linkedClient = await clients.findOne({
+      _id: new ObjectId(clientIdValue),
+      businessId: existingStaff.businessId,
+      isActive: true,
+    });
+    if (!linkedClient) {
+      return reply.status(404).send({
+        error: "Client not found in this business",
+      });
+    }
+  }
+
   // Check if email is being updated and if it conflicts
   if (
     parseResult.data.email &&
@@ -476,14 +496,26 @@ export async function updateStaff(
     }
   }
 
-  const updateData = {
-    ...parseResult.data,
+  const { clientId: _clientId, ...restUpdates } = parseResult.data;
+  const updateData: Record<string, unknown> = {
+    ...restUpdates,
     updatedAt: new Date().toISOString(),
   };
 
+  // Build the Mongo update. clientId is handled separately so an empty value
+  // unassigns the staff member (removes the field) rather than storing "".
+  const updateOps: Record<string, unknown> = { $set: updateData };
+  if (clientIdProvided) {
+    if (clientIdValue) {
+      updateData.clientId = clientIdValue;
+    } else {
+      updateOps.$unset = { clientId: "" };
+    }
+  }
+
   const result = await staff.findOneAndUpdate(
     { _id: new ObjectId(id) },
-    { $set: updateData },
+    updateOps,
     { returnDocument: "after" },
   );
 

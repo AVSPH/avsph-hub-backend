@@ -62,7 +62,11 @@ export declare function getBusinessWorkforceStats(request: FastifyRequest<{
         terminated: number;
     };
     byEmploymentType: Record<string, number>;
-    byDepartment: any;
+    byClient: {
+        clientId: string | null;
+        client: string;
+        count: number;
+    }[];
     hires: any;
     avgTenureMonths: number;
     updatedAt: string;

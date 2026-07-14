@@ -1,3 +1,4 @@
+import { ObjectId } from "@fastify/mongodb";
 import { ensureBusinessAccess } from "./overview.controller.js";
 function parseRange(raw, fallback, max) {
     const parsed = Number.parseInt(raw || "", 10);
@@ -199,10 +200,10 @@ export async function getBusinessWorkforceStats(request, reply) {
                 total: [{ $count: "n" }],
                 byStatus: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
                 byType: [{ $group: { _id: "$employmentType", count: { $sum: 1 } } }],
-                byDept: [
+                byClient: [
                     {
                         $group: {
-                            _id: { $ifNull: ["$department", "Unassigned"] },
+                            _id: "$clientId",
                             count: { $sum: 1 },
                         },
                     },
@@ -250,15 +251,34 @@ export async function getBusinessWorkforceStats(request, reply) {
     const avgTenureMonths = typeof avgMs === "number"
         ? (Date.now() - avgMs) / (1000 * 60 * 60 * 24 * 30.44)
         : 0;
+    // Resolve client names for the client breakdown. Staff with no clientId
+    // (null/missing) are grouped as "Unassigned".
+    const clientRows = (facet?.byClient ?? []);
+    const clientIds = clientRows
+        .map((r) => r._id)
+        .filter((id) => typeof id === "string" && ObjectId.isValid(id));
+    const clientNameById = new Map();
+    if (clientIds.length > 0) {
+        const clientDocs = await db
+            .collection("clients")
+            .find({ _id: { $in: clientIds.map((id) => new ObjectId(id)) } })
+            .project({ name: 1 })
+            .toArray();
+        for (const c of clientDocs) {
+            clientNameById.set(String(c._id), c.name);
+        }
+    }
+    const byClient = clientRows.map((r) => ({
+        clientId: typeof r._id === "string" ? r._id : null,
+        client: (typeof r._id === "string" && clientNameById.get(r._id)) || "Unassigned",
+        count: r.count,
+    }));
     return {
         businessId,
         totalStaff: facet?.total?.[0]?.n ?? 0,
         byStatus,
         byEmploymentType,
-        byDepartment: (facet?.byDept ?? []).map((d) => ({
-            department: d._id,
-            count: d.count,
-        })),
+        byClient,
         hires: (facet?.hires ?? []).map((h) => ({
             month: h._id,
             count: h.count,

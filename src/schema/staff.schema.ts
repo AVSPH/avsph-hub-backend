@@ -26,6 +26,7 @@ export interface StaffDocumentType {
     salary?: number;
     salaryType: 'hourly' | 'daily' | 'monthly' | 'annual';
     compensationProfileId?: string;
+    clientId?: string;
     employmentType: 'full-time' | 'part-time' | 'contract';
     businessId: string;
     status: 'active' | 'on_leave' | 'terminated';
