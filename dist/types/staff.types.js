@@ -31,6 +31,9 @@ export const staffSchema = z.object({
     salaryType: salaryTypeEnum.default("monthly"),
     compensationProfileId: z.string().min(1).optional(),
     clientId: z.string().optional(),
+    // What the CLIENT pays the agency per hour for this staff member, in USD.
+    // Distinct from the compensation profile, which is what the staff receives.
+    billRateUsd: z.number().min(0).optional(),
     employmentType: employmentTypeEnum.default("full-time"),
     businessId: z.string().min(1, "Business ID is required"),
     status: staffStatusEnum.default("active"),
@@ -66,6 +69,7 @@ export const updateStaffSchema = z.object({
     compensationProfileId: z.string().min(1).optional(),
     // Empty string is allowed and means "unassign from client".
     clientId: z.string().optional(),
+    billRateUsd: z.number().min(0).optional(),
     employmentType: employmentTypeEnum.optional(),
     status: staffStatusEnum.optional(),
     notes: z.string().max(1000).optional(),
@@ -121,6 +125,7 @@ export const staffJsonSchema = {
         },
         compensationProfileId: { type: "string" },
         clientId: { type: "string" },
+        billRateUsd: { type: "number", minimum: 0 },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],
@@ -193,6 +198,7 @@ export const updateStaffJsonSchema = {
         },
         compensationProfileId: { type: "string" },
         clientId: { type: "string" },
+        billRateUsd: { type: "number", minimum: 0 },
         employmentType: {
             type: "string",
             enum: ["full-time", "part-time", "contract"],

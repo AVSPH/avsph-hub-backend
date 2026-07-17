@@ -443,13 +443,19 @@ export async function getClientWeeklyReport(
     calculatedPay: number;
     currency: string;
     payUsd: number | null;
+    billRateUsd: number;
+    hasBillRate: boolean;
+    billableUsd: number;
+    marginUsd: number | null;
   }> = [];
 
   let totalHours = 0;
   let totalPay = 0;
   let totalPayUsd = 0;
+  let totalBillableUsd = 0;
   let allUsdResolved = usdConversionAvailable;
   const currencyCounts = new Map<string, number>();
+  const missingBillRateStaff: string[] = [];
 
   for (const member of members) {
     const staffId = String(member._id);
@@ -492,8 +498,25 @@ export async function getClientWeeklyReport(
       totalPayUsd += payUsd;
     }
 
+    // What the client pays the agency: bill rate (USD) x hours worked.
+    // A missing/zero bill rate bills 0 and is flagged rather than guessed.
+    const rawBillRate = member.billRateUsd;
+    const hasBillRate =
+      typeof rawBillRate === "number" &&
+      Number.isFinite(rawBillRate) &&
+      rawBillRate > 0;
+    const billRateUsd = hasBillRate ? (rawBillRate as number) : 0;
+    const billableUsd = roundMoney(billRateUsd * financials.totalHoursWorked);
+    const marginUsd = payUsd == null ? null : roundMoney(billableUsd - payUsd);
+
+    const staffName = `${member.firstName} ${member.lastName}`.trim();
+    if (!hasBillRate) {
+      missingBillRateStaff.push(staffName);
+    }
+
     totalHours += financials.totalHoursWorked;
     totalPay += financials.calculatedPay;
+    totalBillableUsd += billableUsd;
     currencyCounts.set(
       comp.currency,
       (currencyCounts.get(comp.currency) ?? 0) + 1,
@@ -501,7 +524,7 @@ export async function getClientWeeklyReport(
 
     staffBreakdown.push({
       staffId,
-      name: `${member.firstName} ${member.lastName}`.trim(),
+      name: staffName,
       position: member.position ?? "",
       hourlyRate: comp.hourlyRate,
       totalHours: financials.totalHoursWorked,
@@ -509,6 +532,10 @@ export async function getClientWeeklyReport(
       calculatedPay: financials.calculatedPay,
       currency: comp.currency,
       payUsd,
+      billRateUsd,
+      hasBillRate,
+      billableUsd,
+      marginUsd,
     });
   }
 
@@ -535,10 +562,18 @@ export async function getClientWeeklyReport(
     mixedCurrency,
     usdRate: usdConversionAvailable ? usdToPhp : null,
     usdConversionAvailable: allUsdResolved,
+    missingBillRateStaff,
     totals: {
       totalHours: roundMoney(totalHours),
       totalPay: roundMoney(totalPay),
       totalPayUsd: allUsdResolved ? roundMoney(totalPayUsd) : null,
+      totalBillableUsd: roundMoney(totalBillableUsd),
+      // Margin needs staff cost in USD; unavailable if any cost couldn't be
+      // converted (no USD rate configured).
+      totalMarginUsd: allUsdResolved
+        ? roundMoney(totalBillableUsd - totalPayUsd)
+        : null,
+      missingBillRateCount: missingBillRateStaff.length,
       staffCount: members.length,
     },
     staff: staffBreakdown,

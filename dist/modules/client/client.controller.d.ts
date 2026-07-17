@@ -51,10 +51,14 @@ export declare function getClientWeeklyReport(request: FastifyRequest<{
     mixedCurrency: boolean;
     usdRate: number | null;
     usdConversionAvailable: boolean;
+    missingBillRateStaff: string[];
     totals: {
         totalHours: number;
         totalPay: number;
         totalPayUsd: number | null;
+        totalBillableUsd: number;
+        totalMarginUsd: number | null;
+        missingBillRateCount: number;
         staffCount: number;
     };
     staff: {
@@ -67,6 +71,10 @@ export declare function getClientWeeklyReport(request: FastifyRequest<{
         calculatedPay: number;
         currency: string;
         payUsd: number | null;
+        billRateUsd: number;
+        hasBillRate: boolean;
+        billableUsd: number;
+        marginUsd: number | null;
     }[];
 }>;
 export {};

@@ -32,6 +32,7 @@ export declare const staffSchema: z.ZodObject<{
     salaryType: z.ZodDefault<z.ZodEnum<["hourly", "daily", "monthly", "annual"]>>;
     compensationProfileId: z.ZodOptional<z.ZodString>;
     clientId: z.ZodOptional<z.ZodString>;
+    billRateUsd: z.ZodOptional<z.ZodNumber>;
     employmentType: z.ZodDefault<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     businessId: z.ZodString;
     status: z.ZodDefault<z.ZodEnum<["active", "on_leave", "terminated"]>>;
@@ -77,6 +78,7 @@ export declare const staffSchema: z.ZodObject<{
     phone?: string | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -105,6 +107,7 @@ export declare const staffSchema: z.ZodObject<{
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
     photoUrl?: string | undefined;
     documents?: {
         type: string;
@@ -127,6 +130,7 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     salaryType: z.ZodDefault<z.ZodEnum<["hourly", "daily", "monthly", "annual"]>>;
     compensationProfileId: z.ZodOptional<z.ZodString>;
     clientId: z.ZodOptional<z.ZodString>;
+    billRateUsd: z.ZodOptional<z.ZodNumber>;
     employmentType: z.ZodDefault<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     businessId: z.ZodString;
     status: z.ZodDefault<z.ZodEnum<["active", "on_leave", "terminated"]>>;
@@ -166,6 +170,7 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     phone?: string | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
 }, {
     businessId: string;
     firstName: string;
@@ -181,6 +186,7 @@ export declare const createStaffSchema: z.ZodObject<Omit<{
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
 }>;
 export declare const updateStaffSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
@@ -194,6 +200,7 @@ export declare const updateStaffSchema: z.ZodObject<{
     salaryType: z.ZodOptional<z.ZodEnum<["hourly", "daily", "monthly", "annual"]>>;
     compensationProfileId: z.ZodOptional<z.ZodString>;
     clientId: z.ZodOptional<z.ZodString>;
+    billRateUsd: z.ZodOptional<z.ZodNumber>;
     employmentType: z.ZodOptional<z.ZodEnum<["full-time", "part-time", "contract"]>>;
     status: z.ZodOptional<z.ZodEnum<["active", "on_leave", "terminated"]>>;
     notes: z.ZodOptional<z.ZodString>;
@@ -214,6 +221,7 @@ export declare const updateStaffSchema: z.ZodObject<{
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
 }, {
     status?: "active" | "on_leave" | "terminated" | undefined;
     clientId?: string | undefined;
@@ -230,6 +238,7 @@ export declare const updateStaffSchema: z.ZodObject<{
     employmentType?: "full-time" | "part-time" | "contract" | undefined;
     department?: string | undefined;
     compensationProfileId?: string | undefined;
+    billRateUsd?: number | undefined;
 }>;
 export declare const staffLoginSchema: z.ZodObject<{
     email: z.ZodString;
@@ -348,6 +357,10 @@ export declare const staffJsonSchema: {
         };
         readonly clientId: {
             readonly type: "string";
+        };
+        readonly billRateUsd: {
+            readonly type: "number";
+            readonly minimum: 0;
         };
         readonly employmentType: {
             readonly type: "string";
@@ -514,6 +527,10 @@ export declare const updateStaffJsonSchema: {
         readonly clientId: {
             readonly type: "string";
         };
+        readonly billRateUsd: {
+            readonly type: "number";
+            readonly minimum: 0;
+        };
         readonly employmentType: {
             readonly type: "string";
             readonly enum: readonly ["full-time", "part-time", "contract"];
@@ -600,6 +617,10 @@ export declare const staffLoginResponseJsonSchema: {
                 };
                 readonly clientId: {
                     readonly type: "string";
+                };
+                readonly billRateUsd: {
+                    readonly type: "number";
+                    readonly minimum: 0;
                 };
                 readonly employmentType: {
                     readonly type: "string";
