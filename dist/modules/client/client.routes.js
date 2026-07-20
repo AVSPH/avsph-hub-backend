@@ -1,5 +1,5 @@
 import { clientJsonSchema, createClientJsonSchema, updateClientJsonSchema, } from "../../types/client.types.js";
-import { createClient, getClients, getClientById, updateClient, deleteClient, getClientStaff, getClientWeeklyReport, } from "./client.controller.js";
+import { createClient, getClients, getClientById, updateClient, deleteClient, getClientStaff, getClientWeeklyReport, getBusinessClientAnalytics, getClientAnalytics, } from "./client.controller.js";
 const idParamsSchema = {
     type: "object",
     properties: { id: { type: "string" } },
@@ -120,6 +120,46 @@ const clientRoutes = async (fastify) => {
             },
         },
     }, getClientWeeklyReport);
+    // Business-wide client analytics (revenue / cost / margin)
+    fastify.get("/businesses/:businessId/clients/analytics", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "All-time (or date-ranged) client analytics for a business " +
+                "(revenue, staff cost, margin). Admin only.",
+            tags: ["Clients"],
+            security: [{ bearerAuth: [] }],
+            params: {
+                type: "object",
+                properties: { businessId: { type: "string" } },
+                required: ["businessId"],
+            },
+            querystring: {
+                type: "object",
+                properties: {
+                    from: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                    to: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                },
+            },
+        },
+    }, getBusinessClientAnalytics);
+    // Single-client analytics (all-time or date-ranged)
+    fastify.get("/clients/:id/analytics", {
+        preHandler: [fastify.authenticate],
+        schema: {
+            description: "All-time (or date-ranged) analytics for one client " +
+                "(revenue, staff cost, margin). Admin only.",
+            tags: ["Clients"],
+            security: [{ bearerAuth: [] }],
+            params: idParamsSchema,
+            querystring: {
+                type: "object",
+                properties: {
+                    from: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                    to: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+                },
+            },
+        },
+    }, getClientAnalytics);
 };
 export default clientRoutes;
 //# sourceMappingURL=client.routes.js.map

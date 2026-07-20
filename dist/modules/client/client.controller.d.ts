@@ -77,5 +77,64 @@ export declare function getClientWeeklyReport(request: FastifyRequest<{
         marginUsd: number | null;
     }[];
 }>;
+export declare function getBusinessClientAnalytics(request: FastifyRequest<{
+    Params: {
+        businessId: string;
+    };
+    Querystring: {
+        from?: string;
+        to?: string;
+    };
+}>, reply: FastifyReply): Promise<{
+    businessId: string;
+    from: string | null;
+    to: string | null;
+    usdConversionAvailable: boolean;
+    usdRate: number | null;
+    totals: {
+        clientCount: number;
+        activeClientCount: number;
+        staffCount: number;
+        totalHours: number;
+        totalRevenueUsd: number;
+        totalPaidUsd: number | null;
+        totalMarginUsd: number | null;
+        vaSharePct: number | null;
+        marginPct: number | null;
+        missingBillRateCount: number;
+    };
+    clients: {
+        clientId: string;
+        name: string;
+        companyName: string | null;
+        staffCount: number;
+        totalHours: number;
+        revenueUsd: number;
+        paidUsd: number | null;
+        marginUsd: number | null;
+    }[];
+}>;
+export declare function getClientAnalytics(request: FastifyRequest<{
+    Params: IdParams;
+    Querystring: {
+        from?: string;
+        to?: string;
+    };
+}>, reply: FastifyReply): Promise<{
+    clientId: string;
+    from: string | null;
+    to: string | null;
+    usdConversionAvailable: boolean;
+    totals: {
+        staffCount: number;
+        totalHours: number;
+        totalRevenueUsd: number;
+        totalPaidUsd: number | null;
+        totalMarginUsd: number | null;
+        vaSharePct: number | null;
+        marginPct: number | null;
+        missingBillRateCount: number;
+    };
+}>;
 export {};
 //# sourceMappingURL=client.controller.d.ts.map

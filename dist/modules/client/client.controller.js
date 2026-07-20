@@ -422,4 +422,273 @@ export async function getClientWeeklyReport(request, reply) {
         staff: staffBreakdown,
     };
 }
+/**
+ * Builds a USD conversion context. Exchange rates are stored as
+ * <currency> -> PHP, so a non-PHP amount goes to PHP first, then PHP -> USD
+ * via the USD -> PHP rate. Per-currency rates are cached.
+ */
+async function buildUsdContext(db) {
+    const usdToPhp = await getExchangeRateValue(db, "USD", "PHP");
+    const usdAvailable = !!usdToPhp && usdToPhp > 0;
+    const cache = new Map();
+    async function currencyToPhp(currency) {
+        if (currency === "PHP")
+            return 1;
+        if (cache.has(currency))
+            return cache.get(currency);
+        const r = await getExchangeRateValue(db, currency, "PHP");
+        cache.set(currency, r);
+        return r;
+    }
+    async function toUsd(amount, currency) {
+        if (!usdAvailable)
+            return null;
+        if (currency === "USD")
+            return roundMoney(amount);
+        const c = await currencyToPhp(currency);
+        if (c == null)
+            return null;
+        return roundMoney((amount * c) / usdToPhp);
+    }
+    return { usdToPhp, usdAvailable, toUsd };
+}
+function eodDateFilter(from, to) {
+    if (!from && !to)
+        return {};
+    const range = {};
+    if (from)
+        range.$gte = from;
+    if (to)
+        range.$lte = to;
+    return { date: range };
+}
+/**
+ * Bills a single staff member over an optional date window: approved EOD hours
+ * priced at the current bill rate (revenue) and the compensation profile
+ * (cost). Rates are current, not versioned — all-time totals approximate on
+ * today's rates.
+ */
+async function billMember(db, businessId, member, from, to, ctx, effectiveDate) {
+    const eodRecords = await db
+        .collection("eod_reports")
+        .find({
+        staffId: String(member._id),
+        businessId,
+        isActive: true,
+        isApproved: true,
+        ...eodDateFilter(from, to),
+    })
+        .toArray();
+    const comp = await resolveHourlyCompensationProfile(db, {
+        _id: member._id,
+        businessId: member.businessId,
+        salary: member.salary,
+        compensationProfileId: member.compensationProfileId,
+    }, effectiveDate);
+    const fin = calculateInvoiceFinancials(eodRecords, comp, [], [], effectiveDate, comp.currency);
+    const paidUsd = await ctx.toUsd(fin.calculatedPay, comp.currency);
+    const hasBillRate = typeof member.billRateUsd === "number" &&
+        Number.isFinite(member.billRateUsd) &&
+        member.billRateUsd > 0;
+    const billRate = hasBillRate ? member.billRateUsd : 0;
+    const revenueUsd = roundMoney(billRate * fin.totalHoursWorked);
+    const marginUsd = paidUsd == null ? null : roundMoney(revenueUsd - paidUsd);
+    return {
+        hours: fin.totalHoursWorked,
+        paidUsd,
+        revenueUsd,
+        marginUsd,
+        hasBillRate,
+    };
+}
+function pct(part, whole) {
+    if (!whole)
+        return null;
+    return Math.round(((part / whole) * 100 + Number.EPSILON) * 100) / 100;
+}
+/** Resolve + validate an optional from/to window; returns effective comp date. */
+function resolveWindow(from, to) {
+    let f = from;
+    let t = to;
+    if (f && !ISO_DATE_RE.test(f))
+        return { effectiveDate: "", error: "Invalid 'from' date" };
+    if (t && !ISO_DATE_RE.test(t))
+        return { effectiveDate: "", error: "Invalid 'to' date" };
+    if (f && t && f > t)
+        [f, t] = [t, f];
+    const effectiveDate = t || new Date().toISOString().split("T")[0];
+    return { from: f, to: t, effectiveDate };
+}
+// Business-wide client analytics: revenue, cost, margin across all clients.
+export async function getBusinessClientAnalytics(request, reply) {
+    const db = request.server.mongo.db;
+    const clients = db?.collection("clients");
+    const staff = db?.collection("staff");
+    if (!db || !clients || !staff) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { businessId } = request.params;
+    if (!ObjectId.isValid(businessId)) {
+        return reply.status(400).send({ error: "Invalid business ID format" });
+    }
+    const hasAccess = await canAccessBusiness(request, businessId);
+    if (!hasAccess) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const win = resolveWindow(request.query.from, request.query.to);
+    if (win.error)
+        return reply.status(400).send({ error: win.error });
+    const clientDocs = await clients
+        .find({ businessId, isActive: true })
+        .toArray();
+    const assignedStaff = await staff
+        .find({ businessId, isActive: true, clientId: { $exists: true, $ne: "" } })
+        .toArray();
+    // Group assigned staff by client.
+    const staffByClient = new Map();
+    for (const s of assignedStaff) {
+        const cid = String(s.clientId);
+        if (!staffByClient.has(cid))
+            staffByClient.set(cid, []);
+        staffByClient.get(cid).push(s);
+    }
+    const ctx = await buildUsdContext(db);
+    let totalHours = 0;
+    let totalRevenueUsd = 0;
+    let totalPaidUsd = 0;
+    let totalStaff = 0;
+    let missingBillRateCount = 0;
+    let allUsdResolved = ctx.usdAvailable;
+    const clientRows = [];
+    for (const client of clientDocs) {
+        const cid = String(client._id);
+        const members = staffByClient.get(cid) ?? [];
+        let cHours = 0;
+        let cRevenue = 0;
+        let cPaid = 0;
+        let cPaidResolved = ctx.usdAvailable;
+        for (const member of members) {
+            const b = await billMember(db, businessId, member, win.from, win.to, ctx, win.effectiveDate);
+            cHours += b.hours;
+            cRevenue += b.revenueUsd;
+            if (b.paidUsd == null) {
+                cPaidResolved = false;
+                allUsdResolved = false;
+            }
+            else {
+                cPaid += b.paidUsd;
+            }
+            if (!b.hasBillRate)
+                missingBillRateCount++;
+        }
+        totalStaff += members.length;
+        totalHours += cHours;
+        totalRevenueUsd += cRevenue;
+        if (cPaidResolved)
+            totalPaidUsd += cPaid;
+        clientRows.push({
+            clientId: cid,
+            name: client.name,
+            companyName: client.companyName ?? null,
+            staffCount: members.length,
+            totalHours: roundMoney(cHours),
+            revenueUsd: roundMoney(cRevenue),
+            paidUsd: cPaidResolved ? roundMoney(cPaid) : null,
+            marginUsd: cPaidResolved ? roundMoney(cRevenue - cPaid) : null,
+        });
+    }
+    clientRows.sort((a, b) => b.revenueUsd - a.revenueUsd);
+    const revenue = roundMoney(totalRevenueUsd);
+    const paid = allUsdResolved ? roundMoney(totalPaidUsd) : null;
+    const margin = paid == null ? null : roundMoney(revenue - paid);
+    return {
+        businessId,
+        from: win.from ?? null,
+        to: win.to ?? null,
+        usdConversionAvailable: allUsdResolved,
+        usdRate: ctx.usdAvailable ? ctx.usdToPhp : null,
+        totals: {
+            clientCount: clientDocs.length,
+            activeClientCount: clientRows.filter((c) => c.staffCount > 0).length,
+            staffCount: totalStaff,
+            totalHours: roundMoney(totalHours),
+            totalRevenueUsd: revenue,
+            totalPaidUsd: paid,
+            totalMarginUsd: margin,
+            vaSharePct: paid == null ? null : pct(paid, revenue),
+            marginPct: margin == null ? null : pct(margin, revenue),
+            missingBillRateCount,
+        },
+        clients: clientRows,
+    };
+}
+// Single-client analytics (all-time by default, or a date window).
+export async function getClientAnalytics(request, reply) {
+    const db = request.server.mongo.db;
+    const clients = db?.collection("clients");
+    const staff = db?.collection("staff");
+    if (!db || !clients || !staff) {
+        return reply.status(500).send({ error: "Database not available" });
+    }
+    const { id } = request.params;
+    if (!ObjectId.isValid(id)) {
+        return reply.status(400).send({ error: "Invalid client ID format" });
+    }
+    const client = await clients.findOne({ _id: new ObjectId(id) });
+    if (!client) {
+        return reply.status(404).send({ error: "Client not found" });
+    }
+    const hasAccess = await canAccessBusiness(request, client.businessId);
+    if (!hasAccess) {
+        return reply.status(403).send({
+            error: "Forbidden",
+            message: "You do not have access to this business",
+        });
+    }
+    const win = resolveWindow(request.query.from, request.query.to);
+    if (win.error)
+        return reply.status(400).send({ error: win.error });
+    const members = await staff
+        .find({ clientId: id, isActive: true })
+        .toArray();
+    const ctx = await buildUsdContext(db);
+    let totalHours = 0;
+    let totalRevenueUsd = 0;
+    let totalPaidUsd = 0;
+    let missingBillRateCount = 0;
+    let allUsdResolved = ctx.usdAvailable;
+    for (const member of members) {
+        const b = await billMember(db, client.businessId, member, win.from, win.to, ctx, win.effectiveDate);
+        totalHours += b.hours;
+        totalRevenueUsd += b.revenueUsd;
+        if (b.paidUsd == null)
+            allUsdResolved = false;
+        else
+            totalPaidUsd += b.paidUsd;
+        if (!b.hasBillRate)
+            missingBillRateCount++;
+    }
+    const revenue = roundMoney(totalRevenueUsd);
+    const paid = allUsdResolved ? roundMoney(totalPaidUsd) : null;
+    const margin = paid == null ? null : roundMoney(revenue - paid);
+    return {
+        clientId: id,
+        from: win.from ?? null,
+        to: win.to ?? null,
+        usdConversionAvailable: allUsdResolved,
+        totals: {
+            staffCount: members.length,
+            totalHours: roundMoney(totalHours),
+            totalRevenueUsd: revenue,
+            totalPaidUsd: paid,
+            totalMarginUsd: margin,
+            vaSharePct: paid == null ? null : pct(paid, revenue),
+            marginPct: margin == null ? null : pct(margin, revenue),
+            missingBillRateCount,
+        },
+    };
+}
 //# sourceMappingURL=client.controller.js.map

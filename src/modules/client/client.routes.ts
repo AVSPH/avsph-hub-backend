@@ -12,6 +12,8 @@ import {
   deleteClient,
   getClientStaff,
   getClientWeeklyReport,
+  getBusinessClientAnalytics,
+  getClientAnalytics,
 } from "./client.controller.js";
 
 const idParamsSchema = {
@@ -174,6 +176,64 @@ const clientRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     getClientWeeklyReport,
+  );
+
+  // Business-wide client analytics (revenue / cost / margin)
+  fastify.get<{
+    Params: { businessId: string };
+    Querystring: { from?: string; to?: string };
+  }>(
+    "/businesses/:businessId/clients/analytics",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "All-time (or date-ranged) client analytics for a business " +
+          "(revenue, staff cost, margin). Admin only.",
+        tags: ["Clients"],
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: "object",
+          properties: { businessId: { type: "string" } },
+          required: ["businessId"],
+        },
+        querystring: {
+          type: "object",
+          properties: {
+            from: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+            to: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+          },
+        },
+      },
+    },
+    getBusinessClientAnalytics,
+  );
+
+  // Single-client analytics (all-time or date-ranged)
+  fastify.get<{
+    Params: { id: string };
+    Querystring: { from?: string; to?: string };
+  }>(
+    "/clients/:id/analytics",
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        description:
+          "All-time (or date-ranged) analytics for one client " +
+          "(revenue, staff cost, margin). Admin only.",
+        tags: ["Clients"],
+        security: [{ bearerAuth: [] }],
+        params: idParamsSchema,
+        querystring: {
+          type: "object",
+          properties: {
+            from: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+            to: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+          },
+        },
+      },
+    },
+    getClientAnalytics,
   );
 };
 
